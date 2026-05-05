@@ -298,6 +298,13 @@ footer a:hover{color:var(--tx2)}
   <div class="cwrap" style="height:300px"><canvas id="c_ot"></canvas></div>
 </section>
 
+<section id="otlap">
+  <p class="stag">Race · overtaking</p>
+  <h2>Lap Time by Overtake Count</h2>
+  <p class="hsub" style="margin-bottom:8px">Clean laps (&lt;115s) sorted by clean on-track overtakes (high→low). Dots coloured by rider. Step line = overtake count on right axis. Vertical bands separate each overtake group.</p>
+  <div class="cwrap" style="height:360px"><canvas id="c_otlt"></canvas></div>
+</section>
+
 <section id="oiltemp">
   <p class="stag">MoTeC · engine</p>
   <h2>Oil Temperature</h2>
@@ -1717,7 +1724,118 @@ function draw_setup(){
 }
 function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;cv_setup.width=(wrap.clientWidth||900)-20;cv_setup.height=360;draw_setup();}
 
+const c_otlt=document.getElementById('c_otlt');
+const cx_otlt=c_otlt?c_otlt.getContext('2d'):null;
+function draw_otlt(){
+  if(!c_otlt||!cx_otlt)return;
+  const W=c_otlt.width,H=c_otlt.height;if(!W||!H)return;
+  const P={l:52,r:52,t:20,b:36};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  cx_otlt.clearRect(0,0,W,H);cx_otlt.fillStyle='#12141c';cx_otlt.fillRect(0,0,W,H);
+  // Build clean laps joined with OT_NP
+  const items=DATA.filter(d=>d.t!==null&&d.t<115).map(d=>({lap:d.lap,t:d.t,r:d.r,ot:OT_NP[d.lap-1]||0}));
+  // Sort: descending OT, then ascending lap time within same OT
+  items.sort((a,b)=>b.ot-a.ot||a.t-b.t);
+  if(!items.length)return;
+  const N=items.length;
+  const maxOT=items[0].ot;
+  // Y axes
+  const tMin=97,tMax=114;
+  const otMax=maxOT+0.5;
+  const pyL=t=>P.t+ph-(t-tMin)/(tMax-tMin)*ph;   // left: lap time
+  const pyR=v=>P.t+ph-(v/otMax)*ph;               // right: OT count
+  const pxI=i=>P.l+i/(N-1)*pw;
+  // OT group boundaries & shaded bands
+  const groupColors=['#1a1d2e','#1c2030','#1e2335','#21273d','#232b44','#262f4a','#293352'];
+  let groupStart=0;
+  const groups=[];
+  for(let i=1;i<=N;i++){
+    if(i===N||items[i].ot!==items[groupStart].ot){
+      groups.push({ot:items[groupStart].ot,start:groupStart,end:i-1});
+      groupStart=i;
+    }
+  }
+  // Draw group bands
+  groups.forEach((g,gi)=>{
+    const x1=pxI(g.start),x2=g.end<N-1?pxI(g.end+1):pxI(g.end)+pw/N;
+    cx_otlt.fillStyle=gi%2===0?'rgba(255,255,255,0.02)':'rgba(34,211,238,0.03)';
+    cx_otlt.fillRect(x1,P.t,x2-x1,ph);
+    // Divider line
+    if(g.start>0){
+      cx_otlt.strokeStyle='rgba(255,255,255,0.12)';cx_otlt.lineWidth=1;cx_otlt.setLineDash([3,3]);
+      cx_otlt.beginPath();cx_otlt.moveTo(x1,P.t);cx_otlt.lineTo(x1,P.t+ph);cx_otlt.stroke();
+      cx_otlt.setLineDash([]);
+    }
+    // OT count label at top of band
+    if(g.ot>0){
+      const mx=(pxI(g.start)+( g.end<N-1?pxI(g.end+1):pxI(g.end)+pw/N))/2;
+      cx_otlt.fillStyle='rgba(34,211,238,0.6)';cx_otlt.font='bold 11px Segoe UI';cx_otlt.textAlign='center';
+      cx_otlt.fillText(g.ot+'×',mx,P.t+13);
+    }
+  });
+  // Left Y grid + labels (lap time)
+  cx_otlt.strokeStyle='#252a3a';cx_otlt.lineWidth=1;
+  for(let t=Math.ceil(tMin);t<=tMax;t++){
+    const yy=pyL(t);
+    cx_otlt.beginPath();cx_otlt.moveTo(P.l,yy);cx_otlt.lineTo(W-P.r,yy);cx_otlt.stroke();
+    if(t%2===0||t===Math.ceil(tMin)||t===Math.floor(tMax)){
+      cx_otlt.fillStyle='#9aa3b8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='right';
+      const m=Math.floor(t/60),s=t%60;
+      cx_otlt.fillText((m>0?m+':':'')+(s<10&&m>0?'0':'')+s,P.l-4,yy+3);
+    }
+  }
+  // Right Y axis (OT count)
+  for(let v=0;v<=maxOT;v++){
+    const yy=pyR(v);
+    cx_otlt.fillStyle='rgba(34,211,238,0.7)';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';
+    cx_otlt.fillText(v,W-P.r+5,yy+3);
+  }
+  // Scatter dots
+  items.forEach((d,i)=>{
+    const xx=pxI(i),yy=pyL(d.t);
+    const col=RC[d.r]||'#ffffff';
+    cx_otlt.globalAlpha=0.7;
+    cx_otlt.fillStyle=col;
+    cx_otlt.beginPath();cx_otlt.arc(xx,yy,2.5,0,Math.PI*2);cx_otlt.fill();
+    cx_otlt.globalAlpha=1;
+  });
+  // OT step line on right axis
+  cx_otlt.strokeStyle='rgba(34,211,238,0.85)';cx_otlt.lineWidth=2;
+  cx_otlt.beginPath();
+  items.forEach((d,i)=>{
+    const xx=pxI(i),yy=pyR(d.ot);
+    i===0?cx_otlt.moveTo(xx,yy):cx_otlt.lineTo(xx,yy);
+  });
+  cx_otlt.stroke();
+  // Axis labels
+  cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='11px Segoe UI';cx_otlt.textAlign='center';
+  cx_otlt.fillText('Laps sorted by overtake count (high → low)',P.l+pw/2,H-4);
+  cx_otlt.save();cx_otlt.translate(12,P.t+ph/2);cx_otlt.rotate(-Math.PI/2);
+  cx_otlt.fillStyle='#9aa3b8';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Lap time (s)',0,0);cx_otlt.restore();
+  cx_otlt.save();cx_otlt.translate(W-12,P.t+ph/2);cx_otlt.rotate(Math.PI/2);
+  cx_otlt.fillStyle='rgba(34,211,238,0.8)';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Overtakes',0,0);cx_otlt.restore();
+  // Rider legend
+  const riders=Object.keys(RC);let lx=P.l+10;
+  riders.forEach(r=>{
+    cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t+6,4,0,Math.PI*2);cx_otlt.fill();
+    cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';
+    const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t+10);
+    lx+=cx_otlt.measureText(name).width+22;
+  });
+}
+function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;c_otlt.width=(wrap.clientWidth||900)-20;c_otlt.height=360;draw_otlt();}
+
 renderStandings();
 renderToggles();
 renderTeamToggles();
-window.addEventListener('resize',resi
+window.addEventListener('resize',resize);
+requestAnimationFrame(()=>{
+  renderRiders();renderToggles2();renderToggles2b();renderToggles3();renderToggles4();renderToggles5();renderToggles7();
+  resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();
+  initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=Math.max(1,Math.round(a*838/24));lapMax2=Math.min(838,b>=24?838:Math.round(b*838/24));draw2();});
+  initDualSlider('dsMin2b','dsMax2b','dsFill2b','sLbl2b',(a,b)=>{lapMin2b=Math.max(1,Math.round(a*838/24));lapMax2b=Math.min(838,b>=24?838:Math.round(b*838/24));draw2b();});
+  initDualSlider('dsMin3','dsMax3','dsFill3','sLbl3',(a,b)=>{lapMin3=Math.max(1,Math.round(a*838/24));lapMax3=Math.min(838,b>=24?838:Math.round(b*838/24));draw3();});
+});
+</script>
+</body>
+</html>
