@@ -169,9 +169,9 @@ footer a:hover{color:var(--tx2)}
     <span class="lbl">OVERLAY</span>
     <button id="bConn3" class="on" onclick="toggleConn3()">Connectors</button>
     &nbsp;
-    <span class="lbl">LAP RANGE</span>
-    <span id="sLbl3" style="font-size:.68rem;color:var(--tx2);min-width:90px">Laps 1–838</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill3"></div><input type="range" id="dsMin3" min="1" max="838" value="1"><input type="range" id="dsMax3" min="1" max="838" value="838"></div>
+    <span class="lbl">RACE TIME</span>
+    <span id="sLbl3" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill3"></div><input type="range" id="dsMin3" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMax3" min="0" max="24" value="24" step="0.5"></div>
   </div>
   <div class="cwrap"><canvas id="c3"></canvas></div>
   <div class="lgnd">
@@ -191,9 +191,9 @@ footer a:hover{color:var(--tx2)}
     <span class="lbl">COMPARE</span>
     <span id="ttogs2"></span>
     &nbsp;
-    <span class="lbl">LAP RANGE</span>
-    <span id="sLbl2" style="font-size:.68rem;color:var(--tx2);min-width:90px">Laps 1–838</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill2"></div><input type="range" id="dsMin2" min="1" max="838" value="1"><input type="range" id="dsMax2" min="1" max="838" value="838"></div>
+    <span class="lbl">RACE TIME</span>
+    <span id="sLbl2" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill2"></div><input type="range" id="dsMin2" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMax2" min="0" max="24" value="24" step="0.5"></div>
   </div>
   <div class="cwrap" style="height:560px"><canvas id="c2"></canvas></div>
   <div class="lgnd" id="lgnd2"></div>
@@ -847,10 +847,10 @@ function initDualSlider(idMin,idMax,idFill,idLbl,onChange){
   if(!mn||!mx||!fill||!lbl)return;
   function upd(e){
     let a=+mn.value,b=+mx.value;
-    if(a>b-5){if(e&&e.target===mn){mn.value=b-5;a=+mn.value;}else{mx.value=a+5;b=+mx.value;}}
-    const p=v=>(v-1)/(838-1)*100;
+    if(a>b-0.5){if(e&&e.target===mn){mn.value=b-0.5;a=+mn.value;}else{mx.value=a+0.5;b=+mx.value;}}
+    const p=v=>v/24*100;
     fill.style.left=p(a)+'%';fill.style.width=(p(b)-p(a))+'%';
-    lbl.textContent='Laps '+a+'\u2013'+b;
+    lbl.textContent=a+'h\u2013'+b+'h';
     onChange(a,b);
   }
   mn.addEventListener('input',upd);mx.addEventListener('input',upd);upd(null);
@@ -991,8 +991,8 @@ window.addEventListener('resize',resize);
 requestAnimationFrame(()=>{
   renderRiders();renderToggles2();renderToggles3();renderToggles4();renderToggles5();
   resize();resize2();resize3();resize4();resize5();
-  initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=a;lapMax2=b;draw2();});
-  initDualSlider('dsMin3','dsMax3','dsFill3','sLbl3',(a,b)=>{lapMin3=a;lapMax3=b;draw3();});
+  initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=Math.max(1,Math.round(a*838/24));lapMax2=Math.min(838,b>=24?838:Math.round(b*838/24));draw2();});
+  initDualSlider('dsMin3','dsMax3','dsFill3','sLbl3',(a,b)=>{lapMin3=Math.max(1,Math.round(a*838/24));lapMax3=Math.min(838,b>=24?838:Math.round(b*838/24));draw3();});
 });
 </script>
 </body>
