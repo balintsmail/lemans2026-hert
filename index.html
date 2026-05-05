@@ -1766,9 +1766,9 @@ function renderOTLTStats(items,groups){
     // Baseline = avg in 0× group (if exists), else lowest avg
     const baseOT=groups.find(g=>g.ot===0);
     const baseline=baseOT&&segAvg[0]!=null?segAvg[0]:Math.min(...Object.values(segAvg).filter(v=>v!=null));
-    let html=`<div style="background:#181b28;border:1px solid #252a3a;border-radius:6px;padding:10px 12px;min-width:190px">`;
-    html+=`<div style="font-size:11px;font-weight:700;color:${RC[r]};margin-bottom:7px;letter-spacing:.04em">${r.split(' ')[0]}</div>`;
-    html+=`<div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:3px 7px;align-items:center;font-size:10px">`;
+    let html=`<div style="background:#181b28;border:1px solid #252a3a;border-radius:6px;padding:14px 16px;min-width:220px">`;
+    html+=`<div style="font-size:14px;font-weight:700;color:${RC[r]};margin-bottom:10px;letter-spacing:.04em">${r.split(' ')[0]}</div>`;
+    html+=`<div style="display:grid;grid-template-columns:auto 1fr auto auto;gap:5px 10px;align-items:center;font-size:13px">`;
     groups.forEach(g=>{
       const cnt=rLaps.filter(d=>d.ot===g.ot).length;
       const pct=total>0?(cnt/total*100):0;
@@ -1782,16 +1782,16 @@ function renderOTLTStats(items,groups){
         const sign=d>=0?'+':'−';
         const abs=Math.abs(d).toFixed(2);
         const dc=d>0.5?'#f87171':d>0?'#fb923c':'#34d399';
-        deltaHtml=`<span style="color:${dc};font-weight:600;white-space:nowrap">${sign}${abs}s</span>`;
+        deltaHtml=`<span style="color:${dc};font-weight:700;white-space:nowrap;font-size:13px">${sign}${abs}s</span>`;
       } else if(avg!=null&&g.ot===0){
-        deltaHtml=`<span style="color:#6b7280;font-size:9px">base</span>`;
+        deltaHtml=`<span style="color:#6b7280;font-size:12px">base</span>`;
       }
       html+=`<span style="color:#9aa3b8;white-space:nowrap">${g.ot}×</span>`;
-      html+=`<div style="background:#252a3a;border-radius:3px;height:6px;overflow:hidden"><div style="width:${barW}%;height:100%;background:${col};border-radius:3px"></div></div>`;
+      html+=`<div style="background:#252a3a;border-radius:3px;height:7px;overflow:hidden"><div style="width:${barW}%;height:100%;background:${col};border-radius:3px"></div></div>`;
       html+=`<span style="color:#c0c8d8;white-space:nowrap;text-align:right">${cnt} <span style="color:#6b7280">${pct.toFixed(0)}%</span></span>`;
       html+=deltaHtml;
     });
-    html+=`</div><div style="margin-top:6px;font-size:10px;color:#6b7280">${total} laps · avg base ${baseline!=null?baseline.toFixed(3)+'s':'—'}</div></div>`;
+    html+=`</div><div style="margin-top:8px;font-size:12px;color:#6b7280">${total} laps · base avg ${baseline!=null?baseline.toFixed(3)+'s':'—'}</div></div>`;
     cells.push(html);
   });
   el.innerHTML=cells.join('');
