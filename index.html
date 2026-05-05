@@ -606,10 +606,10 @@ const cx3=cv3.getContext('2d');
 
 function draw3(){
   const W3=cv3.width,H3=cv3.height;if(!W3||!H3)return;
-  const P={l:68,r:20,t:18,b:36};
+  const P={l:68,r:80,t:18,b:38};
   const pw=W3-P.l-P.r,ph=H3-P.t-P.b;
   const xMin=1,xMax=838;
-  // pre-compute y range from visible data
+  // pre-compute y range
   const _avgs=[];
   Object.entries(TRAW).forEach(([ts,td])=>{
     const team=+ts;if(hiddenTeams3.has(team))return;
@@ -640,57 +640,59 @@ function draw3(){
   }
   cx3.fillStyle='#c0c8d8';cx3.font='11px Segoe UI';cx3.textAlign='center';
   cx3.fillText('Lap',P.l+pw/2,H3-4);
-  cx3.save();cx3.translate(12,P.t+ph/2);cx3.rotate(-Math.PI/2);cx3.fillText('Lap Time',0,0);cx3.restore();
-  // team stint avgs — all teams, always visible
+  cx3.save();cx3.translate(12,P.t+ph/2);cx3.rotate(-Math.PI/2);cx3.fillStyle='#c0c8d8';cx3.font='11px Segoe UI';cx3.fillText('Avg Lap Time',0,0);cx3.restore();
+  // teams: dot at stint midpoint
   Object.entries(TRAW).forEach(([ts,td])=>{
     const team=+ts;if(hiddenTeams3.has(team))return;
     const tSts=[];let tBuf=[];
     td.forEach(([l,t])=>{if(t===null){if(tBuf.length){tSts.push([...tBuf]);tBuf=[];}}else tBuf.push([l,t]);});
     if(tBuf.length)tSts.push([...tBuf]);
-    const tSegs=[];
+    const dots=[];
     tSts.forEach(laps=>{
       if(laps.length<2)return;
-      const clean=laps.slice(1).filter(([l,t])=>t<105);
-      if(!clean.length)return;
+      const clean=laps.slice(1).filter(([l,t])=>t<105);if(!clean.length)return;
       const avg=clean.reduce((s,[l,t])=>s+t,0)/clean.length;
       const yy=py(avg);if(yy<P.t||yy>H3-P.b)return;
-      const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
-      cx3.strokeStyle=TC[team];cx3.lineWidth=2;cx3.globalAlpha=.65;
-      cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();
-      cx3.globalAlpha=1;
-      tSegs.push({x1,x2,yy});
+      const mx=(px(laps[0][0])+px(laps[laps.length-1][0]))/2;
+      dots.push({x:mx,y:yy});
     });
-    if(showConn3&&tSegs.length>1){
-      cx3.strokeStyle=TC[team];cx3.lineWidth=2;cx3.globalAlpha=.5;
-      cx3.beginPath();
-      for(let i=0;i<tSegs.length-1;i++){cx3.moveTo(tSegs[i].x2,tSegs[i].yy);cx3.lineTo(tSegs[i+1].x1,tSegs[i+1].yy);}
-      cx3.stroke();cx3.globalAlpha=1;
+    if(showConn3&&dots.length>1){
+      cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=.55;cx3.setLineDash([4,3]);
+      cx3.beginPath();dots.forEach((d,i)=>i===0?cx3.moveTo(d.x,d.y):cx3.lineTo(d.x,d.y));
+      cx3.stroke();cx3.setLineDash([]);cx3.globalAlpha=1;
     }
+    dots.forEach(d=>{
+      cx3.beginPath();cx3.arc(d.x,d.y,4,0,Math.PI*2);
+      cx3.fillStyle=TC[team];cx3.fill();
+      cx3.strokeStyle='rgba(0,0,0,.4)';cx3.lineWidth=1;cx3.stroke();
+    });
   });
-  // #38 stint avgs — white, solid
+  // #38: dot at stint midpoint, white
   const stints=[];let sLaps=[];
   DATA.forEach(d=>{if(d.t===null){if(sLaps.length){stints.push([...sLaps]);sLaps=[];}}else sLaps.push({...d});});
   if(sLaps.length)stints.push([...sLaps]);
-  const segs38=[];
+  const dots38=[];
   stints.forEach(laps=>{
     if(!laps.length)return;
     const clean=laps.slice(1).filter(d=>d.t<105);if(!clean.length)return;
     const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
     const yy=py(avg);if(yy<P.t||yy>H3-P.b)return;
-    const x1=px(laps[0].lap),x2=px(laps[laps.length-1].lap);
-    cx3.strokeStyle='#ffffff';cx3.lineWidth=2;cx3.globalAlpha=.9;cx3.setLineDash([]);
-    cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();cx3.globalAlpha=1;
-    segs38.push({x1,x2,yy});
+    const mx=(px(laps[0].lap)+px(laps[laps.length-1].lap))/2;
+    dots38.push({x:mx,y:yy});
   });
-  if(showConn3&&segs38.length>1){
-    cx3.strokeStyle='#ffffff';cx3.lineWidth=2;cx3.globalAlpha=.5;
-    cx3.beginPath();
-    for(let i=0;i<segs38.length-1;i++){cx3.moveTo(segs38[i].x2,segs38[i].yy);cx3.lineTo(segs38[i+1].x1,segs38[i+1].yy);}
+  if(showConn3&&dots38.length>1){
+    cx3.strokeStyle='#ffffff';cx3.lineWidth=3;cx3.globalAlpha=1;cx3.setLineDash([]);
+    cx3.beginPath();dots38.forEach((d,i)=>i===0?cx3.moveTo(d.x,d.y):cx3.lineTo(d.x,d.y));
     cx3.stroke();cx3.globalAlpha=1;
   }
+  dots38.forEach(d=>{
+    cx3.beginPath();cx3.arc(d.x,d.y,6,0,Math.PI*2);
+    cx3.fillStyle='#ffffff';cx3.fill();
+    cx3.strokeStyle='rgba(0,0,0,.4)';cx3.lineWidth=1;cx3.stroke();
+  });
 }
 
-function resize3(){const wrap=cv3.parentElement;cv3.width=(wrap.clientWidth||900)-20;cv3.height=630;draw3();}
+function resize3(){const wrap=cv3.parentElement;cv3.width=(wrap.clientWidth||900)-20;cv3.height=510;draw3();}
 
 
 renderStandings();
