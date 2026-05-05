@@ -608,13 +608,25 @@ function draw3(){
   const W3=cv3.width,H3=cv3.height;if(!W3||!H3)return;
   const P={l:68,r:20,t:18,b:36};
   const pw=W3-P.l-P.r,ph=H3-P.t-P.b;
-  const xMin=1,xMax=838,yMin=96,yMax=104;
+  const xMin=1,xMax=838;
+  // pre-compute y range from visible data
+  const _avgs=[];
+  Object.entries(TRAW).forEach(([ts,td])=>{
+    const team=+ts;if(hiddenTeams3.has(team))return;
+    let buf=[];
+    td.forEach(([l,t])=>{if(t===null){if(buf.length){const c=buf.slice(1).filter(([l,t])=>t<105);if(c.length)_avgs.push(c.reduce((s,[l,t])=>s+t,0)/c.length);buf=[];}}else buf.push([l,t]);});
+    if(buf.length){const c=buf.slice(1).filter(([l,t])=>t<105);if(c.length)_avgs.push(c.reduce((s,[l,t])=>s+t,0)/c.length);}
+  });
+  {let buf=[];DATA.forEach(d=>{if(d.t===null){if(buf.length){const c=buf.slice(1).filter(d=>d.t<105);if(c.length)_avgs.push(c.reduce((s,d)=>s+d.t,0)/c.length);buf=[];}}else buf.push(d);});if(buf.length){const c=buf.slice(1).filter(d=>d.t<105);if(c.length)_avgs.push(c.reduce((s,d)=>s+d.t,0)/c.length);}}
+  if(!_avgs.length)return;
+  const yMin=Math.min(..._avgs)-0.4,yMax=Math.max(..._avgs)+0.4;
   const px=lap=>P.l+(lap-xMin)/(xMax-xMin)*pw;
   const py=t=>P.t+ph-(t-yMin)/(yMax-yMin)*ph;
   cx3.clearRect(0,0,W3,H3);
   cx3.fillStyle='#12141c';cx3.fillRect(0,0,W3,H3);
   cx3.strokeStyle='#252a3a';cx3.lineWidth=1;
-  for(let y=Math.ceil(yMin);y<=yMax;y++){
+  const step=0.5;
+  for(let y=Math.ceil(yMin/step)*step;y<=yMax+0.01;y+=step){
     const yy=py(y);
     cx3.beginPath();cx3.moveTo(P.l,yy);cx3.lineTo(W3-P.r,yy);cx3.stroke();
     cx3.fillStyle='#9aa3b8';cx3.font='11px Segoe UI';cx3.textAlign='right';
@@ -629,13 +641,6 @@ function draw3(){
   cx3.fillStyle='#c0c8d8';cx3.font='11px Segoe UI';cx3.textAlign='center';
   cx3.fillText('Lap',P.l+pw/2,H3-4);
   cx3.save();cx3.translate(12,P.t+ph/2);cx3.rotate(-Math.PI/2);cx3.fillText('Lap Time',0,0);cx3.restore();
-  // pit markers
-  DATA.filter(d=>d.t===null).forEach(d=>{
-    const xx=px(d.lap);
-    cx3.strokeStyle='rgba(244,166,42,.15)';cx3.lineWidth=1;cx3.setLineDash([3,5]);
-    cx3.beginPath();cx3.moveTo(xx,P.t);cx3.lineTo(xx,H3-P.b);cx3.stroke();
-    cx3.setLineDash([]);
-  });
   // team stint avgs — all teams, always visible
   Object.entries(TRAW).forEach(([ts,td])=>{
     const team=+ts;if(hiddenTeams3.has(team))return;
