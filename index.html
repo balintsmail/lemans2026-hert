@@ -90,6 +90,7 @@ footer a:hover{color:var(--tx2)}
   <div class="nlinks">
     <a href="#overview">Overview</a>
     <a href="#laptimes">Lap times</a>
+    <a href="#stints">Stints</a>
     <a href="#standings">Standings</a>
     <a href="#riders">Riders</a>
   </div>
@@ -127,6 +128,8 @@ footer a:hover{color:var(--tx2)}
     <button id="bClean" onclick="setFilter('clean')">Clean &lt;115s</button>
     &nbsp;
     <span class="lbl">OVERLAY</span>
+    <button id="bDots" class="on" onclick="toggleDots()">Dots</button>
+    <button id="bStintAvg" class="on" onclick="toggleStintAvg()">Stint avg</button>
     <button id="bAvg" onclick="toggleAvg()">Rolling avg (15L)</button>
     &nbsp;
     <span class="lbl">RIDERS</span>
@@ -144,6 +147,21 @@ footer a:hover{color:var(--tx2)}
     <div class="li"><span style="display:inline-block;width:20px;height:2px;background:#aaa;opacity:.7;margin-right:2px"></span>Stint avg #38</div>
     <div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:1.5px dashed rgba(200,200,200,.4);margin-right:2px;vertical-align:middle"></span>Comparison avg</div>
   </div>
+</section>
+
+<section id="stints">
+  <p class="stag">Performance · ranked by pace</p>
+  <h2>Stint ranking</h2>
+  <p class="hsub" style="margin-bottom:12px">Each point = one stint, ordered fastest→slowest. Toggle riders &amp; comparison teams.</p>
+  <div class="ctrl">
+    <span class="lbl">RIDERS</span>
+    <span id="rtogs2"></span>
+    &nbsp;
+    <span class="lbl">COMPARE</span>
+    <span id="ttogs2"></span>
+  </div>
+  <div class="cwrap" style="height:560px"><canvas id="c2"></canvas></div>
+  <div class="lgnd" id="lgnd2"></div>
 </section>
 
 <section id="standings">
@@ -281,7 +299,7 @@ function renderRiders(){
 const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
-let filter='all',showAvg=false,hidden=new Set(),hiddenTeams=new Set([9,25,41,49]);
+let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49]);
 
 function resize(){
   const wrap=cv.parentElement;
@@ -322,6 +340,7 @@ function draw(){
     cx.beginPath();cx.moveTo(xx,PAD.t);cx.lineTo(xx,H-PAD.b);cx.stroke();
     cx.setLineDash([]);
   });
+  if(showStintAvg){
   Object.entries(TRAW).forEach(([ts,td])=>{
     const team=+ts;if(hiddenTeams.has(team))return;
     const tSts=[];let tBuf=[];
@@ -340,6 +359,8 @@ function draw(){
       cx.fillText('#'+team+' '+fmt(avg),x2-2,yy+9);cx.globalAlpha=1;
     });
   });
+  }
+  if(showStintAvg){
   const stints=[];let sLaps=[];
   DATA.forEach(d=>{if(d.t===null){if(sLaps.length){stints.push([...sLaps]);sLaps=[];}}else sLaps.push({...d});});
   if(sLaps.length)stints.push([...sLaps]);
@@ -355,6 +376,7 @@ function draw(){
     cx.globalAlpha=.75;cx.fillStyle=RC[rider];cx.font='bold 11px Segoe UI';cx.textAlign='right';
     cx.fillText(fmt(avg),x2-2,yy-3);cx.globalAlpha=1;
   });
+  }
   if(showAvg){
     RIDERS.filter(r=>!hidden.has(r)).forEach(r=>{
       const rl=DATA.filter(d=>d.r===r&&d.t!==null&&(filter!=='clean'||d.t<115));
@@ -370,6 +392,7 @@ function draw(){
       cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;
     });
   }
+  if(showDots){
   hitmap=[];
   vis.forEach(d=>{
     const xx=px(d.lap),yy=py(d.t);
@@ -386,6 +409,7 @@ function draw(){
     cx.globalAlpha=1;
     hitmap.push({x:xx,y:yy,d});
   });
+  }else hitmap=[];
 }
 cv.addEventListener('mousemove',e=>{
   const rect=cv.getBoundingClientRect();
@@ -409,18 +433,152 @@ cv.addEventListener('mousemove',e=>{
   }else tip.style.display='none';
 });
 cv.addEventListener('mouseleave',()=>document.getElementById('tip').style.display='none');
+function toggleDots(){showDots=!showDots;document.getElementById('bDots').classList.toggle('on',showDots);draw();}
+function toggleStintAvg(){showStintAvg=!showStintAvg;document.getElementById('bStintAvg').classList.toggle('on',showStintAvg);draw();}
 function setFilter(f){filter=f;document.getElementById('bAll').classList.toggle('on',f==='all');document.getElementById('bClean').classList.toggle('on',f==='clean');draw();}
 function toggleAvg(){showAvg=!showAvg;document.getElementById('bAvg').classList.toggle('on',showAvg);draw();}
-function toggleRider(r){hidden.has(r)?hidden.delete(r):hidden.add(r);document.getElementById('rt_'+r).classList.toggle('off',hidden.has(r));draw();}
+function toggleRider(r){hidden.has(r)?hidden.delete(r):hidden.add(r);const _off=hidden.has(r);['rt_'+r,'rt2_'+r].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw();draw2();}
 function renderToggles(){document.getElementById('rtogs').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');}
 function renderTeamToggles(){document.getElementById('ttogs').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>#${t}</span>`).join('');}
-function toggleTeam(t){hiddenTeams.has(t)?hiddenTeams.delete(t):hiddenTeams.add(t);document.getElementById('tt_'+t).classList.toggle('off',hiddenTeams.has(t));draw();}
+function toggleTeam(t){hiddenTeams.has(t)?hiddenTeams.delete(t):hiddenTeams.add(t);const _off=hiddenTeams.has(t);['tt_'+t,'tt2_'+t].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw();draw2();}
+
+// ── STINT RANKING CHART ───────────────────────────────────────────────────────
+const cv2=document.getElementById('c2');
+const cx2=cv2.getContext('2d');
+let hitmap2=[];
+
+function buildStintSeries(){
+  const series=[];
+  // #38 riders
+  RIDERS.forEach(r=>{
+    if(hidden.has(r))return;
+    const stints=[];let buf=[];
+    DATA.forEach(d=>{
+      if(d.t===null){if(buf.length){stints.push([...buf]);buf=[];}}
+      else if(d.r===r)buf.push(d);
+      else{if(buf.length){stints.push([...buf]);buf=[];}}
+    });
+    if(buf.length)stints.push([...buf]);
+    const pts=stints.map(laps=>{
+      const clean=laps.slice(1).filter(d=>d.t<105);
+      if(!clean.length)return null;
+      const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
+      return{avg,n:laps.length,cn:clean.length};
+    }).filter(Boolean).sort((a,b)=>a.avg-b.avg);
+    if(pts.length)series.push({lbl:r.split(' ').pop(),color:RC[r],pts,kind:'rider'});
+  });
+  // comparison teams
+  Object.entries(TRAW).forEach(([ts,td])=>{
+    const team=+ts;if(hiddenTeams.has(team))return;
+    const stints=[];let buf=[];
+    td.forEach(([l,t])=>{
+      if(t===null){if(buf.length){stints.push([...buf]);buf=[];}}
+      else buf.push([l,t]);
+    });
+    if(buf.length)stints.push([...buf]);
+    const pts=stints.map(laps=>{
+      const clean=laps.slice(1).filter(([l,t])=>t<105);
+      if(!clean.length)return null;
+      const avg=clean.reduce((s,[l,t])=>s+t,0)/clean.length;
+      return{avg,n:laps.length,cn:clean.length};
+    }).filter(Boolean).sort((a,b)=>a.avg-b.avg);
+    if(pts.length)series.push({lbl:'#'+team,color:TC[team],pts,kind:'team'});
+  });
+  return series;
+}
+
+function draw2(){
+  const W2=cv2.width,H2=cv2.height;
+  if(!W2||!H2)return;
+  const PAD2={l:68,r:80,t:18,b:38};
+  const pw2=W2-PAD2.l-PAD2.r,ph2=H2-PAD2.t-PAD2.b;
+  cx2.clearRect(0,0,W2,H2);
+  cx2.fillStyle='#12141c';cx2.fillRect(0,0,W2,H2);
+  const series=buildStintSeries();
+  if(!series.length)return;
+  const maxN=Math.max(...series.map(s=>s.pts.length));
+  const allAvg=series.flatMap(s=>s.pts.map(p=>p.avg));
+  const dMin=Math.min(...allAvg),dMax=Math.max(...allAvg);
+  const pad=0.4;
+  const yMin=dMin-pad,yMax=dMax+pad;
+  const xOf=rank=>maxN<=1?PAD2.l+pw2/2:PAD2.l+(rank-1)/(maxN-1)*pw2;
+  const yOf=t=>PAD2.t+ph2-(t-yMin)/(yMax-yMin)*ph2;
+  // grid y
+  cx2.strokeStyle='#252a3a';cx2.lineWidth=1;
+  const step=0.5;
+  for(let y=Math.ceil(yMin/step)*step;y<=yMax+0.01;y+=step){
+    const yy=yOf(y);
+    cx2.beginPath();cx2.moveTo(PAD2.l,yy);cx2.lineTo(W2-PAD2.r,yy);cx2.stroke();
+    cx2.fillStyle='#9aa3b8';cx2.font='11px Segoe UI';cx2.textAlign='right';
+    cx2.fillText(fmt(y),PAD2.l-5,yy+3);
+  }
+  // grid x
+  for(let x=1;x<=maxN;x++){
+    const xx=xOf(x);
+    cx2.beginPath();cx2.moveTo(xx,PAD2.t);cx2.lineTo(xx,H2-PAD2.b);cx2.stroke();
+    cx2.fillStyle='#9aa3b8';cx2.font='11px Segoe UI';cx2.textAlign='center';
+    cx2.fillText('#'+x,xx,H2-PAD2.b+14);
+  }
+  cx2.fillStyle='#c0c8d8';cx2.font='11px Segoe UI';cx2.textAlign='center';
+  cx2.fillText('Stint rank (fastest → slowest)',PAD2.l+pw2/2,H2-4);
+  cx2.save();cx2.translate(12,PAD2.t+ph2/2);cx2.rotate(-Math.PI/2);cx2.fillStyle='#c0c8d8';cx2.font='11px Segoe UI';cx2.fillText('Avg Lap Time',0,0);cx2.restore();
+  hitmap2=[];
+  series.forEach(s=>{
+    const isRider=s.kind==='rider';
+    // connecting line
+    cx2.strokeStyle=s.color;cx2.lineWidth=isRider?2.5:1.5;
+    cx2.globalAlpha=isRider?.85:.5;cx2.setLineDash(isRider?[]:[4,3]);
+    cx2.beginPath();
+    s.pts.forEach((p,i)=>{
+      const xx=s.pts.length===1?PAD2.l+pw2/2:xOf(i+1),yy=yOf(p.avg);
+      i===0?cx2.moveTo(xx,yy):cx2.lineTo(xx,yy);
+    });
+    cx2.stroke();cx2.setLineDash([]);cx2.globalAlpha=1;
+    // dots
+    s.pts.forEach((p,i)=>{
+      const xx=s.pts.length===1?PAD2.l+pw2/2:xOf(i+1),yy=yOf(p.avg);
+      cx2.beginPath();cx2.arc(xx,yy,isRider?5:4,0,Math.PI*2);
+      cx2.fillStyle=s.color;cx2.fill();
+      cx2.strokeStyle='rgba(0,0,0,.5)';cx2.lineWidth=1;cx2.stroke();
+      hitmap2.push({x:xx,y:yy,lbl:s.lbl,color:s.color,avg:p.avg,rank:i+1,n:p.n,cn:p.cn,total:s.pts.length});
+    });
+    // label on right
+    const last=s.pts[s.pts.length-1];
+    const lx=s.pts.length===1?PAD2.l+pw2/2:xOf(s.pts.length);
+    cx2.fillStyle=s.color;cx2.font=isRider?'bold 10px Segoe UI':'10px Segoe UI';
+    cx2.textAlign='left';cx2.fillText(s.lbl,lx+8,yOf(last.avg)+3);
+  });
+}
+
+cv2.addEventListener('mousemove',e=>{
+  const rect=cv2.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  let best=null,bD=999;
+  hitmap2.forEach(h=>{const d=Math.hypot(h.x-mx,h.y-my);if(d<bD){bD=d;best=h;}});
+  const tip=document.getElementById('tip');
+  if(best&&bD<22){
+    document.getElementById('tl').textContent='Rank #'+best.rank+' of '+best.total+' · '+best.lbl;
+    document.getElementById('tr').textContent=best.n+' laps ('+best.cn+' clean)';
+    document.getElementById('tt').textContent=fmt(best.avg);
+    document.getElementById('tn').textContent='Stint avg';
+    tip.style.display='block';
+    tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-10)+'px';
+  }else tip.style.display='none';
+});
+cv2.addEventListener('mouseleave',()=>document.getElementById('tip').style.display='none');
+
+function resize2(){const wrap=cv2.parentElement;cv2.width=(wrap.clientWidth||900)-20;cv2.height=510;draw2();}
+function renderToggles2(){
+  document.getElementById('rtogs2').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt2_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');
+  document.getElementById('ttogs2').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt2_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>#${t}</span>`).join('');
+  document.getElementById('lgnd2').innerHTML=RIDERS.map(r=>`<div class="li"><div class="ld" style="background:${RC[r]}"></div>${r.split(' ').pop()}</div>`).join('')+Object.entries(TC).map(([t,col])=>`<div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:1.5px dashed ${col};opacity:.7;margin-right:4px;vertical-align:middle"></span>#${t}</div>`).join('');
+}
+
 
 renderStandings();
 renderToggles();
 renderTeamToggles();
 window.addEventListener('resize',resize);
-requestAnimationFrame(()=>{renderRiders();resize();});
+requestAnimationFrame(()=>{renderRiders();renderToggles2();resize();resize2();});
 </script>
 </body>
 </html>
