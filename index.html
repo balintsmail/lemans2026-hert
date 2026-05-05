@@ -290,7 +290,11 @@ footer a:hover{color:var(--tx2)}
 <section id="overtakes">
   <p class="stag">Race · overtaking</p>
   <h2>Overtakes per Lap</h2>
-  <p class="hsub" style="margin-bottom:12px">Lap-by-lap overtakes vs all 59 competitors (official EWC lap-by-lap data). Gold bars = total inc. pitters. Teal line = clean on-track overtakes (excl. pit laps).</p>
+  <p class="hsub" style="margin-bottom:8px">Lap-by-lap overtakes vs all 59 competitors (official EWC lap-by-lap data). Toggle series below.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <button id="bOT_ALL" class="on" onclick="toggleOT_ALL()" style="background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.6);color:#fbbf24">&#9646; All overtakes (incl. pitters)</button>
+    <button id="bOT_NP" class="on" onclick="toggleOT_NP()" style="background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.5);color:#22d3ee">&#9135; Clean on-track (excl. pitters)</button>
+  </div>
   <div class="cwrap" style="height:300px"><canvas id="c_ot"></canvas></div>
 </section>
 
@@ -517,7 +521,7 @@ const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
 let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49,77]),hiddenTeams2=new Set(),hiddenTeams2b=new Set(),hiddenTeams3=new Set(),hiddenTeams4=new Set(),hiddenTeams7=new Set(),showConn3=true,lapMin2=1,lapMax2=838,lapMin2b=1,lapMax2b=559,lapMin3=1,lapMax3=838,gapMode='raw',hiddenTeams5=new Set(),showAvg4=true,showAvg7=true;
-let filterSC=true,hiddenPOS=new Set();
+let filterSC=true,hiddenPOS=new Set(),showOT_ALL=true,showOT_NP=true;
 
 function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
   SC_RANGES.forEach(([a,b])=>{
@@ -1454,6 +1458,9 @@ function draw_pos(){
   cx_pos.fillStyle='#c0c8d8';cx_pos.font='11px Segoe UI';cx_pos.fillText('SST Position',0,0);cx_pos.restore();
 }
 
+function toggleOT_ALL(){showOT_ALL=!showOT_ALL;const el=document.getElementById('bOT_ALL');if(el)el.classList.toggle('on',showOT_ALL);draw_ot();}
+function toggleOT_NP(){showOT_NP=!showOT_NP;const el=document.getElementById('bOT_NP');if(el)el.classList.toggle('on',showOT_NP);draw_ot();}
+
 function draw_ot(){
   if(!c_ot||!cx_ot)return;
   const W=c_ot.width,H=c_ot.height;
@@ -1463,9 +1470,10 @@ function draw_ot(){
   cx_ot.clearRect(0,0,W,H);
   cx_ot.fillStyle='#12141c';cx_ot.fillRect(0,0,W,H);
   const NLAPS=838;
-  const maxVal=Math.max(1,...OT_ALL.filter(v=>v!=null&&v>0));
+  const activeData=showOT_ALL?OT_ALL:(showOT_NP?OT_NP:[]);
+  const maxVal=Math.max(1,...activeData.filter(v=>v!=null&&v>0));
   const pxF=lap=>P.l+(lap-1)/(NLAPS-1)*pw;
-  const pyF=v=>P.t+ph-(v/( maxVal+1))*ph;
+  const pyF=v=>P.t+ph-(v/(maxVal+1))*ph;
   drawSCBands(cx_ot,pxF,P.t,ph,H,P.b);
   // y grid
   cx_ot.strokeStyle='#252a3a';cx_ot.lineWidth=1;
@@ -1488,35 +1496,34 @@ function draw_ot(){
   }
   // bars for OT_ALL
   const bw=Math.max(1,pw/NLAPS-0.5);
-  let cumAll=0,cumNP=0;
-  for(let i=0;i<NLAPS;i++){
-    const v=OT_ALL[i];
-    if(v==null||v===0)continue;
-    cumAll+=v;
-    const xx=pxF(i+1);
-    const yTop=pyF(v),yBot=pyF(0);
-    cx_ot.fillStyle='rgba(251,191,36,0.7)';
-    cx_ot.fillRect(xx-bw/2,yTop,bw,yBot-yTop);
+  if(showOT_ALL){
+    for(let i=0;i<NLAPS;i++){
+      const v=OT_ALL[i];
+      if(v==null||v===0)continue;
+      const xx=pxF(i+1);
+      cx_ot.fillStyle='rgba(251,191,36,0.7)';
+      cx_ot.fillRect(xx-bw/2,pyF(v),bw,pyF(0)-pyF(v));
+    }
   }
   // line for OT_NP
-  cx_ot.strokeStyle='#22d3ee';cx_ot.lineWidth=2;
-  cx_ot.beginPath();
-  let started=false;
-  for(let i=0;i<NLAPS;i++){
-    const v=OT_NP[i];
-    if(v==null){started=false;continue;}
-    const xx=pxF(i+1),yy=pyF(v);
-    if(!started){cx_ot.moveTo(xx,yy);started=true;}
-    else cx_ot.lineTo(xx,yy);
+  if(showOT_NP){
+    cx_ot.strokeStyle='#22d3ee';cx_ot.lineWidth=2;
+    cx_ot.beginPath();
+    let started=false;
+    for(let i=0;i<NLAPS;i++){
+      const v=OT_NP[i];
+      if(v==null){started=false;continue;}
+      const xx=pxF(i+1),yy=pyF(v);
+      if(!started){cx_ot.moveTo(xx,yy);started=true;}
+      else cx_ot.lineTo(xx,yy);
+    }
+    cx_ot.stroke();
   }
-  cx_ot.stroke();
   // cumulative annotation
   const totalAll=OT_ALL.filter(v=>v!=null).reduce((a,b)=>a+b,0);
   const totalNP=OT_NP.filter(v=>v!=null).reduce((a,b)=>a+b,0);
-  cx_ot.fillStyle='rgba(251,191,36,0.9)';cx_ot.font='bold 12px Segoe UI';cx_ot.textAlign='right';
-  cx_ot.fillText('vs 59 competitors (all): '+totalAll,W-P.r-4,P.t+16);
-  cx_ot.fillStyle='#22d3ee';cx_ot.font='12px Segoe UI';
-  cx_ot.fillText('Real on-track (excl. pitters): '+totalNP,W-P.r-4,P.t+32);
+  if(showOT_ALL){cx_ot.fillStyle='rgba(251,191,36,0.9)';cx_ot.font='bold 12px Segoe UI';cx_ot.textAlign='right';cx_ot.fillText('All (incl. pitters): '+totalAll,W-P.r-4,P.t+16);}
+  if(showOT_NP){cx_ot.fillStyle='#22d3ee';cx_ot.font='12px Segoe UI';cx_ot.textAlign='right';cx_ot.fillText('Clean on-track: '+totalNP,W-P.r-4,showOT_ALL?P.t+32:P.t+16);}
   // axes labels
   cx_ot.fillStyle='#c0c8d8';cx_ot.font='11px Segoe UI';cx_ot.textAlign='center';
   cx_ot.fillText('Race hours',P.l+pw/2,H-4);
@@ -1713,14 +1720,4 @@ function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;cv
 renderStandings();
 renderToggles();
 renderTeamToggles();
-window.addEventListener('resize',resize);
-requestAnimationFrame(()=>{
-  renderRiders();renderToggles2();renderToggles2b();renderToggles3();renderToggles4();renderToggles5();renderToggles7();
-  resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();
-  initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=Math.max(1,Math.round(a*838/24));lapMax2=Math.min(838,b>=24?838:Math.round(b*838/24));draw2();});
-  initDualSlider('dsMin2b','dsMax2b','dsFill2b','sLbl2b',(a,b)=>{lapMin2b=Math.max(1,Math.round(a*838/24));lapMax2b=Math.min(838,b>=24?838:Math.round(b*838/24));draw2b();});
-  initDualSlider('dsMin3','dsMax3','dsFill3','sLbl3',(a,b)=>{lapMin3=Math.max(1,Math.round(a*838/24));lapMax3=Math.min(838,b>=24?838:Math.round(b*838/24));draw3();});
-});
-</script>
-</body>
-</html>
+window.addEventListener('resize',resi
