@@ -301,8 +301,17 @@ footer a:hover{color:var(--tx2)}
 <section id="otlap">
   <p class="stag">Race · overtaking</p>
   <h2>Lap Time by Overtake Count</h2>
-  <p class="hsub" style="margin-bottom:8px">Clean laps (&lt;115s) sorted by clean on-track overtakes (high→low). Dots coloured by rider. Step line = overtake count on right axis. Vertical bands separate each overtake group.</p>
+  <p class="hsub" style="margin-bottom:8px">Clean laps (&lt;115s) sorted by clean on-track overtakes (high→low). Dots = rider colour. Dashed line = segment average. Step line = overtake count (right axis).</p>
+  <div class="ctrl">
+    <span class="lbl">RIDERS</span>
+    <span id="otlt-rtogs"></span>
+    &nbsp;
+    <span class="lbl">RACE TIME</span>
+    <span id="sLblOTLT" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillOTLT"></div><input type="range" id="dsMinOTLT" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxOTLT" min="0" max="24" value="24" step="0.5"></div>
+  </div>
   <div class="cwrap" style="height:360px"><canvas id="c_otlt"></canvas></div>
+  <div id="otlt-stats" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px"></div>
 </section>
 
 <section id="oiltemp">
@@ -528,7 +537,7 @@ const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
 let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49,77]),hiddenTeams2=new Set(),hiddenTeams2b=new Set(),hiddenTeams3=new Set(),hiddenTeams4=new Set(),hiddenTeams7=new Set(),showConn3=true,lapMin2=1,lapMax2=838,lapMin2b=1,lapMax2b=559,lapMin3=1,lapMax3=838,gapMode='raw',hiddenTeams5=new Set(),showAvg4=true,showAvg7=true;
-let filterSC=true,hiddenPOS=new Set(),showOT_ALL=true,showOT_NP=true;
+let filterSC=true,hiddenPOS=new Set(),showOT_ALL=true,showOT_NP=true,lapMinOTLT=1,lapMaxOTLT=838,hiddenRidersOTLT=new Set();
 
 function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
   SC_RANGES.forEach(([a,b])=>{
@@ -1726,102 +1735,102 @@ function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;cv
 
 const c_otlt=document.getElementById('c_otlt');
 const cx_otlt=c_otlt?c_otlt.getContext('2d'):null;
+function renderOTLTRiderToggles(){
+  const el=document.getElementById('otlt-rtogs');if(!el)return;
+  el.innerHTML=Object.keys(RC).map(r=>{
+    const short=r.split(' ')[0];
+    return `<span class="rtog" id="otlt_r_${short}" onclick="toggleOTLTRider('${r}')" style="border-color:${RC[r]}40"><span class="dot" style="background:${RC[r]}"></span>${short}</span>`;
+  }).join('');
+}
+function toggleOTLTRider(r){
+  hiddenRidersOTLT.has(r)?hiddenRidersOTLT.delete(r):hiddenRidersOTLT.add(r);
+  const short=r.split(' ')[0];
+  const el=document.getElementById('otlt_r_'+short);if(el)el.classList.toggle('off',hiddenRidersOTLT.has(r));
+  draw_otlt();
+}
+function renderOTLTStats(items,groups){
+  const el=document.getElementById('otlt-stats');if(!el)return;
+  const riders=Object.keys(RC).filter(r=>!hiddenRidersOTLT.has(r));
+  if(!riders.length||!groups.length){el.innerHTML='';return;}
+  const cells=[];
+  riders.forEach(r=>{
+    const rLaps=items.filter(d=>d.r===r);
+    const total=rLaps.length;
+    if(!total)return;
+    let html=`<div style="background:#181b28;border:1px solid #252a3a;border-radius:6px;padding:10px 12px;min-width:160px">`;
+    html+=`<div style="font-size:11px;font-weight:700;color:${RC[r]};margin-bottom:7px;letter-spacing:.04em">${r.split(' ')[0]}</div>`;
+    html+=`<div style="display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:10px">`;
+    groups.forEach(g=>{
+      const cnt=rLaps.filter(d=>d.ot===g.ot).length;
+      const pct=total>0?(cnt/total*100):0;
+      const barW=Math.round(pct);
+      const col=g.ot===0?'#374151':'rgba(34,211,238,0.7)';
+      html+=`<span style="color:#9aa3b8;white-space:nowrap">${g.ot}× overtake${g.ot!==1?'s':''}</span>`;
+      html+=`<div style="background:#252a3a;border-radius:3px;height:6px;overflow:hidden"><div style="width:${barW}%;height:100%;background:${col};border-radius:3px"></div></div>`;
+      html+=`<span style="color:#c0c8d8;white-space:nowrap;text-align:right">${cnt} <span style="color:#6b7280">${pct.toFixed(0)}%</span></span>`;
+    });
+    html+=`</div><div style="margin-top:6px;font-size:10px;color:#6b7280">${total} clean laps total</div></div>`;
+    cells.push(html);
+  });
+  el.innerHTML=cells.join('');
+}
 function draw_otlt(){
   if(!c_otlt||!cx_otlt)return;
   const W=c_otlt.width,H=c_otlt.height;if(!W||!H)return;
-  const P={l:52,r:52,t:20,b:36};
+  const P={l:52,r:52,t:24,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   cx_otlt.clearRect(0,0,W,H);cx_otlt.fillStyle='#12141c';cx_otlt.fillRect(0,0,W,H);
-  // Build clean laps joined with OT_NP
-  const items=DATA.filter(d=>d.t!==null&&d.t<115).map(d=>({lap:d.lap,t:d.t,r:d.r,ot:OT_NP[d.lap-1]||0}));
-  // Sort: descending OT, then ascending lap time within same OT
+  const items=DATA
+    .filter(d=>d.t!==null&&d.t<115&&d.lap>=lapMinOTLT&&d.lap<=lapMaxOTLT&&!hiddenRidersOTLT.has(d.r))
+    .map(d=>({lap:d.lap,t:d.t,r:d.r,ot:OT_NP[d.lap-1]||0}));
   items.sort((a,b)=>b.ot-a.ot||a.t-b.t);
-  if(!items.length)return;
-  const N=items.length;
-  const maxOT=items[0].ot;
-  // Y axes
-  const tMin=97,tMax=114;
-  const otMax=maxOT+0.5;
-  const pyL=t=>P.t+ph-(t-tMin)/(tMax-tMin)*ph;   // left: lap time
-  const pyR=v=>P.t+ph-(v/otMax)*ph;               // right: OT count
-  const pxI=i=>P.l+i/(N-1)*pw;
-  // OT group boundaries & shaded bands
-  const groupColors=['#1a1d2e','#1c2030','#1e2335','#21273d','#232b44','#262f4a','#293352'];
-  let groupStart=0;
-  const groups=[];
-  for(let i=1;i<=N;i++){
-    if(i===N||items[i].ot!==items[groupStart].ot){
-      groups.push({ot:items[groupStart].ot,start:groupStart,end:i-1});
-      groupStart=i;
-    }
+  if(!items.length){
+    cx_otlt.fillStyle='#555';cx_otlt.font='14px Segoe UI';cx_otlt.textAlign='center';
+    cx_otlt.fillText('No laps in selected range',W/2,H/2);
+    renderOTLTStats([],[]);return;
   }
-  // Draw group bands
+  const N=items.length,maxOT=items[0].ot;
+  const allT=items.map(d=>d.t);
+  const tMin=Math.max(96,Math.floor(Math.min(...allT))-1),tMax=Math.min(116,Math.ceil(Math.max(...allT))+1);
+  const otMax=Math.max(1,maxOT)+0.5;
+  const pyL=t=>P.t+ph-(t-tMin)/(tMax-tMin)*ph;
+  const pyR=v=>P.t+ph-(v/otMax)*ph;
+  const pxI=i=>N>1?P.l+i/(N-1)*pw:P.l+pw/2;
+  const step=N>1?(pxI(1)-pxI(0)):pw;
+  let gs=0;const groups=[];
+  for(let i=1;i<=N;i++){if(i===N||items[i].ot!==items[gs].ot){groups.push({ot:items[gs].ot,start:gs,end:i-1});gs=i;}}
+  const gx1=g=>pxI(g.start)-step/2;
+  const gx2=g=>pxI(g.end)+step/2;
   groups.forEach((g,gi)=>{
-    const x1=pxI(g.start),x2=g.end<N-1?pxI(g.end+1):pxI(g.end)+pw/N;
-    cx_otlt.fillStyle=gi%2===0?'rgba(255,255,255,0.02)':'rgba(34,211,238,0.03)';
-    cx_otlt.fillRect(x1,P.t,x2-x1,ph);
-    // Divider line
-    if(g.start>0){
-      cx_otlt.strokeStyle='rgba(255,255,255,0.12)';cx_otlt.lineWidth=1;cx_otlt.setLineDash([3,3]);
-      cx_otlt.beginPath();cx_otlt.moveTo(x1,P.t);cx_otlt.lineTo(x1,P.t+ph);cx_otlt.stroke();
-      cx_otlt.setLineDash([]);
-    }
-    // OT count label at top of band
-    if(g.ot>0){
-      const mx=(pxI(g.start)+( g.end<N-1?pxI(g.end+1):pxI(g.end)+pw/N))/2;
-      cx_otlt.fillStyle='rgba(34,211,238,0.6)';cx_otlt.font='bold 11px Segoe UI';cx_otlt.textAlign='center';
-      cx_otlt.fillText(g.ot+'×',mx,P.t+13);
-    }
+    const x1=gx1(g),x2=gx2(g);
+    cx_otlt.fillStyle=gi%2===0?'rgba(255,255,255,0.02)':'rgba(34,211,238,0.03)';cx_otlt.fillRect(x1,P.t,x2-x1,ph);
+    if(g.start>0){cx_otlt.strokeStyle='rgba(255,255,255,0.14)';cx_otlt.lineWidth=1;cx_otlt.setLineDash([3,3]);cx_otlt.beginPath();cx_otlt.moveTo(x1,P.t);cx_otlt.lineTo(x1,P.t+ph);cx_otlt.stroke();cx_otlt.setLineDash([]);}
+    const mx=(x1+x2)/2;
+    cx_otlt.fillStyle=g.ot===0?'rgba(150,160,180,0.5)':'rgba(34,211,238,0.75)';cx_otlt.font='bold 11px Segoe UI';cx_otlt.textAlign='center';cx_otlt.fillText(g.ot+'×',mx,P.t+14);
   });
-  // Left Y grid + labels (lap time)
   cx_otlt.strokeStyle='#252a3a';cx_otlt.lineWidth=1;
-  for(let t=Math.ceil(tMin);t<=tMax;t++){
-    const yy=pyL(t);
-    cx_otlt.beginPath();cx_otlt.moveTo(P.l,yy);cx_otlt.lineTo(W-P.r,yy);cx_otlt.stroke();
-    if(t%2===0||t===Math.ceil(tMin)||t===Math.floor(tMax)){
-      cx_otlt.fillStyle='#9aa3b8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='right';
-      const m=Math.floor(t/60),s=t%60;
-      cx_otlt.fillText((m>0?m+':':'')+(s<10&&m>0?'0':'')+s,P.l-4,yy+3);
-    }
+  for(let t=Math.ceil(tMin);t<=Math.floor(tMax);t++){
+    const yy=pyL(t);cx_otlt.beginPath();cx_otlt.moveTo(P.l,yy);cx_otlt.lineTo(W-P.r,yy);cx_otlt.stroke();
+    if(t%2===0){cx_otlt.fillStyle='#9aa3b8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='right';const m=Math.floor(t/60),s=t%60;cx_otlt.fillText((m>0?m+':':'')+(s<10&&m>0?'0':'')+s,P.l-4,yy+3);}
   }
-  // Right Y axis (OT count)
-  for(let v=0;v<=maxOT;v++){
-    const yy=pyR(v);
-    cx_otlt.fillStyle='rgba(34,211,238,0.7)';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';
-    cx_otlt.fillText(v,W-P.r+5,yy+3);
-  }
-  // Scatter dots
-  items.forEach((d,i)=>{
-    const xx=pxI(i),yy=pyL(d.t);
-    const col=RC[d.r]||'#ffffff';
-    cx_otlt.globalAlpha=0.7;
-    cx_otlt.fillStyle=col;
-    cx_otlt.beginPath();cx_otlt.arc(xx,yy,2.5,0,Math.PI*2);cx_otlt.fill();
-    cx_otlt.globalAlpha=1;
+  for(let v=0;v<=Math.ceil(otMax);v++){cx_otlt.fillStyle='rgba(34,211,238,0.65)';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';cx_otlt.fillText(v,W-P.r+5,pyR(v)+3);}
+  items.forEach((d,i)=>{const xx=pxI(i),yy=pyL(d.t);cx_otlt.globalAlpha=0.65;cx_otlt.fillStyle=RC[d.r]||'#fff';cx_otlt.beginPath();cx_otlt.arc(xx,yy,2.5,0,Math.PI*2);cx_otlt.fill();cx_otlt.globalAlpha=1;});
+  groups.forEach(g=>{
+    const seg=items.slice(g.start,g.end+1);
+    const avg=seg.reduce((s,d)=>s+d.t,0)/seg.length;
+    const yy=pyL(avg);const x1=gx1(g),x2=gx2(g);
+    cx_otlt.strokeStyle='rgba(255,255,255,0.8)';cx_otlt.lineWidth=1.5;cx_otlt.setLineDash([5,3]);
+    cx_otlt.beginPath();cx_otlt.moveTo(x1,yy);cx_otlt.lineTo(x2,yy);cx_otlt.stroke();cx_otlt.setLineDash([]);
+    cx_otlt.fillStyle='rgba(255,255,255,0.85)';cx_otlt.font='bold 9px Segoe UI';cx_otlt.textAlign='right';cx_otlt.fillText(avg.toFixed(3),x2-2,yy-3);
   });
-  // OT step line on right axis
-  cx_otlt.strokeStyle='rgba(34,211,238,0.85)';cx_otlt.lineWidth=2;
-  cx_otlt.beginPath();
-  items.forEach((d,i)=>{
-    const xx=pxI(i),yy=pyR(d.ot);
-    i===0?cx_otlt.moveTo(xx,yy):cx_otlt.lineTo(xx,yy);
-  });
-  cx_otlt.stroke();
-  // Axis labels
-  cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='11px Segoe UI';cx_otlt.textAlign='center';
-  cx_otlt.fillText('Laps sorted by overtake count (high → low)',P.l+pw/2,H-4);
-  cx_otlt.save();cx_otlt.translate(12,P.t+ph/2);cx_otlt.rotate(-Math.PI/2);
-  cx_otlt.fillStyle='#9aa3b8';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Lap time (s)',0,0);cx_otlt.restore();
-  cx_otlt.save();cx_otlt.translate(W-12,P.t+ph/2);cx_otlt.rotate(Math.PI/2);
-  cx_otlt.fillStyle='rgba(34,211,238,0.8)';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Overtakes',0,0);cx_otlt.restore();
-  // Rider legend
-  const riders=Object.keys(RC);let lx=P.l+10;
-  riders.forEach(r=>{
-    cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t+6,4,0,Math.PI*2);cx_otlt.fill();
-    cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';
-    const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t+10);
-    lx+=cx_otlt.measureText(name).width+22;
-  });
+  cx_otlt.strokeStyle='rgba(34,211,238,0.85)';cx_otlt.lineWidth=2;cx_otlt.beginPath();
+  items.forEach((d,i)=>{const xx=pxI(i),yy=pyR(d.ot);i===0?cx_otlt.moveTo(xx,yy):cx_otlt.lineTo(xx,yy);});cx_otlt.stroke();
+  cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='11px Segoe UI';cx_otlt.textAlign='center';cx_otlt.fillText('Laps sorted by clean overtake count (high → low)',P.l+pw/2,H-4);
+  cx_otlt.save();cx_otlt.translate(12,P.t+ph/2);cx_otlt.rotate(-Math.PI/2);cx_otlt.fillStyle='#9aa3b8';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Lap time (s)',0,0);cx_otlt.restore();
+  cx_otlt.save();cx_otlt.translate(W-12,P.t+ph/2);cx_otlt.rotate(Math.PI/2);cx_otlt.fillStyle='rgba(34,211,238,0.8)';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Overtakes',0,0);cx_otlt.restore();
+  const riders=Object.keys(RC).filter(r=>!hiddenRidersOTLT.has(r));let lx=P.l+10;
+  riders.forEach(r=>{cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t-10,4,0,Math.PI*2);cx_otlt.fill();cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t-6);lx+=cx_otlt.measureText(name).width+22;});
+  renderOTLTStats(items,groups);
 }
 function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;c_otlt.width=(wrap.clientWidth||900)-20;c_otlt.height=360;draw_otlt();}
 
@@ -1831,7 +1840,8 @@ renderTeamToggles();
 window.addEventListener('resize',resize);
 requestAnimationFrame(()=>{
   renderRiders();renderToggles2();renderToggles2b();renderToggles3();renderToggles4();renderToggles5();renderToggles7();
-  resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();
+  resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();renderOTLTRiderToggles();
+  initDualSlider('dsMinOTLT','dsMaxOTLT','dsFillOTLT','sLblOTLT',(a,b)=>{lapMinOTLT=Math.max(1,Math.round(a*838/24));lapMaxOTLT=Math.min(838,b>=24?838:Math.round(b*838/24));draw_otlt();});
   initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=Math.max(1,Math.round(a*838/24));lapMax2=Math.min(838,b>=24?838:Math.round(b*838/24));draw2();});
   initDualSlider('dsMin2b','dsMax2b','dsFill2b','sLbl2b',(a,b)=>{lapMin2b=Math.max(1,Math.round(a*838/24));lapMax2b=Math.min(838,b>=24?838:Math.round(b*838/24));draw2b();});
   initDualSlider('dsMin3','dsMax3','dsFill3','sLbl3',(a,b)=>{lapMin3=Math.max(1,Math.round(a*838/24));lapMax3=Math.min(838,b>=24?838:Math.round(b*838/24));draw3();});
