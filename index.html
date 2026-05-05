@@ -632,6 +632,7 @@ function draw3(){
     const tSts=[];let tBuf=[];
     td.forEach(([l,t])=>{if(t===null){if(tBuf.length){tSts.push([...tBuf]);tBuf=[];}}else tBuf.push([l,t]);});
     if(tBuf.length)tSts.push([...tBuf]);
+    const tPts=[];
     tSts.forEach(laps=>{
       if(laps.length<2)return;
       const clean=laps.slice(1).filter(([l,t])=>t<105);
@@ -641,14 +642,20 @@ function draw3(){
       const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
       cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=.65;cx3.setLineDash([4,3]);
       cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();
-      cx3.setLineDash([]);cx3.fillStyle=TC[team];cx3.font='10px Segoe UI';cx3.textAlign='right';
-      cx3.fillText(TNAMES[team]+' '+fmt(avg),x2-2,yy+9);cx3.globalAlpha=1;
+      cx3.setLineDash([]);cx3.globalAlpha=1;
+      tPts.push({x:x2,y:yy});
     });
+    if(tPts.length>1){
+      cx3.strokeStyle=TC[team];cx3.lineWidth=1;cx3.globalAlpha=.5;
+      cx3.beginPath();tPts.forEach((p,i)=>i===0?cx3.moveTo(p.x,p.y):cx3.lineTo(p.x,p.y));
+      cx3.stroke();cx3.globalAlpha=1;
+    }
   });
   // #38 stint avgs — white, solid
   const stints=[];let sLaps=[];
   DATA.forEach(d=>{if(d.t===null){if(sLaps.length){stints.push([...sLaps]);sLaps=[];}}else sLaps.push({...d});});
   if(sLaps.length)stints.push([...sLaps]);
+  const pts38=[];
   stints.forEach(laps=>{
     if(!laps.length)return;
     const clean=laps.slice(1).filter(d=>d.t<105);if(!clean.length)return;
@@ -656,10 +663,14 @@ function draw3(){
     const yy=py(avg);if(yy<P.t||yy>H3-P.b)return;
     const x1=px(laps[0].lap),x2=px(laps[laps.length-1].lap);
     cx3.strokeStyle='#ffffff';cx3.lineWidth=3;cx3.globalAlpha=.9;cx3.setLineDash([]);
-    cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();
-    cx3.globalAlpha=.8;cx3.fillStyle='#ffffff';cx3.font='bold 11px Segoe UI';cx3.textAlign='right';
-    cx3.fillText(fmt(avg),x2-2,yy-3);cx3.globalAlpha=1;
+    cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();cx3.globalAlpha=1;
+    pts38.push({x:x2,y:yy});
   });
+  if(pts38.length>1){
+    cx3.strokeStyle='#ffffff';cx3.lineWidth=1;cx3.globalAlpha=.5;
+    cx3.beginPath();pts38.forEach((p,i)=>i===0?cx3.moveTo(p.x,p.y):cx3.lineTo(p.x,p.y));
+    cx3.stroke();cx3.globalAlpha=1;
+  }
 }
 
 function resize3(){const wrap=cv3.parentElement;cv3.width=(wrap.clientWidth||900)-20;cv3.height=630;draw3();}
