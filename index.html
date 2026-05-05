@@ -650,7 +650,7 @@ function draw3(){
       const avg=clean.reduce((s,[l,t])=>s+t,0)/clean.length;
       const yy=py(avg);if(yy<P.t||yy>H3-P.b)return;
       const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
-      cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=.65;
+      cx3.strokeStyle=TC[team];cx3.lineWidth=6;cx3.globalAlpha=.65;
       cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();
       cx3.globalAlpha=1;
       tSegs.push({x1,x2,yy});
@@ -673,8 +673,7 @@ function draw3(){
     const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
     const yy=py(avg);if(yy<P.t||yy>H3-P.b)return;
     const x1=px(laps[0].lap),x2=px(laps[laps.length-1].lap);
-    cx3.fillStyle='#ffffff';cx3.globalAlpha=.2;cx3.fillRect(x1,yy,x2-x1,H3-P.b-yy);
-    cx3.strokeStyle='#ffffff';cx3.lineWidth=3;cx3.globalAlpha=.9;cx3.setLineDash([]);
+    cx3.strokeStyle='#ffffff';cx3.lineWidth=6;cx3.globalAlpha=.9;cx3.setLineDash([]);
     cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();cx3.globalAlpha=1;
     segs38.push({x1,x2,yy});
   });
