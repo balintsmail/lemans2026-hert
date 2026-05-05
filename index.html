@@ -16,7 +16,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);backgrou
 .nlinks a{padding:5px 10px;border-radius:5px;color:var(--tx2);font-size:.76rem;transition:background .15s}
 .nlinks a:hover{background:var(--bg3);color:var(--tx)}
 .nbadge{margin-left:auto;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:var(--green);font-size:.72rem;font-weight:700;padding:4px 12px;border-radius:20px}
-section{padding:72px 24px 48px;max-width:1060px;margin:0 auto}
+section{padding:72px 40px 48px}
 section:first-of-type{padding-top:calc(var(--nav-h) + 36px)}
 .stag{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:16px}
 h1{font-size:1.9rem;font-weight:700;color:#fff;margin-bottom:6px}
@@ -80,6 +80,7 @@ tr.self td:first-child{border-left:2px solid var(--green);padding-left:10px}
 footer{text-align:center;padding:24px;font-size:.7rem;color:var(--tx3);border-top:1px solid var(--bd);margin-top:40px}
 footer a:hover{color:var(--tx2)}
 @media(max-width:600px){.nlinks{display:none}nav{padding:0 16px}section{padding:68px 16px 36px}}
+@media(min-width:1400px){section{padding:72px 60px 48px}}
 </style>
 </head>
 <body>
@@ -420,6 +421,3 @@ renderToggles();
 renderTeamToggles();
 window.addEventListener('resize',resize);
 requestAnimationFrame(()=>{renderRiders();resize();});
-</script>
-</body>
-</html>
