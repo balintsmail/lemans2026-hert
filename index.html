@@ -154,10 +154,17 @@ footer a:hover{color:var(--tx2)}
   <p class="stag">Comparison · all 838 laps</p>
   <h2>Stint Average vs Other Teams</h2>
   <p class="hsub" style="margin-bottom:12px">Stint averages by lap position. #38 in white, comparison teams in colour. No individual laps shown.</p>
+  <div class="ctrl">
+    <span class="lbl">COMPARE</span>
+    <span id="ttogs3"></span>
+    &nbsp;
+    <span class="lbl">OVERLAY</span>
+    <button id="bConn3" class="on" onclick="toggleConn3()">Connectors</button>
+  </div>
   <div class="cwrap"><canvas id="c3"></canvas></div>
   <div class="lgnd">
     <div class="li"><span style="display:inline-block;width:20px;height:2px;background:#fff;margin-right:4px;vertical-align:middle"></span>#38 HERT stint avg</div>
-    <div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:2px dashed rgba(200,200,200,.5);margin-right:4px;vertical-align:middle"></span>Comparison stint avg</div>
+    <div class="li"><span style="display:inline-block;width:20px;height:2px;background:rgba(200,200,200,.5);margin-right:4px;vertical-align:middle"></span>Comparison stint avg</div>
   </div>
 </section>
 
@@ -312,7 +319,7 @@ function renderRiders(){
 const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
-let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49]),hiddenTeams2=new Set();
+let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49]),hiddenTeams2=new Set(),hiddenTeams3=new Set(),showConn3=true;
 
 function resize(){
   const wrap=cv.parentElement;
@@ -453,6 +460,9 @@ function toggleAvg(){showAvg=!showAvg;document.getElementById('bAvg').classList.
 function toggleRider(r){hidden.has(r)?hidden.delete(r):hidden.add(r);const _off=hidden.has(r);['rt_'+r,'rt2_'+r].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw();draw2();}
 function renderToggles(){document.getElementById('rtogs').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');}
 function renderTeamToggles(){const _TN={9:'#9 Tecmas',25:'#25 Etoil',41:'#41 Dafy',49:'#49 Revo Aprilia'};document.getElementById('ttogs').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>${_TN[+t]||'#'+t}</span>`).join('');}
+function toggleTeam3(t){hiddenTeams3.has(t)?hiddenTeams3.delete(t):hiddenTeams3.add(t);const _off=hiddenTeams3.has(t);const el=document.getElementById('tt3_'+t);if(el)el.classList.toggle('off',_off);draw3();}
+function toggleConn3(){showConn3=!showConn3;document.getElementById('bConn3').classList.toggle('on',showConn3);draw3();}
+function renderToggles3(){document.getElementById('ttogs3').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog" id="tt3_${t}" onclick="toggleTeam3(${t})"><span class="dot" style="background:${col}"></span>${TNAMES[+t]||'#'+t}</span>`).join('');}
 function toggleTeam2(t){hiddenTeams2.has(t)?hiddenTeams2.delete(t):hiddenTeams2.add(t);const _off=hiddenTeams2.has(t);['tt2_'+t].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw2();}
 function toggleTeam(t){hiddenTeams.has(t)?hiddenTeams.delete(t):hiddenTeams.add(t);const _off=hiddenTeams.has(t);['tt_'+t,'tt2_'+t].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw();draw2();}
 
@@ -628,7 +638,7 @@ function draw3(){
   });
   // team stint avgs — all teams, always visible
   Object.entries(TRAW).forEach(([ts,td])=>{
-    const team=+ts;
+    const team=+ts;if(hiddenTeams3.has(team))return;
     const tSts=[];let tBuf=[];
     td.forEach(([l,t])=>{if(t===null){if(tBuf.length){tSts.push([...tBuf]);tBuf=[];}}else tBuf.push([l,t]);});
     if(tBuf.length)tSts.push([...tBuf]);
@@ -640,12 +650,12 @@ function draw3(){
       const avg=clean.reduce((s,[l,t])=>s+t,0)/clean.length;
       const yy=py(avg);if(yy<P.t||yy>H3-P.b)return;
       const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
-      cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=.65;cx3.setLineDash([4,3]);
+      cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=.65;
       cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();
-      cx3.setLineDash([]);cx3.globalAlpha=1;
+      cx3.globalAlpha=1;
       tSegs.push({x1,x2,yy});
     });
-    if(tSegs.length>1){
+    if(showConn3&&tSegs.length>1){
       cx3.strokeStyle=TC[team];cx3.lineWidth=1;cx3.globalAlpha=.5;
       cx3.beginPath();
       for(let i=0;i<tSegs.length-1;i++){cx3.moveTo(tSegs[i].x2,tSegs[i].yy);cx3.lineTo(tSegs[i+1].x1,tSegs[i+1].yy);}
@@ -667,7 +677,7 @@ function draw3(){
     cx3.beginPath();cx3.moveTo(x1,yy);cx3.lineTo(x2,yy);cx3.stroke();cx3.globalAlpha=1;
     segs38.push({x1,x2,yy});
   });
-  if(segs38.length>1){
+  if(showConn3&&segs38.length>1){
     cx3.strokeStyle='#ffffff';cx3.lineWidth=1;cx3.globalAlpha=.5;
     cx3.beginPath();
     for(let i=0;i<segs38.length-1;i++){cx3.moveTo(segs38[i].x2,segs38[i].yy);cx3.lineTo(segs38[i+1].x1,segs38[i+1].yy);}
@@ -682,7 +692,7 @@ renderStandings();
 renderToggles();
 renderTeamToggles();
 window.addEventListener('resize',resize);
-requestAnimationFrame(()=>{renderRiders();renderToggles2();resize();resize2();resize3();});
+requestAnimationFrame(()=>{renderRiders();renderToggles2();renderToggles3();resize();resize2();resize3();});
 </script>
 </body>
 </html>
