@@ -439,7 +439,7 @@ function setFilter(f){filter=f;document.getElementById('bAll').classList.toggle(
 function toggleAvg(){showAvg=!showAvg;document.getElementById('bAvg').classList.toggle('on',showAvg);draw();}
 function toggleRider(r){hidden.has(r)?hidden.delete(r):hidden.add(r);const _off=hidden.has(r);['rt_'+r,'rt2_'+r].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw();draw2();}
 function renderToggles(){document.getElementById('rtogs').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');}
-function renderTeamToggles(){document.getElementById('ttogs').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>#${t}</span>`).join('');}
+function renderTeamToggles(){const _TN={9:'#9 Tecmas',25:'#25 Etoil',41:'#41 Dafy',49:'#49 Revo Aprilia'};document.getElementById('ttogs').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>${_TN[+t]||'#'+t}</span>`).join('');}
 function toggleTeam(t){hiddenTeams.has(t)?hiddenTeams.delete(t):hiddenTeams.add(t);const _off=hiddenTeams.has(t);['tt_'+t,'tt2_'+t].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('off',_off);});draw();draw2();}
 
 // ── STINT RANKING CHART ───────────────────────────────────────────────────────
@@ -571,7 +571,7 @@ cv2.addEventListener('mouseleave',()=>document.getElementById('tip').style.displ
 function resize2(){const wrap=cv2.parentElement;cv2.width=(wrap.clientWidth||900)-20;cv2.height=510;draw2();}
 function renderToggles2(){
   document.getElementById('rtogs2').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt2_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');
-  document.getElementById('ttogs2').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt2_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>#${t}</span>`).join('');
+  const _TN={9:'#9 Tecmas',25:'#25 Etoil',41:'#41 Dafy',49:'#49 Revo Aprilia'};document.getElementById('ttogs2').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog off" id="tt2_${t}" onclick="toggleTeam(${t})"><span class="dot" style="background:${col}"></span>${_TN[+t]||'#'+t}</span>`).join('');
   document.getElementById('lgnd2').innerHTML=RIDERS.map(r=>`<div class="li"><div class="ld" style="background:${RC[r]}"></div>${r.split(' ').pop()}</div>`).join('')+Object.entries(TC).map(([t,col])=>`<div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:1.5px dashed ${col};opacity:.7;margin-right:4px;vertical-align:middle"></span>#${t}</div>`).join('');
 }
 
