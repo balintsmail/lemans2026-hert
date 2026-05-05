@@ -203,7 +203,7 @@ footer a:hover{color:var(--tx2)}
 
 <section id="stints2">
   <p class="stag">Performance · ranked by pace · first 16h</p>
-  <h2>Stint ranking (early race)</h2>
+  <h2>Stint ranking (0h – 16h)</h2>
   <p class="hsub" style="margin-bottom:12px">Same as above — defaulting to 0–16h. Each point = one stint, ordered fastest→slowest.</p>
   <div class="ctrl">
     <span class="lbl">RIDERS</span>
@@ -923,21 +923,34 @@ function draw2b(){
     cx6.fillText(mm+':'+(ss<10?'0':'')+ss,PAD2.l-5,yy+4);
   }
   hitmap6=[];
-  series.forEach((s,si)=>{
-    const n=s.pts.length;
-    s.pts.forEach((pt,i)=>{
-      const x=pxF(i,n),y=pyF(pt.avg);
-      if(s.kind==='combined'){
-        cx6.beginPath();cx6.arc(x,y,5,0,Math.PI*2);
-        cx6.fillStyle=pt.color||'#aaa';cx6.globalAlpha=0.9;cx6.fill();
-        cx6.globalAlpha=1;cx6.strokeStyle='rgba(0,0,0,.3)';cx6.lineWidth=1;cx6.stroke();
-      } else {
-        cx6.beginPath();cx6.arc(x,y,4,0,Math.PI*2);
-        cx6.fillStyle=s.color;cx6.globalAlpha=0.75;cx6.fill();
-        cx6.globalAlpha=1;cx6.strokeStyle='rgba(0,0,0,.3)';cx6.lineWidth=1;cx6.stroke();
-      }
-      hitmap6.push({x,y,pt,series:s});
+  series.forEach(s=>{
+    const isCombined=s.kind==='combined',isTeam=s.kind==='team';
+    const xp=i=>s.pts.length===1?PAD2.l+pw2/2:pxF(i,s.pts.length);
+    // connecting line
+    cx6.strokeStyle=isCombined?'#ffffff':s.color;
+    cx6.lineWidth=3;
+    cx6.globalAlpha=isCombined?1:0.55;
+    cx6.setLineDash(isTeam?[4,3]:[]);
+    cx6.beginPath();
+    s.pts.forEach((p,i)=>{const xx=xp(i),yy=pyF(p.avg);i===0?cx6.moveTo(xx,yy):cx6.lineTo(xx,yy);});
+    cx6.stroke();cx6.setLineDash([]);cx6.globalAlpha=1;
+    // dots
+    s.pts.forEach((p,i)=>{
+      const xx=xp(i),yy=pyF(p.avg);
+      const dotColor=isCombined?p.color:s.color;
+      cx6.beginPath();cx6.arc(xx,yy,isCombined?6:4,0,Math.PI*2);
+      cx6.fillStyle=dotColor;cx6.fill();
+      cx6.strokeStyle='rgba(0,0,0,.4)';cx6.lineWidth=1;cx6.stroke();
+      hitmap6.push({x:xx,y:yy,lbl:isCombined?p.lbl:s.lbl,color:dotColor,avg:p.avg,rank:i+1,n:p.n,cn:p.cn});
     });
+    // right-side label for teams
+    if(isTeam){
+      const last=s.pts[s.pts.length-1];
+      const lx=xp(s.pts.length-1);
+      cx6.fillStyle=s.color;cx6.font='10px Segoe UI';
+      cx6.globalAlpha=0.7;cx6.textAlign='left';
+      cx6.fillText(s.lbl,lx+8,pyF(last.avg)+3);cx6.globalAlpha=1;
+    }
   });
   cx6.fillStyle='#c0c8d8';cx6.font='11px Segoe UI';cx6.textAlign='center';
   cx6.fillText('Stint rank (fastest → slowest)',PAD2.l+pw2/2,H2-4);
