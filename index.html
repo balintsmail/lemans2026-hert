@@ -43,14 +43,14 @@ button.on{background:#1b2c48;border-color:#2d5fa0;color:#7fb8f8}
 .cwrap{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:10px;position:relative;height:660px}
 canvas{display:block;cursor:crosshair;width:100%;height:100%}
 .lgnd{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
-.li{display:flex;align-items:center;gap:5px;font-size:.66rem;color:var(--tx3)}
+.li{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2)}
 .ld{width:8px;height:8px;border-radius:50%}
 #tip{position:fixed;pointer-events:none;display:none;z-index:200;background:rgba(12,14,22,.96);border:1px solid #2a2e42;border-radius:8px;padding:10px 14px;font-size:.74rem;min-width:145px}
 .tl{font-size:1rem;font-weight:700;color:#fff}.tr{color:var(--tx2);margin-top:2px}.tt{color:#7dd3fc;font-weight:600;margin-top:4px}.tn{color:#f59e0b;font-size:.68rem;margin-top:3px}
 .sctrl{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .stwrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:.8rem}
-th{text-align:left;padding:8px 12px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);border-bottom:1px solid var(--bd);cursor:pointer;white-space:nowrap;user-select:none}
+th{text-align:left;padding:8px 12px;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2);border-bottom:1px solid var(--bd);cursor:pointer;white-space:nowrap;user-select:none}
 th:hover{color:var(--tx2)}
 td{padding:10px 12px;border-bottom:1px solid rgba(30,33,48,.6)}
 tr:last-child td{border-bottom:none}
@@ -300,20 +300,20 @@ function draw(){
   const py=t=>PAD.t+ph-(t-yMin)/(yMax-yMin)*ph;
   cx.clearRect(0,0,W,H);
   cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
-  cx.strokeStyle='#191c28';cx.lineWidth=1;
+  cx.strokeStyle='#252a3a';cx.lineWidth=1;
   for(let y=Math.ceil(yMin);y<=yMax;y++){
     const yy=py(y);
     cx.beginPath();cx.moveTo(PAD.l,yy);cx.lineTo(W-PAD.r,yy);cx.stroke();
-    cx.fillStyle='#444';cx.font='10px Segoe UI';cx.textAlign='right';
+    cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';
     cx.fillText(fmt(y),PAD.l-5,yy+3);
   }
   for(let x=100;x<=838;x+=100){
     const xx=px(x);
     cx.beginPath();cx.moveTo(xx,PAD.t);cx.lineTo(xx,H-PAD.b);cx.stroke();
-    cx.fillStyle='#444';cx.font='10px Segoe UI';cx.textAlign='center';
+    cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='center';
     cx.fillText(x,xx,H-PAD.b+14);
   }
-  cx.fillStyle='#555';cx.font='10px Segoe UI';cx.textAlign='center';
+  cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';
   cx.fillText('Lap',PAD.l+pw/2,H-4);
   cx.save();cx.translate(12,PAD.t+ph/2);cx.rotate(-Math.PI/2);cx.fillText('Lap Time',0,0);cx.restore();
   DATA.filter(d=>d.t===null).forEach(d=>{
@@ -336,7 +336,7 @@ function draw(){
       const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
       cx.strokeStyle=TC[team];cx.lineWidth=1.5;cx.globalAlpha=.55;cx.setLineDash([4,3]);
       cx.beginPath();cx.moveTo(x1,yy);cx.lineTo(x2,yy);cx.stroke();
-      cx.setLineDash([]);cx.fillStyle=TC[team];cx.font='8px Segoe UI';cx.textAlign='right';
+      cx.setLineDash([]);cx.fillStyle=TC[team];cx.font='10px Segoe UI';cx.textAlign='right';
       cx.fillText('#'+team+' '+fmt(avg),x2-2,yy+9);cx.globalAlpha=1;
     });
   });
@@ -352,7 +352,7 @@ function draw(){
     const x1=px(laps[0].lap),x2=px(laps[laps.length-1].lap);
     cx.strokeStyle=RC[rider];cx.lineWidth=2;cx.globalAlpha=.85;cx.setLineDash([]);
     cx.beginPath();cx.moveTo(x1,yy);cx.lineTo(x2,yy);cx.stroke();
-    cx.globalAlpha=.75;cx.fillStyle=RC[rider];cx.font='bold 9px Segoe UI';cx.textAlign='right';
+    cx.globalAlpha=.75;cx.fillStyle=RC[rider];cx.font='bold 11px Segoe UI';cx.textAlign='right';
     cx.fillText(fmt(avg),x2-2,yy-3);cx.globalAlpha=1;
   });
   if(showAvg){
