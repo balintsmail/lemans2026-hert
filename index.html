@@ -479,7 +479,8 @@ function buildStintSeries(){
       const avg=clean.reduce((s,[l,t])=>s+t,0)/clean.length;
       return{avg,n:laps.length,cn:clean.length};
     }).filter(Boolean).sort((a,b)=>a.avg-b.avg);
-    if(pts.length)series.push({lbl:'#'+team,color:TC[team],pts,kind:'team'});
+    const TN={9:'#9 Tecmas',25:'#25 Etoil',41:'#41 Dafy',49:'#49 Revo Aprilia'};
+    if(pts.length)series.push({lbl:TN[team]||'#'+team,color:TC[team],pts,kind:'team'});
   });
   return series;
 }
@@ -524,9 +525,9 @@ function draw2(){
     const isCombined=s.kind==='combined',isTeam=s.kind==='team';
     const xp=i=>s.pts.length===1?PAD2.l+pw2/2:xOf(i+1);
     // connecting line
-    cx2.strokeStyle=isCombined?'rgba(200,210,230,0.2)':s.color;
-    cx2.lineWidth=isCombined?1.5:1.5;
-    cx2.globalAlpha=isCombined?1:0.5;
+    cx2.strokeStyle=isCombined?'#ffffff':s.color;
+    cx2.lineWidth=isCombined?3:3;
+    cx2.globalAlpha=isCombined?1:0.55;
     cx2.setLineDash(isTeam?[4,3]:[]);
     cx2.beginPath();
     s.pts.forEach((p,i)=>{const xx=xp(i),yy=yOf(p.avg);i===0?cx2.moveTo(xx,yy):cx2.lineTo(xx,yy);});
