@@ -449,24 +449,21 @@ let hitmap2=[];
 
 function buildStintSeries(){
   const series=[];
-  // #38 riders
-  RIDERS.forEach(r=>{
-    if(hidden.has(r))return;
-    const stints=[];let buf=[];
-    DATA.forEach(d=>{
-      if(d.t===null){if(buf.length){stints.push([...buf]);buf=[];}}
-      else if(d.r===r)buf.push(d);
-      else{if(buf.length){stints.push([...buf]);buf=[];}}
-    });
-    if(buf.length)stints.push([...buf]);
-    const pts=stints.map(laps=>{
-      const clean=laps.slice(1).filter(d=>d.t<105);
-      if(!clean.length)return null;
-      const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
-      return{avg,n:laps.length,cn:clean.length};
-    }).filter(Boolean).sort((a,b)=>a.avg-b.avg);
-    if(pts.length)series.push({lbl:r.split(' ').pop(),color:RC[r],pts,kind:'rider'});
+  // #38 combined — all riders in one series, per-point color
+  const allBuf=[];let buf=[];
+  DATA.forEach(d=>{
+    if(d.t===null){if(buf.length){allBuf.push([...buf]);buf=[];}}
+    else buf.push(d);
   });
+  if(buf.length)allBuf.push([...buf]);
+  const pts38=allBuf.map(laps=>{
+    if(hidden.has(laps[0].r))return null;
+    const clean=laps.slice(1).filter(d=>d.t<105);
+    if(!clean.length)return null;
+    const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
+    return{avg,n:laps.length,cn:clean.length,color:RC[laps[0].r],lbl:laps[0].r.split(' ').pop()};
+  }).filter(Boolean).sort((a,b)=>a.avg-b.avg);
+  if(pts38.length)series.push({lbl:'#38',color:'rgba(200,210,230,0.2)',pts:pts38,kind:'combined'});
   // comparison teams
   Object.entries(TRAW).forEach(([ts,td])=>{
     const team=+ts;if(hiddenTeams.has(team))return;
@@ -524,29 +521,33 @@ function draw2(){
   cx2.save();cx2.translate(12,PAD2.t+ph2/2);cx2.rotate(-Math.PI/2);cx2.fillStyle='#c0c8d8';cx2.font='11px Segoe UI';cx2.fillText('Avg Lap Time',0,0);cx2.restore();
   hitmap2=[];
   series.forEach(s=>{
-    const isRider=s.kind==='rider';
+    const isCombined=s.kind==='combined',isTeam=s.kind==='team';
+    const xp=i=>s.pts.length===1?PAD2.l+pw2/2:xOf(i+1);
     // connecting line
-    cx2.strokeStyle=s.color;cx2.lineWidth=isRider?2.5:1.5;
-    cx2.globalAlpha=isRider?.85:.5;cx2.setLineDash(isRider?[]:[4,3]);
+    cx2.strokeStyle=isCombined?'rgba(200,210,230,0.2)':s.color;
+    cx2.lineWidth=isCombined?1.5:1.5;
+    cx2.globalAlpha=isCombined?1:0.5;
+    cx2.setLineDash(isTeam?[4,3]:[]);
     cx2.beginPath();
-    s.pts.forEach((p,i)=>{
-      const xx=s.pts.length===1?PAD2.l+pw2/2:xOf(i+1),yy=yOf(p.avg);
-      i===0?cx2.moveTo(xx,yy):cx2.lineTo(xx,yy);
-    });
+    s.pts.forEach((p,i)=>{const xx=xp(i),yy=yOf(p.avg);i===0?cx2.moveTo(xx,yy):cx2.lineTo(xx,yy);});
     cx2.stroke();cx2.setLineDash([]);cx2.globalAlpha=1;
     // dots
     s.pts.forEach((p,i)=>{
-      const xx=s.pts.length===1?PAD2.l+pw2/2:xOf(i+1),yy=yOf(p.avg);
-      cx2.beginPath();cx2.arc(xx,yy,isRider?5:4,0,Math.PI*2);
-      cx2.fillStyle=s.color;cx2.fill();
-      cx2.strokeStyle='rgba(0,0,0,.5)';cx2.lineWidth=1;cx2.stroke();
-      hitmap2.push({x:xx,y:yy,lbl:s.lbl,color:s.color,avg:p.avg,rank:i+1,n:p.n,cn:p.cn,total:s.pts.length});
+      const xx=xp(i),yy=yOf(p.avg);
+      const dotColor=isCombined?p.color:s.color;
+      cx2.beginPath();cx2.arc(xx,yy,isCombined?6:4,0,Math.PI*2);
+      cx2.fillStyle=dotColor;cx2.fill();
+      cx2.strokeStyle='rgba(0,0,0,.4)';cx2.lineWidth=1;cx2.stroke();
+      hitmap2.push({x:xx,y:yy,lbl:isCombined?p.lbl:s.lbl,color:dotColor,avg:p.avg,rank:i+1,n:p.n,cn:p.cn,total:s.pts.length});
     });
-    // label on right
-    const last=s.pts[s.pts.length-1];
-    const lx=s.pts.length===1?PAD2.l+pw2/2:xOf(s.pts.length);
-    cx2.fillStyle=s.color;cx2.font=isRider?'bold 10px Segoe UI':'10px Segoe UI';
-    cx2.textAlign='left';cx2.fillText(s.lbl,lx+8,yOf(last.avg)+3);
+    // right-side label (teams only; #38 uses legend)
+    if(isTeam){
+      const last=s.pts[s.pts.length-1];
+      const lx=s.pts.length===1?PAD2.l+pw2/2:xOf(s.pts.length);
+      cx2.fillStyle=s.color;cx2.font='10px Segoe UI';
+      cx2.globalAlpha=0.7;cx2.textAlign='left';
+      cx2.fillText(s.lbl,lx+8,yOf(last.avg)+3);cx2.globalAlpha=1;
+    }
   });
 }
 
