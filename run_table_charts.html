@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BMW EWC Le Mans 2026 – Run Table Charts</title>
+<style>
+  :root{--bg:#0c0e16;--bg2:#12141c;--bg3:#1a1d2a;--bd:#2a2e42;--tx:#e8eaf0;--tx2:#9aa3b8;--green:#4ade80;--amber:#fbbf24;--teal:#22d3ee;--red:#f87171;--purple:#a78bfa;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',Arial,sans-serif;font-size:14px;padding:28px 32px;}
+  h1{font-size:1.3rem;font-weight:700;margin-bottom:4px;color:var(--tx);}
+  .subtitle{color:var(--tx2);font-size:.82rem;margin-bottom:28px;}
+  .section{margin-bottom:36px;}
+  h2{font-size:.95rem;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;}
+  .card{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px 20px;}
+  canvas{display:block;width:100%;height:auto;}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;}
+  .li{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2);}
+  .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .dash{width:18px;height:2px;flex-shrink:0;}
+  .note{font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic;}
+  .interp-note{font-size:.72rem;color:var(--amber);margin-top:6px;}
+</style>
+</head>
+<body>
+
+<h1>BMW EWC · Le Mans 2026 · Race Run Table</h1>
+<p class="subtitle">14 April 2026 · 15:00 → 03:55 · Stint 1–14</p>
+
+<div class="section">
+  <h2>Weather — Air Temp · Track Temp · Wind Speed</h2>
+  <div class="card">
+    <canvas id="c1" height="300"></canvas>
+    <div class="legend">
+      <div class="li"><div class="dot" style="background:#f87171"></div>Air Temp (°C)</div>
+      <div class="li"><div class="dot" style="background:#fb923c"></div>Track Temp (°C)</div>
+      <div class="li"><div class="dash" style="background:#22d3ee"></div>Wind Speed km/h (right axis)</div>
+      <div class="li"><div class="dot" style="background:#fbbf24;opacity:.5;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated values</div>
+    </div>
+    <p class="interp-note">⚠ Interpolated: Air temp S7 (14.5°C), S9 (11.5°C) · Wind speed S2 (16.3), S3 (16.7), S7 (15), S8 (14), S9 (13) — online weather data unavailable (network restricted)</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Tyre Pressures — End of Stint (bar)</h2>
+  <div class="card">
+    <canvas id="c2" height="300"></canvas>
+    <div class="legend">
+      <div class="li"><div class="dot" style="background:#4ade80"></div>Front End Pressure (bar)</div>
+      <div class="li"><div class="dot" style="background:#a78bfa"></div>Rear End Pressure (bar)</div>
+    </div>
+    <p class="note">Only stints with recorded end pressures shown. Front Start S1 = 2.30 bar · Rear Start S1 = 1.40 bar</p>
+  </div>
+</div>
+
+<div class="section">
+  <h2>Fuel Out — Remaining in Tank at Pit Stop (L)</h2>
+  <div class="card">
+    <canvas id="c3" height="280"></canvas>
+    <div class="legend">
+      <div class="li"><div class="dot" style="background:#fbbf24"></div>Fuel Out (L)</div>
+      <div class="li"><div class="dash" style="background:#4ade80"></div>Fuel Consumed (L, right axis)</div>
+    </div>
+    <p class="note">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = ran longer on tank.</p>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+const STINTS  = ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12','S13','S14'];
+const TIMES   = ['15:00','15:50','16:50','17:50','18:50','19:50','20:50','21:50','22:50','23:50','00:55','01:55','02:55','03:55'];
+const RIDERS  = ['Bálint','Loris','Máté','Jan','Bálint','Loris','Máté','Bálint','Jan','Loris','Máté','Bálint','Jan','Loris'];
+
+// Weather (interpolated values flagged)
+const AIR_TEMP   = [18,19,19,18,17,16,14.5,13,11.5,10,9,8,7,7];
+const AIR_INTERP = [false,false,false,false,false,false,true,false,true,false,false,false,false,false];
+const TRACK_TEMP = [25,25,26,24,21,21,18,17,14,13.6,12.3,12.4,12.2,11];
+const WIND       = [16,16.3,16.7,17,16,16,15,14,13,12,11,9,8,6];
+const WIND_INTERP= [false,true,true,false,false,false,true,true,true,false,false,false,false,false];
+
+// Tyre pressures (NaN = not recorded)
+const F_END = [null,2.25,null,2.24,null,2.24,null,2.00,null,null,null,2.17,null,2.15];
+const R_END = [null,1.41,null,1.25,null,1.24,null,1.22,null,null,null,1.21,null,1.15];
+
+// Fuel
+const FUEL_OUT   = [0.40,1.20,0.80,1.00,0.93,0.85,1.10,0.70,0.70,1.30,1.20,0.74,0.90,1.20];
+const FUEL_CONS  = [23.6,22.8,23.2,23.0,23.07,23.15,22.9,23.3,23.3,22.7,22.8,23.26,23.1,22.8];
+const LAPS_ACT   = [34,34,36,34,34,38,36,34,34,34,35,34,34,34];
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+function setupCanvas(id){
+  const cv=document.getElementById(id);
+  const wrap=cv.parentElement;
+  cv.width=wrap.clientWidth-40;
+  return {cv,cx:cv.getContext('2d'),W:cv.width,H:cv.height};
+}
+function gridH(cx,W,H,P,yMin,yMax,step,color='#1e2233'){
+  cx.strokeStyle=color;cx.lineWidth=1;
+  for(let y=Math.ceil(yMin/step)*step;y<=yMax+0.01;y+=step){
+    const yy=P.t+((H-P.t-P.b)*(yMax-y)/(yMax-yMin));
+    cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();
+  }
+}
+function axisLabelsY(cx,H,P,yMin,yMax,step,suffix='',color='#9aa3b8',right=false){
+  cx.fillStyle=color;cx.font='11px Segoe UI';
+  cx.textAlign=right?'left':'right';
+  for(let y=Math.ceil(yMin/step)*step;y<=yMax+0.01;y+=step){
+    const yy=P.t+((H-P.t-P.b)*(yMax-y)/(yMax-yMin));
+    cx.fillText(y+suffix,right?W2-P.r+6:P.l-5,yy+4);
+  }
+}
+
+// ── CHART 1: WEATHER ────────────────────────────────────────────────────────
+(function(){
+  const {cv,cx,W,H}=setupCanvas('c1');
+  const P={l:46,r:52,t:20,b:36};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  const N=14;
+  const px=i=>P.l+i/(N-1)*pw;
+  const n=STINTS.length;
+
+  // Left Y: temp 0–30
+  const tMin=0,tMax=30,tStep=5;
+  const pyT=v=>P.t+ph-(v-tMin)/(tMax-tMin)*ph;
+  // Right Y: wind 0–25
+  const wMin=0,wMax=25,wStep=5;
+  const pyW=v=>P.t+ph-(v-wMin)/(wMax-wMin)*ph;
+
+  cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
+
+  // Grid (temp axis)
+  cx.strokeStyle='#1e2233';cx.lineWidth=1;
+  for(let y=tMin;y<=tMax;y+=tStep){
+    const yy=pyT(y);
+    cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();
+    cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';
+    cx.fillText(y+'°',P.l-5,yy+4);
+  }
+  // Right axis wind labels
+  for(let y=wMin;y<=wMax;y+=wStep){
+    const yy=pyW(y);
+    cx.fillStyle='#22d3ee';cx.font='11px Segoe UI';cx.textAlign='left';
+    cx.fillText(y,W-P.r+5,yy+4);
+  }
+
+  // X axis
+  for(let i=0;i<n;i++){
+    const xx=px(i);
+    cx.strokeStyle='#1a1e2e';cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();
+    cx.fillStyle='#9aa3b8';cx.font='10px Segoe UI';cx.textAlign='center';
+    cx.fillText(TIMES[i],xx,H-P.b+14);
+    cx.fillStyle='#6b7280';cx.font='9px Segoe UI';
+    cx.fillText(STINTS[i],xx,H-P.b+26);
+  }
+
+  // TRACK TEMP line
+  cx.strokeStyle='#fb923c';cx.lineWidth=2.5;cx.setLineDash([]);
+  cx.beginPath();
+  TRACK_TEMP.forEach((v,i)=>{i===0?cx.moveTo(px(i),pyT(v)):cx.lineTo(px(i),pyT(v));});
+  cx.stroke();
+
+  // AIR TEMP — draw segments between non-interpolated and interpolated
+  function drawSegmentedLine(vals, isInterp, pyFn, solidColor, interpColor, lw=2.5){
+    for(let i=0;i<vals.length-1;i++){
+      const interp=isInterp[i]||isInterp[i+1];
+      cx.strokeStyle=interp?interpColor:solidColor;
+      cx.lineWidth=lw;
+      cx.setLineDash(interp?[4,3]:[]);
+      cx.beginPath();cx.moveTo(px(i),pyFn(vals[i]));cx.lineTo(px(i+1),pyFn(vals[i+1]));cx.stroke();
+    }
+    cx.setLineDash([]);
+    // Dots
+    vals.forEach((v,i)=>{
+      cx.beginPath();cx.arc(px(i),pyFn(v),isInterp[i]?3.5:4,0,Math.PI*2);
+      cx.fillStyle=isInterp[i]?'#fbbf24':solidColor;cx.fill();
+      if(isInterp[i]){cx.strokeStyle=solidColor;cx.lineWidth=1.5;cx.stroke();}
+    });
+  }
+
+  drawSegmentedLine(AIR_TEMP,AIR_INTERP,pyT,'#f87171','#fbbf24');
+  // WIND line (right axis)
+  drawSegmentedLine(WIND,WIND_INTERP,pyW,'#22d3ee','#fbbf24',2);
+
+  // Axis labels
+  cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';
+  cx.fillText('Stint / Time',P.l+pw/2,H-2);
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);
+  cx.fillStyle='#f87171';cx.font='11px Segoe UI';cx.fillText('Temperature (°C)',0,0);cx.restore();
+  cx.save();cx.translate(W-10,P.t+ph/2);cx.rotate(Math.PI/2);
+  cx.fillStyle='#22d3ee';cx.font='11px Segoe UI';cx.fillText('Wind Speed (km/h)',0,0);cx.restore();
+})();
+
+// ── CHART 2: TYRE PRESSURES ─────────────────────────────────────────────────
+(function(){
+  const {cv,cx,W,H}=setupCanvas('c2');
+  const P={l:48,r:20,t:20,b:48};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  const N=14;
+  const px=i=>P.l+i/(N-1)*pw;
+  const pMin=1.0,pMax=2.5,pStep=0.25;
+  const pyP=v=>P.t+ph-(v-pMin)/(pMax-pMin)*ph;
+
+  cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
+
+  // Grid
+  cx.strokeStyle='#1e2233';cx.lineWidth=1;
+  for(let y=pMin;y<=pMax+0.01;y+=pStep){
+    const yy=pyP(y);
+    cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();
+    cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';
+    cx.fillText(y.toFixed(2),P.l-5,yy+4);
+  }
+
+  // X axis
+  for(let i=0;i<N;i++){
+    const xx=px(i);
+    cx.strokeStyle='#1a1e2e';cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();
+    cx.fillStyle='#9aa3b8';cx.font='10px Segoe UI';cx.textAlign='center';
+    cx.fillText(TIMES[i],xx,H-P.b+14);
+    cx.fillStyle='#6b7280';cx.font='9px Segoe UI';
+    cx.fillText(STINTS[i],xx,H-P.b+26);
+  }
+
+  // Start pressure reference lines (S1)
+  [[2.3,'#4ade80'],[1.4,'#a78bfa']].forEach(([v,col])=>{
+    cx.strokeStyle=col;cx.lineWidth=1;cx.setLineDash([6,4]);cx.globalAlpha=0.35;
+    const yy=pyP(v);
+    cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();
+    cx.globalAlpha=1;cx.setLineDash([]);
+    cx.fillStyle=col;cx.font='9px Segoe UI';cx.textAlign='left';cx.globalAlpha=0.5;
+    cx.fillText('Start '+v,P.l+4,yy-3);cx.globalAlpha=1;
+  });
+
+  // Connect only known points
+  function drawPressure(arr, col){
+    const pts=arr.map((v,i)=>v!==null?{x:px(i),y:pyP(v),i}:null).filter(Boolean);
+    // Line between consecutive points only if adjacent stints
+    cx.strokeStyle=col;cx.lineWidth=2.5;cx.setLineDash([5,4]);
+    for(let j=0;j<pts.length-1;j++){
+      cx.beginPath();cx.moveTo(pts[j].x,pts[j].y);cx.lineTo(pts[j+1].x,pts[j+1].y);cx.stroke();
+    }
+    cx.setLineDash([]);
+    pts.forEach(p=>{
+      cx.beginPath();cx.arc(p.x,p.y,5,0,Math.PI*2);
+      cx.fillStyle=col;cx.fill();
+      cx.fillStyle='#fff';cx.font='bold 10px Segoe UI';cx.textAlign='center';
+      cx.fillText(arr[p.i].toFixed(2),p.x,p.y-9);
+    });
+  }
+
+  drawPressure(F_END,'#4ade80');
+  drawPressure(R_END,'#a78bfa');
+
+  // Axis label
+  cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';
+  cx.fillText('Stint / Time',P.l+pw/2,H-2);
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);
+  cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.fillText('Pressure (bar)',0,0);cx.restore();
+})();
+
+// ── CHART 3: FUEL OUT ───────────────────────────────────────────────────────
+(function(){
+  const {cv,cx,W,H}=setupCanvas('c3');
+  const P={l:48,r:60,t:20,b:48};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  const N=14;
+  const bw=Math.max(8,pw/N*0.55);
+  const px=i=>P.l+(i+0.5)/N*pw;
+
+  // Left Y: fuel out 0–2L
+  const fMin=0,fMax=2,fStep=0.5;
+  const pyF=v=>P.t+ph-(v-fMin)/(fMax-fMin)*ph;
+  // Right Y: fuel consumed 22–24.5L
+  const cMin=22,cMax=24.5,cStep=0.5;
+  const pyC=v=>P.t+ph-(v-cMin)/(cMax-cMin)*ph;
+
+  cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
+
+  // Grid (fuel out axis)
+  cx.strokeStyle='#1e2233';cx.lineWidth=1;
+  for(let y=fMin;y<=fMax;y+=fStep){
+    const yy=pyF(y);
+    cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();
+    cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';
+    cx.fillText(y.toFixed(1)+'L',P.l-5,yy+4);
+  }
+  // Right axis consumed
+  for(let y=cMin;y<=cMax+0.01;y+=cStep){
+    const yy=pyC(y);
+    cx.fillStyle='#4ade80';cx.font='11px Segoe UI';cx.textAlign='left';
+    cx.fillText(y.toFixed(1),W-P.r+5,yy+4);
+  }
+
+  // X axis
+  for(let i=0;i<N;i++){
+    const xx=px(i);
+    cx.strokeStyle='#1a1e2e';cx.lineWidth=1;
+    cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();
+    cx.fillStyle='#9aa3b8';cx.font='10px Segoe UI';cx.textAlign='center';
+    cx.fillText(TIMES[i],xx,H-P.b+14);
+    cx.fillStyle='#6b7280';cx.font='9px Segoe UI';
+    cx.fillText(STINTS[i],xx,H-P.b+26);
+  }
+
+  // Bars: fuel out
+  const baseY=pyF(0);
+  FUEL_OUT.forEach((v,i)=>{
+    const xx=px(i),barH=baseY-pyF(v);
+    const g=cx.createLinearGradient(0,pyF(v),0,baseY);
+    g.addColorStop(0,'#fbbf24');g.addColorStop(1,'#92400e');
+    cx.fillStyle=g;
+    cx.fillRect(xx-bw/2,pyF(v),bw,barH);
+    // Label on bar
+    cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.textAlign='center';
+    cx.fillText(v.toFixed(2),xx,pyF(v)-4);
+  });
+
+  // Consumed line (right axis)
+  cx.strokeStyle='#4ade80';cx.lineWidth=2.5;cx.setLineDash([]);
+  cx.beginPath();
+  FUEL_CONS.forEach((v,i)=>{i===0?cx.moveTo(px(i),pyC(v)):cx.lineTo(px(i),pyC(v));});
+  cx.stroke();
+  FUEL_CONS.forEach((v,i)=>{
+    cx.beginPath();cx.arc(px(i),pyC(v),3.5,0,Math.PI*2);
+    cx.fillStyle='#4ade80';cx.fill();
+  });
+
+  // Rider labels
+  const rcol={'Bálint':'#5B9BD5','Loris':'#D63B25','Máté':'#217346','Jan':'#FFC000'};
+  RIDERS.forEach((r,i)=>{
+    cx.fillStyle=rcol[r]||'#9aa3b8';cx.font='9px Segoe UI';cx.textAlign='center';
+    cx.fillText(r.split('')[0],px(i),H-P.b+37);
+  });
+
+  // Axis labels
+  cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';
+  cx.fillText('Stint / Time',P.l+pw/2,H-2);
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);
+  cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.fillText('Fuel Out (L)',0,0);cx.restore();
+  cx.save();cx.translate(W-8,P.t+ph/2);cx.rotate(Math.PI/2);
+  cx.fillStyle='#4ade80';cx.font='11px Segoe UI';cx.fillText('Fuel Consumed (L)',0,0);cx.restore();
+
+  // Laps labels inside bars
+  LAPS_ACT.forEach((v,i)=>{
+    cx.fillStyle='rgba(255,255,255,0.55)';cx.font='9px Segoe UI';cx.textAlign='center';
+    cx.fillText(v+'L',px(i),baseY-4);
+  });
+})();
+</script>
+
+</body>
+</html>
