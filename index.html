@@ -1252,9 +1252,11 @@ function draw5(){
   for(let y=yMin;y<=yMax+0.1;y+=stepY){
     const yy=pyF(y);
     cx5.beginPath();cx5.moveTo(P.l,yy);cx5.lineTo(W-P.r,yy);cx5.stroke();
-    const lbl=Math.abs(y)>=60?fmtS(Math.abs(y)):(y>0?'+':'')+y+'s';
+    const absY=Math.abs(y);
+    const sign=y>0?'+':y<0?'-':'';
+    const lbl=absY>=60?(sign+Math.floor(absY/60)+':'+(absY%60<10?'0':'')+Math.round(absY%60)):(sign+absY+'s');
     cx5.fillStyle='#9aa3b8';cx5.font='11px Segoe UI';cx5.textAlign='right';
-    cx5.fillText((y>0?'+':'')+lbl,P.l-5,yy+3);
+    cx5.fillText(lbl,P.l-5,yy+3);
   }
   // x grid (hours)
   for(let h=0;h<=24;h+=2){
