@@ -292,7 +292,7 @@ footer a:hover{color:var(--tx2)}
   <h2>Overtakes per Lap</h2>
   <p class="hsub" style="margin-bottom:8px">Lap-by-lap overtakes vs all 59 competitors (official EWC lap-by-lap data). Toggle series below.</p>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-    <button id="bOT_ALL" class="on" onclick="toggleOT_ALL()" style="background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.6);color:#fbbf24">&#9646; All overtakes (incl. pitters)</button>
+    <button id="bOT_ALL" class="off" onclick="toggleOT_ALL()" style="background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.6);color:#fbbf24">&#9646; All overtakes (incl. pitters)</button>
     <button id="bOT_NP" class="on" onclick="toggleOT_NP()" style="background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.5);color:#22d3ee">&#9135; Clean on-track (excl. pitters)</button>
   </div>
   <div class="cwrap" style="height:300px"><canvas id="c_ot"></canvas></div>
@@ -537,7 +537,7 @@ const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
 let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49,77]),hiddenTeams2=new Set(),hiddenTeams2b=new Set(),hiddenTeams3=new Set(),hiddenTeams4=new Set(),hiddenTeams7=new Set(),showConn3=true,lapMin2=1,lapMax2=838,lapMin2b=1,lapMax2b=559,lapMin3=1,lapMax3=838,gapMode='raw',hiddenTeams5=new Set(),showAvg4=true,showAvg7=true;
-let filterSC=true,hiddenPOS=new Set(),showOT_ALL=true,showOT_NP=true,lapMinOTLT=1,lapMaxOTLT=838,hiddenRidersOTLT=new Set();
+let filterSC=true,hiddenPOS=new Set(),showOT_ALL=false,showOT_NP=true,lapMinOTLT=1,lapMaxOTLT=838,hiddenRidersOTLT=new Set();
 
 function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
   SC_RANGES.forEach(([a,b])=>{
@@ -1486,10 +1486,14 @@ function draw_ot(){
   cx_ot.clearRect(0,0,W,H);
   cx_ot.fillStyle='#12141c';cx_ot.fillRect(0,0,W,H);
   const NLAPS=838;
-  const activeData=showOT_ALL?OT_ALL:(showOT_NP?OT_NP:[]);
-  const maxVal=Math.max(1,...activeData.filter(v=>v!=null&&v>0));
+  // scale from whichever series are active
+  const allVals=[];
+  if(showOT_ALL)OT_ALL.forEach(v=>{if(v!=null)allVals.push(v);});
+  if(showOT_NP)OT_NP.forEach(v=>{if(v!=null)allVals.push(v);});
+  const maxVal=Math.max(1,...allVals.filter(v=>v>0));
   const pxF=lap=>P.l+(lap-1)/(NLAPS-1)*pw;
   const pyF=v=>P.t+ph-(v/(maxVal+1))*ph;
+  const yBase=pyF(0);
   drawSCBands(cx_ot,pxF,P.t,ph,H,P.b);
   // y grid
   cx_ot.strokeStyle='#252a3a';cx_ot.lineWidth=1;
@@ -1510,36 +1514,33 @@ function draw_ot(){
     cx_ot.fillStyle='#9aa3b8';cx_ot.font='11px Segoe UI';cx_ot.textAlign='center';
     cx_ot.fillText(h+'h',xx,H-P.b+14);
   }
-  // bars for OT_ALL
   const bw=Math.max(1,pw/NLAPS-0.5);
+  // OT_ALL bars (gold, drawn first / behind)
   if(showOT_ALL){
+    cx_ot.fillStyle='#fbbf24';
     for(let i=0;i<NLAPS;i++){
       const v=OT_ALL[i];
       if(v==null||v===0)continue;
       const xx=pxF(i+1);
-      cx_ot.fillStyle='rgba(251,191,36,0.7)';
-      cx_ot.fillRect(xx-bw/2,pyF(v),bw,pyF(0)-pyF(v));
+      cx_ot.fillRect(xx-bw/2,pyF(v),bw,yBase-pyF(v));
     }
   }
-  // line for OT_NP
+  // OT_NP bars (teal, drawn on top)
   if(showOT_NP){
-    cx_ot.strokeStyle='#22d3ee';cx_ot.lineWidth=2;
-    cx_ot.beginPath();
-    let started=false;
+    cx_ot.fillStyle='#22d3ee';
     for(let i=0;i<NLAPS;i++){
       const v=OT_NP[i];
-      if(v==null){started=false;continue;}
-      const xx=pxF(i+1),yy=pyF(v);
-      if(!started){cx_ot.moveTo(xx,yy);started=true;}
-      else cx_ot.lineTo(xx,yy);
+      if(v==null||v===0)continue;
+      const xx=pxF(i+1);
+      cx_ot.fillRect(xx-bw/2,pyF(v),bw,yBase-pyF(v));
     }
-    cx_ot.stroke();
   }
   // cumulative annotation
   const totalAll=OT_ALL.filter(v=>v!=null).reduce((a,b)=>a+b,0);
   const totalNP=OT_NP.filter(v=>v!=null).reduce((a,b)=>a+b,0);
-  if(showOT_ALL){cx_ot.fillStyle='rgba(251,191,36,0.9)';cx_ot.font='bold 12px Segoe UI';cx_ot.textAlign='right';cx_ot.fillText('All (incl. pitters): '+totalAll,W-P.r-4,P.t+16);}
-  if(showOT_NP){cx_ot.fillStyle='#22d3ee';cx_ot.font='12px Segoe UI';cx_ot.textAlign='right';cx_ot.fillText('Clean on-track: '+totalNP,W-P.r-4,showOT_ALL?P.t+32:P.t+16);}
+  let annY=P.t+16;
+  if(showOT_ALL){cx_ot.fillStyle='#fbbf24';cx_ot.font='bold 12px Segoe UI';cx_ot.textAlign='right';cx_ot.fillText('All (incl. pitters): '+totalAll,W-P.r-4,annY);annY+=16;}
+  if(showOT_NP){cx_ot.fillStyle='#22d3ee';cx_ot.font='bold 12px Segoe UI';cx_ot.textAlign='right';cx_ot.fillText('Clean on-track: '+totalNP,W-P.r-4,annY);}
   // axes labels
   cx_ot.fillStyle='#c0c8d8';cx_ot.font='11px Segoe UI';cx_ot.textAlign='center';
   cx_ot.fillText('Race hours',P.l+pw/2,H-4);
