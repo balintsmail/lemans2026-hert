@@ -110,6 +110,7 @@ footer a:hover{color:var(--tx2)}
     <a href="#setupchart">Setup</a>
     <a href="#standings">Standings</a>
     <a href="#riders">Riders</a>
+    <a href="#runtable">Run Table</a>
   </div>
   <div class="nbadge">P1 Stock · P6 Overall</div>
 </nav>
@@ -1847,6 +1848,129 @@ requestAnimationFrame(()=>{
   initDualSlider('dsMin2b','dsMax2b','dsFill2b','sLbl2b',(a,b)=>{lapMin2b=Math.max(1,Math.round(a*838/24));lapMax2b=Math.min(838,b>=24?838:Math.round(b*838/24));draw2b();});
   initDualSlider('dsMin3','dsMax3','dsFill3','sLbl3',(a,b)=>{lapMin3=Math.max(1,Math.round(a*838/24));lapMax3=Math.min(838,b>=24?838:Math.round(b*838/24));draw3();});
 });
+</script>
+
+<section id="runtable">
+  <p class="stag">Pit wall · run table</p>
+  <h2>Run Table — Weather · Tyres · Fuel</h2>
+  <p class="hsub" style="margin-bottom:12px">Manually recorded pit-wall data. 14 stints · 14 Apr 2026 · 15:00 → 03:55. Tyre pressures recorded at end of stint (selected stints only). Fuel out = litres remaining when stopped.</p>
+
+  <div class="cwrap" style="margin-bottom:24px">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Weather — Air Temp · Track Temp · Wind Speed</p>
+    <canvas id="rt_c1" height="300"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#f87171"></div>Air Temp (°C)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fb923c"></div>Track Temp (°C)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#22d3ee"></div>Wind Speed km/h (right axis)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated</div>
+    </div>
+    <p style="font-size:.72rem;color:#fbbf24;margin-top:6px;font-style:italic">⚠ Interpolated: Air temp S7 (14.5°C), S9 (11.5°C) · Wind speed S2–S3, S7–S9 — online weather unavailable</p>
+  </div>
+
+  <div class="cwrap" style="margin-bottom:24px">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Tyre Pressures — End of Stint (bar)</p>
+    <canvas id="rt_c2" height="300"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>Front End (bar)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#a78bfa"></div>Rear End (bar)</div>
+    </div>
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Only stints with recorded end pressures shown. Front Start S1 = 2.30 bar · Rear Start S1 = 1.40 bar</p>
+  </div>
+
+  <div class="cwrap">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
+    <canvas id="rt_c3" height="280"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#4ade80"></div>Fuel Consumed (L, right axis)</div>
+    </div>
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = ran longer on tank.</p>
+  </div>
+</section>
+
+<script>
+// ── RUN TABLE CHARTS ─────────────────────────────────────────────────────────
+(function(){
+const STINTS  = ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12','S13','S14'];
+const TIMES   = ['15:00','15:50','16:50','17:50','18:50','19:50','20:50','21:50','22:50','23:50','00:55','01:55','02:55','03:55'];
+const RIDERS  = ['Bálint','Loris','Máté','Jan','Bálint','Loris','Máté','Bálint','Jan','Loris','Máté','Bálint','Jan','Loris'];
+const AIR_TEMP   = [18,19,19,18,17,16,14.5,13,11.5,10,9,8,7,7];
+const AIR_INTERP = [false,false,false,false,false,false,true,false,true,false,false,false,false,false];
+const TRACK_TEMP = [25,25,26,24,21,21,18,17,14,13.6,12.3,12.4,12.2,11];
+const WIND       = [16,16.3,16.7,17,16,16,15,14,13,12,11,9,8,6];
+const WIND_INTERP= [false,true,true,false,false,false,true,true,true,false,false,false,false,false];
+const F_END = [null,2.25,null,2.24,null,2.24,null,2.00,null,null,null,2.17,null,2.15];
+const R_END = [null,1.41,null,1.25,null,1.24,null,1.22,null,null,null,1.21,null,1.15];
+const FUEL_OUT   = [0.40,1.20,0.80,1.00,0.93,0.85,1.10,0.70,0.70,1.30,1.20,0.74,0.90,1.20];
+const FUEL_CONS  = [23.6,22.8,23.2,23.0,23.07,23.15,22.9,23.3,23.3,22.7,22.8,23.26,23.1,22.8];
+const LAPS_ACT   = [34,34,36,34,34,38,36,34,34,34,35,34,34,34];
+const rcol_rt    = {'Bálint':'#5B9BD5','Loris':'#D63B25','Máté':'#217346','Jan':'#FFC000'};
+
+function rtSetup(id){
+  const cv=document.getElementById(id);
+  const wrap=cv.parentElement;
+  cv.width=Math.max(400,wrap.clientWidth-40);
+  return {cv,cx:cv.getContext('2d'),W:cv.width,H:cv.height};
+}
+
+// CHART 1: WEATHER
+(function(){
+  const {cv,cx,W,H}=rtSetup('rt_c1');
+  const P={l:46,r:52,t:20,b:36};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  const N=14,px=i=>P.l+i/(N-1)*pw;
+  const tMin=0,tMax=30,pyT=v=>P.t+ph-(v-tMin)/tMax*ph;
+  const wMin=0,wMax=25,pyW=v=>P.t+ph-(v-wMin)/(wMax-wMin)*ph;
+  cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
+  for(let y=0;y<=30;y+=5){const yy=pyT(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y+'°',P.l-5,yy+4);}
+  for(let y=0;y<=25;y+=5){const yy=pyW(y);cx.fillStyle='#22d3ee';cx.font='11px Segoe UI';cx.textAlign='left';cx.fillText(y,W-P.r+5,yy+4);}
+  for(let i=0;i<N;i++){const xx=px(i);cx.strokeStyle='#1a1e2e';cx.lineWidth=1;cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='10px Segoe UI';cx.textAlign='center';cx.fillText(TIMES[i],xx,H-P.b+14);cx.fillStyle='#6b7280';cx.font='9px Segoe UI';cx.fillText(STINTS[i],xx,H-P.b+26);}
+  cx.strokeStyle='#fb923c';cx.lineWidth=2.5;cx.setLineDash([]);cx.beginPath();TRACK_TEMP.forEach((v,i)=>{i===0?cx.moveTo(px(i),pyT(v)):cx.lineTo(px(i),pyT(v));});cx.stroke();
+  function segLine(vals,isInterp,pyFn,solidColor,interpColor,lw){lw=lw||2.5;for(let i=0;i<vals.length-1;i++){const interp=isInterp[i]||isInterp[i+1];cx.strokeStyle=interp?interpColor:solidColor;cx.lineWidth=lw;cx.setLineDash(interp?[4,3]:[]);cx.beginPath();cx.moveTo(px(i),pyFn(vals[i]));cx.lineTo(px(i+1),pyFn(vals[i+1]));cx.stroke();}cx.setLineDash([]);vals.forEach((v,i)=>{cx.beginPath();cx.arc(px(i),pyFn(v),isInterp[i]?3.5:4,0,Math.PI*2);cx.fillStyle=isInterp[i]?'#fbbf24':solidColor;cx.fill();if(isInterp[i]){cx.strokeStyle=solidColor;cx.lineWidth=1.5;cx.stroke();}});}
+  segLine(AIR_TEMP,AIR_INTERP,pyT,'#f87171','#fbbf24');
+  segLine(WIND,WIND_INTERP,pyW,'#22d3ee','#fbbf24',2);
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#f87171';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Temperature (°C)',0,0);cx.restore();
+  cx.save();cx.translate(W-10,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#22d3ee';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Wind Speed (km/h)',0,0);cx.restore();
+})();
+
+// CHART 2: TYRE PRESSURES
+(function(){
+  const {cv,cx,W,H}=rtSetup('rt_c2');
+  const P={l:48,r:20,t:20,b:48};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  const N=14,px=i=>P.l+i/(N-1)*pw;
+  const pMin=1.0,pMax=2.5,pyP=v=>P.t+ph-(v-pMin)/(pMax-pMin)*ph;
+  cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
+  for(let y=1.0;y<=2.5+0.01;y+=0.25){const yy=pyP(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y.toFixed(2),P.l-5,yy+4);}
+  for(let i=0;i<N;i++){const xx=px(i);cx.strokeStyle='#1a1e2e';cx.lineWidth=1;cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='10px Segoe UI';cx.textAlign='center';cx.fillText(TIMES[i],xx,H-P.b+14);cx.fillStyle='#6b7280';cx.font='9px Segoe UI';cx.fillText(STINTS[i],xx,H-P.b+26);}
+  [[2.3,'#4ade80'],[1.4,'#a78bfa']].forEach(function(pair){var v=pair[0],col=pair[1];cx.strokeStyle=col;cx.lineWidth=1;cx.setLineDash([6,4]);cx.globalAlpha=0.35;var yy=pyP(v);cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.globalAlpha=1;cx.setLineDash([]);cx.fillStyle=col;cx.font='9px Segoe UI';cx.textAlign='left';cx.globalAlpha=0.5;cx.fillText('Start '+v,P.l+4,yy-3);cx.globalAlpha=1;});
+  function drawP(arr,col){const pts=arr.map((v,i)=>v!==null?{x:px(i),y:pyP(v),i,v}:null).filter(Boolean);cx.strokeStyle=col;cx.lineWidth=2.5;cx.setLineDash([5,4]);for(let j=0;j<pts.length-1;j++){cx.beginPath();cx.moveTo(pts[j].x,pts[j].y);cx.lineTo(pts[j+1].x,pts[j+1].y);cx.stroke();}cx.setLineDash([]);pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,5,0,Math.PI*2);cx.fillStyle=col;cx.fill();cx.fillStyle='#fff';cx.font='bold 10px Segoe UI';cx.textAlign='center';cx.fillText(p.v.toFixed(2),p.x,p.y-9);});}
+  drawP(F_END,'#4ade80');drawP(R_END,'#a78bfa');
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Pressure (bar)',0,0);cx.restore();
+})();
+
+// CHART 3: FUEL OUT
+(function(){
+  const {cv,cx,W,H}=rtSetup('rt_c3');
+  const P={l:48,r:60,t:20,b:48};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  const N=14,bw=Math.max(8,pw/N*0.55),px=i=>P.l+(i+0.5)/N*pw;
+  const fMin=0,fMax=2,pyF=v=>P.t+ph-(v-fMin)/(fMax-fMin)*ph;
+  const cMin=22,cMax=24.5,pyC=v=>P.t+ph-(v-cMin)/(cMax-cMin)*ph;
+  cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
+  for(let y=0;y<=2+0.01;y+=0.5){const yy=pyF(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y.toFixed(1)+'L',P.l-5,yy+4);}
+  for(let y=22;y<=24.5+0.01;y+=0.5){const yy=pyC(y);cx.fillStyle='#4ade80';cx.font='11px Segoe UI';cx.textAlign='left';cx.fillText(y.toFixed(1),W-P.r+5,yy+4);}
+  for(let i=0;i<N;i++){const xx=px(i);cx.strokeStyle='#1a1e2e';cx.lineWidth=1;cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='10px Segoe UI';cx.textAlign='center';cx.fillText(TIMES[i],xx,H-P.b+14);cx.fillStyle='#6b7280';cx.font='9px Segoe UI';cx.fillText(STINTS[i],xx,H-P.b+26);}
+  const baseY=pyF(0);
+  FUEL_OUT.forEach((v,i)=>{const xx=px(i),barH=baseY-pyF(v);const g=cx.createLinearGradient(0,pyF(v),0,baseY);g.addColorStop(0,'#fbbf24');g.addColorStop(1,'#92400e');cx.fillStyle=g;cx.fillRect(xx-bw/2,pyF(v),bw,barH);cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.textAlign='center';cx.fillText(v.toFixed(2),xx,pyF(v)-4);});
+  cx.strokeStyle='#4ade80';cx.lineWidth=2.5;cx.setLineDash([]);cx.beginPath();FUEL_CONS.forEach((v,i)=>{i===0?cx.moveTo(px(i),pyC(v)):cx.lineTo(px(i),pyC(v));});cx.stroke();
+  FUEL_CONS.forEach((v,i)=>{cx.beginPath();cx.arc(px(i),pyC(v),3.5,0,Math.PI*2);cx.fillStyle='#4ade80';cx.fill();});
+  RIDERS.forEach((r,i)=>{cx.fillStyle=rcol_rt[r]||'#9aa3b8';cx.font='9px Segoe UI';cx.textAlign='center';cx.fillText(r[0],px(i),H-P.b+37);});
+  LAPS_ACT.forEach((v,i)=>{cx.fillStyle='rgba(255,255,255,0.45)';cx.font='9px Segoe UI';cx.textAlign='center';cx.fillText(v+'L',px(i),baseY-4);});
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
+  cx.save();cx.translate(W-8,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#4ade80';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Consumed (L)',0,0);cx.restore();
+})();
+})();
 </script>
 </body>
 </html>
