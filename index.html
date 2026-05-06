@@ -544,7 +544,7 @@ function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
     ctx.fillStyle='rgba(255,210,50,0.07)';
     const x1=pxF(a),x2=pxF(b+1);
     ctx.fillRect(x1,Pt,x2-x1,ph);
-    ctx.strokeStyle='rgba(255,210,50,0.22)';ctx.lineWidth=1;
+    ctx.strokeStyle='rgba(255,210,50,0.7)';ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(x1,Pt);ctx.lineTo(x1,H-Pb);ctx.stroke();
     ctx.beginPath();ctx.moveTo(x2,Pt);ctx.lineTo(x2,H-Pb);ctx.stroke();
   });
@@ -585,7 +585,7 @@ function draw(){
   cx.save();cx.translate(12,PAD.t+ph/2);cx.rotate(-Math.PI/2);cx.fillText('Lap Time',0,0);cx.restore();
   DATA.filter(d=>d.t===null).forEach(d=>{
     const xx=px(d.lap);
-    cx.strokeStyle='rgba(244,166,42,.15)';cx.lineWidth=1;cx.setLineDash([3,5]);
+    cx.strokeStyle='rgba(244,166,42,.6)';cx.lineWidth=1;cx.setLineDash([3,5]);
     cx.beginPath();cx.moveTo(xx,PAD.t);cx.lineTo(xx,H-PAD.b);cx.stroke();
     cx.setLineDash([]);
   });
@@ -602,7 +602,7 @@ function draw(){
       const avg=clean.reduce((s,[l,t])=>s+t,0)/clean.length;
       const yy=py(avg);if(yy<PAD.t||yy>H-PAD.b)return;
       const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
-      cx.strokeStyle=TC[team];cx.lineWidth=1.5;cx.globalAlpha=.55;cx.setLineDash([4,3]);
+      cx.strokeStyle=TC[team];cx.lineWidth=1.5;cx.globalAlpha=1;cx.setLineDash([4,3]);
       cx.beginPath();cx.moveTo(x1,yy);cx.lineTo(x2,yy);cx.stroke();
       cx.setLineDash([]);cx.fillStyle=TC[team];cx.font='10px Segoe UI';cx.textAlign='right';
       cx.fillText('#'+team+' '+fmt(avg),x2-2,yy+9);cx.globalAlpha=1;
@@ -620,9 +620,9 @@ function draw(){
     const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
     const yy=py(avg);if(yy<PAD.t||yy>H-PAD.b)return;
     const x1=px(laps[0].lap),x2=px(laps[laps.length-1].lap);
-    cx.strokeStyle=RC[rider];cx.lineWidth=2;cx.globalAlpha=.85;cx.setLineDash([]);
+    cx.strokeStyle=RC[rider];cx.lineWidth=2;cx.globalAlpha=1;cx.setLineDash([]);
     cx.beginPath();cx.moveTo(x1,yy);cx.lineTo(x2,yy);cx.stroke();
-    cx.globalAlpha=.75;cx.fillStyle=RC[rider];cx.font='bold 11px Segoe UI';cx.textAlign='right';
+    cx.globalAlpha=1;cx.fillStyle=RC[rider];cx.font='bold 11px Segoe UI';cx.textAlign='right';
     cx.fillText(fmt(avg),x2-2,yy-3);cx.globalAlpha=1;
   });
   }
@@ -630,7 +630,7 @@ function draw(){
     RIDERS.filter(r=>!hidden.has(r)).forEach(r=>{
       const rl=DATA.filter(d=>d.r===r&&d.t!==null&&(filter!=='clean'||d.t<115));
       if(rl.length<2)return;
-      cx.strokeStyle=RC[r];cx.lineWidth=1.5;cx.setLineDash([3,4]);cx.globalAlpha=.6;
+      cx.strokeStyle=RC[r];cx.lineWidth=1.5;cx.setLineDash([3,4]);cx.globalAlpha=1;
       cx.beginPath();let st=false;
       rl.forEach((d,i)=>{
         const sl=rl.slice(Math.max(0,i-14),i+1);
@@ -652,7 +652,7 @@ function draw(){
     else if(idx>0&&DATA[idx-1].t===null)col='#f59e0b';
     else if(d.t>115)col='#ef4444';
     const r=d.lap===BEST?5:2;
-    cx.globalAlpha=d.lap===BEST?1:.5;
+    cx.globalAlpha=1;
     cx.beginPath();cx.arc(xx,yy,r,0,Math.PI*2);cx.fillStyle=col;cx.fill();
     if(d.lap===BEST){cx.globalAlpha=1;cx.strokeStyle='#fff';cx.lineWidth=1.5;cx.stroke();}
     cx.globalAlpha=1;
@@ -724,7 +724,7 @@ function buildStintSeries(lapMin,lapMax,htSet){
     const avg=clean.reduce((s,d)=>s+d.t,0)/clean.length;
     return{avg,n:laps.length,cn:clean.length,color:RC[laps[0].r],lbl:laps[0].r.split(' ').pop()};
   }).filter(Boolean).sort((a,b)=>a.avg-b.avg);
-  if(pts38.length)series.push({lbl:'#38',color:'rgba(200,210,230,0.2)',pts:pts38,kind:'combined'});
+  if(pts38.length)series.push({lbl:'#38',color:'rgba(200,210,230,1)',pts:pts38,kind:'combined'});
   // comparison teams
   Object.entries(TRAW).forEach(([ts,td])=>{
     const team=+ts;if(htSet.has(team))return;
@@ -789,7 +789,7 @@ function draw2(){
     // connecting line
     cx2.strokeStyle=isCombined?'#ffffff':s.color;
     cx2.lineWidth=isCombined?3:3;
-    cx2.globalAlpha=isCombined?1:0.55;
+    cx2.globalAlpha=1;
     cx2.setLineDash(isTeam?[4,3]:[]);
     cx2.beginPath();
     s.pts.forEach((p,i)=>{const xx=xp(i),yy=yOf(p.avg);i===0?cx2.moveTo(xx,yy):cx2.lineTo(xx,yy);});
@@ -808,7 +808,7 @@ function draw2(){
       const last=s.pts[s.pts.length-1];
       const lx=s.pts.length===1?PAD2.l+pw2/2:xOf(s.pts.length);
       cx2.fillStyle=s.color;cx2.font='10px Segoe UI';
-      cx2.globalAlpha=0.7;cx2.textAlign='left';
+      cx2.globalAlpha=1;cx2.textAlign='left';
       cx2.fillText(s.lbl,lx+8,yOf(last.avg)+3);cx2.globalAlpha=1;
     }
   });
@@ -834,7 +834,7 @@ function resize2(){const wrap=cv2.parentElement;cv2.width=(wrap.clientWidth||900
 function renderToggles2(){
   document.getElementById('rtogs2').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt2_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');
   document.getElementById('ttogs2').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog" id="tt2_${t}" onclick="toggleTeam2(${t})"><span class="dot" style="background:${col}"></span>${TNAMES[+t]||'#'+t}</span>`).join('');
-  document.getElementById('lgnd2').innerHTML=RIDERS.map(r=>`<div class="li"><div class="ld" style="background:${RC[r]}"></div>${r.split(' ').pop()}</div>`).join('')+Object.entries(TC).map(([t,col])=>`<div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:1.5px dashed ${col};opacity:.7;margin-right:4px;vertical-align:middle"></span>#${t}</div>`).join('');
+  document.getElementById('lgnd2').innerHTML=RIDERS.map(r=>`<div class="li"><div class="ld" style="background:${RC[r]}"></div>${r.split(' ').pop()}</div>`).join('')+Object.entries(TC).map(([t,col])=>`<div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:1.5px dashed ${col};opacity:1;margin-right:4px;vertical-align:middle"></span>#${t}</div>`).join('');
 }
 
 
@@ -903,7 +903,7 @@ function draw3(){
       dots.push({x:mx,y:yy});
     });
     if(showConn3&&dots.length>1){
-      cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=.55;cx3.setLineDash([4,3]);
+      cx3.strokeStyle=TC[team];cx3.lineWidth=3;cx3.globalAlpha=1;cx3.setLineDash([4,3]);
       cx3.beginPath();dots.forEach((d,i)=>i===0?cx3.moveTo(d.x,d.y):cx3.lineTo(d.x,d.y));
       cx3.stroke();cx3.setLineDash([]);cx3.globalAlpha=1;
     }
@@ -993,14 +993,14 @@ function draw4(){
     if(hiddenTeams4.has(tid))return;
     const stops=PITSTOPS[tid];
     const col=tid===38?'#ffffff':TC[tid];
-    const alpha=tid===38?1:0.55;
+    const alpha=1;
     const dR=tid===38?6:4;
     // avg
     if(showAvg4){
       const avg=stops.reduce((a,b)=>a+b,0)/stops.length;
       const avgy=py(avg);
       cx4.save();
-      cx4.globalAlpha=alpha*0.7;cx4.strokeStyle=col;cx4.lineWidth=1;cx4.setLineDash([6,4]);
+      cx4.globalAlpha=1;cx4.strokeStyle=col;cx4.lineWidth=1;cx4.setLineDash([6,4]);
       cx4.beginPath();cx4.moveTo(P.l,avgy);cx4.lineTo(W-P.r,avgy);cx4.stroke();
       cx4.setLineDash([]);
       cx4.globalAlpha=1;cx4.fillStyle=col;cx4.font='11px Segoe UI';cx4.textAlign='left';
@@ -1071,7 +1071,7 @@ function draw2b(){
     // connecting line
     cx6.strokeStyle=isCombined?'#ffffff':s.color;
     cx6.lineWidth=3;
-    cx6.globalAlpha=isCombined?1:0.55;
+    cx6.globalAlpha=1;
     cx6.setLineDash(isTeam?[4,3]:[]);
     cx6.beginPath();
     s.pts.forEach((p,i)=>{const xx=xp(i),yy=pyF(p.avg);i===0?cx6.moveTo(xx,yy):cx6.lineTo(xx,yy);});
@@ -1090,7 +1090,7 @@ function draw2b(){
       const last=s.pts[s.pts.length-1];
       const lx=xp(s.pts.length-1);
       cx6.fillStyle=s.color;cx6.font='10px Segoe UI';
-      cx6.globalAlpha=0.7;cx6.textAlign='left';
+      cx6.globalAlpha=1;cx6.textAlign='left';
       cx6.fillText(s.lbl,lx+8,pyF(last.avg)+3);cx6.globalAlpha=1;
     }
   });
@@ -1156,13 +1156,13 @@ function draw7(){
     if(hiddenTeams7.has(tid))return;
     const stops=PS7[tid];if(!stops.length)return;
     const col=tid===38?'#ffffff':TC[tid];
-    const alpha=tid===38?1:0.55;
+    const alpha=1;
     const dR=tid===38?6:4;
     if(showAvg7){
       const avg=stops.reduce((a,b)=>a+b,0)/stops.length;
       const avgy=py(avg);
       cx7.save();
-      cx7.globalAlpha=alpha*0.7;cx7.strokeStyle=col;cx7.lineWidth=1;cx7.setLineDash([6,4]);
+      cx7.globalAlpha=1;cx7.strokeStyle=col;cx7.lineWidth=1;cx7.setLineDash([6,4]);
       cx7.beginPath();cx7.moveTo(P.l,avgy);cx7.lineTo(W-P.r,avgy);cx7.stroke();
       cx7.setLineDash([]);
       cx7.globalAlpha=1;cx7.fillStyle=col;cx7.font='11px Segoe UI';cx7.textAlign='left';
@@ -1272,9 +1272,9 @@ function draw5(){
   cx5.save();cx5.translate(12,P.t+ph/2);cx5.rotate(-Math.PI/2);cx5.fillStyle='#c0c8d8';cx5.font='11px Segoe UI';cx5.fillText('Gap to #38 (s) +ahead',0,0);cx5.restore();
   // 0 line (#38 reference)
   const zy=pyF(0);
-  cx5.save();cx5.strokeStyle='rgba(255,255,255,.35)';cx5.lineWidth=2;cx5.setLineDash([8,5]);
+  cx5.save();cx5.strokeStyle='rgba(255,255,255,1)';cx5.lineWidth=2;cx5.setLineDash([8,5]);
   cx5.beginPath();cx5.moveTo(P.l,zy);cx5.lineTo(W-P.r,zy);cx5.stroke();cx5.setLineDash([]);
-  cx5.fillStyle='rgba(255,255,255,.7)';cx5.font='bold 10px Segoe UI';cx5.textAlign='right';
+  cx5.fillStyle='rgba(255,255,255,1)';cx5.font='bold 10px Segoe UI';cx5.textAlign='right';
   cx5.fillText('#38',P.l-5,zy-4);cx5.restore();
   // draw teams
   seriesData.forEach(({tid,pts,col})=>{
