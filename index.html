@@ -534,6 +534,7 @@ function renderRiders(){
 const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
+const DPR=window.devicePixelRatio||1;
 let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49,77]),hiddenTeams2=new Set(),hiddenTeams2b=new Set(),hiddenTeams3=new Set(),hiddenTeams4=new Set(),hiddenTeams7=new Set(),showConn3=true,lapMin2=1,lapMax2=838,lapMin2b=1,lapMax2b=559,lapMin3=1,lapMax3=838,gapMode='raw',hiddenTeams5=new Set(),showAvg4=true,showAvg7=true;
 let filterSC=true,hiddenPOS=new Set(),lapMinOTLT=1,lapMaxOTLT=838,hiddenRidersOTLT=new Set();
 
@@ -549,14 +550,14 @@ function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
 }
 function resize(){
   const wrap=cv.parentElement;
-  cv.width=(wrap.clientWidth||900)-20;
-  cv.height=630;
+  {const _w=(wrap.clientWidth||900)-20,_h=630;cv.width=_w*DPR;cv.height=_h*DPR;cv.style.width=_w+'px';cv.style.height=_h+'px';}
   draw();
 }
 function getVisible(){return DATA.filter(d=>d.t!==null&&!hidden.has(d.r)&&(filter==='all'||d.t<115));}
 function draw(){
   const vis=getVisible();if(!vis.length)return;
-  W=cv.width;H=cv.height;
+  W=Math.round(cv.width/DPR);H=Math.round(cv.height/DPR);
+  cx.setTransform(DPR,0,0,DPR,0,0);
   PAD={l:68,r:20,t:18,b:36};
   const pw=W-PAD.l-PAD.r,ph=H-PAD.t-PAD.b;
   const xMin=1,xMax=838,yMin=96,yMax=104;
@@ -746,7 +747,8 @@ function buildStintSeries(lapMin,lapMax,htSet){
 }
 
 function draw2(){
-  const W2=cv2.width,H2=cv2.height;
+  const W2=Math.round(cv2.width/DPR),H2=Math.round(cv2.height/DPR);
+  cx2.setTransform(DPR,0,0,DPR,0,0);
   if(!W2||!H2)return;
   const PAD2={l:68,r:80,t:18,b:38};
   const pw2=W2-PAD2.l-PAD2.r,ph2=H2-PAD2.t-PAD2.b;
@@ -828,7 +830,7 @@ cv2.addEventListener('mousemove',e=>{
 });
 cv2.addEventListener('mouseleave',()=>document.getElementById('tip').style.display='none');
 
-function resize2(){const wrap=cv2.parentElement;cv2.width=(wrap.clientWidth||900)-20;cv2.height=510;draw2();}
+function resize2(){const wrap=cv2.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv2.width=_w*DPR;cv2.height=_h*DPR;cv2.style.width=_w+'px';cv2.style.height=_h+'px';}draw2();}
 function renderToggles2(){
   document.getElementById('rtogs2').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt2_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');
   document.getElementById('ttogs2').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog" id="tt2_${t}" onclick="toggleTeam2(${t})"><span class="dot" style="background:${col}"></span>${TNAMES[+t]||'#'+t}</span>`).join('');
@@ -842,7 +844,8 @@ const cx3=cv3.getContext('2d');
 
 function lapInRange(lap){return lap>=lapMin3&&lap<=lapMax3;}
 function draw3(){
-  const W3=cv3.width,H3=cv3.height;if(!W3||!H3)return;
+  const W3=Math.round(cv3.width/DPR),H3=Math.round(cv3.height/DPR);if(!W3||!H3)return;
+  cx3.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:80,t:18,b:38};
   const pw=W3-P.l-P.r,ph=H3-P.t-P.b;
   const xMin=1,xMax=838;
@@ -937,7 +940,7 @@ function draw3(){
   });
 }
 
-function resize3(){const wrap=cv3.parentElement;cv3.width=(wrap.clientWidth||900)-20;cv3.height=510;draw3();}
+function resize3(){const wrap=cv3.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv3.width=_w*DPR;cv3.height=_h*DPR;cv3.style.width=_w+'px';cv3.style.height=_h+'px';}draw3();}
 
 const cv4=document.getElementById('c4'),cx4=cv4?cv4.getContext('2d'):null;
 function renderToggles4(){
@@ -951,7 +954,8 @@ function toggleTeam4(t){
 function fmtS(s){const m=Math.floor(s/60);const ss=(s%60).toFixed(1);return m+':'+(ss<10?'0':'')+ss;}
 function draw4(){
   if(!cv4||!cx4)return;
-  const W=cv4.width,H=cv4.height;if(!W||!H)return;
+  const W=Math.round(cv4.width/DPR),H=Math.round(cv4.height/DPR);if(!W||!H)return;
+  cx4.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:80,t:18,b:38};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   // visible teams
@@ -1023,7 +1027,7 @@ function draw4(){
     cx4.restore();
   });
 }
-function resize4(){if(!cv4)return;const wrap=cv4.parentElement;cv4.width=(wrap.clientWidth||900)-20;cv4.height=510;draw4();}
+function resize4(){if(!cv4)return;const wrap=cv4.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv4.width=_w*DPR;cv4.height=_h*DPR;cv4.style.width=_w+'px';cv4.style.height=_h+'px';}draw4();}
 
 // ── STINT RANKING 2 (Early race / 0-16h default) ────────────────────────────
 const cv6=document.getElementById('c6');
@@ -1038,7 +1042,8 @@ function renderToggles2b(){
 function toggleTeam2b(t){hiddenTeams2b.has(t)?hiddenTeams2b.delete(t):hiddenTeams2b.add(t);const el=document.getElementById('tt2b_'+t);if(el)el.classList.toggle('off',hiddenTeams2b.has(t));draw2b();}
 function draw2b(){
   if(!cv6||!cx6)return;
-  const W2=cv6.width,H2=cv6.height;
+  const W2=Math.round(cv6.width/DPR),H2=Math.round(cv6.height/DPR);
+  cx6.setTransform(DPR,0,0,DPR,0,0);
   if(!W2||!H2)return;
   const PAD2={l:68,r:80,t:18,b:38};
   const pw2=W2-PAD2.l-PAD2.r,ph2=H2-PAD2.t-PAD2.b;
@@ -1102,7 +1107,7 @@ function draw2b(){
     return `<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 6px"><span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block"></span><span style="font-size:.7rem;color:#9aa3b8">${s.lbl}</span></span>`;
   }).join('');
 }
-function resize2b(){if(!cv6)return;const wrap=cv6.parentElement;cv6.width=(wrap.clientWidth||900)-20;cv6.height=560;draw2b();}
+function resize2b(){if(!cv6)return;const wrap=cv6.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=560;cv6.width=_w*DPR;cv6.height=_h*DPR;cv6.style.width=_w+'px';cv6.style.height=_h+'px';}draw2b();}
 
 // ── PITSTOPS 2 (clean stops only ≤150s) ─────────────────────────────────────
 const cv7=document.getElementById('c7');
@@ -1116,7 +1121,8 @@ function toggleAvg4(){showAvg4=!showAvg4;const b=document.getElementById('bAvg4'
 function toggleAvg7(){showAvg7=!showAvg7;const b=document.getElementById('bAvg7');if(b){b.classList.toggle('on',showAvg7);b.textContent=showAvg7?'Show avg':'Hide avg';}draw7();}
 function draw7(){
   if(!cv7||!cx7)return;
-  const W=cv7.width,H=cv7.height;if(!W||!H)return;
+  const W=Math.round(cv7.width/DPR),H=Math.round(cv7.height/DPR);if(!W||!H)return;
+  cx7.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:80,t:18,b:38};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const allTeams=[38,9,25,41,49,77];
@@ -1183,7 +1189,7 @@ function draw7(){
     cx7.restore();
   });
 }
-function resize7(){if(!cv7)return;const wrap=cv7.parentElement;cv7.width=(wrap.clientWidth||900)-20;cv7.height=510;draw7();}
+function resize7(){if(!cv7)return;const wrap=cv7.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv7.width=_w*DPR;cv7.height=_h*DPR;cv7.style.width=_w+'px';cv7.style.height=_h+'px';}draw7();}
 function initDualSlider(idMin,idMax,idFill,idLbl,onChange){
   const mn=document.getElementById(idMin),mx=document.getElementById(idMax);
   const fill=document.getElementById(idFill),lbl=document.getElementById(idLbl);
@@ -1219,7 +1225,8 @@ function get38StintAvgs(){
 function nearest38(mid,ref){let best=null,bd=Infinity;ref.forEach(r=>{const d=Math.abs(r.mid-mid);if(d<bd){bd=d;best=r;}});return best?best.avg:null;}
 function draw5(){
   if(!cv5||!cx5)return;
-  const W=cv5.width,H=cv5.height;if(!W||!H)return;
+  const W=Math.round(cv5.width/DPR),H=Math.round(cv5.height/DPR);if(!W||!H)return;
+  cx5.setTransform(DPR,0,0,DPR,0,0);
   const P={l:72,r:90,t:18,b:38};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   // collect on-track gaps
@@ -1304,7 +1311,7 @@ function draw5(){
     cx5.restore();
   });
 }
-function resize5(){if(!cv5)return;const wrap=cv5.parentElement;cv5.width=(wrap.clientWidth||900)-20;cv5.height=510;draw5();}
+function resize5(){if(!cv5)return;const wrap=cv5.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv5.width=_w*DPR;cv5.height=_h*DPR;cv5.style.width=_w+'px';cv5.style.height=_h+'px';}draw5();}
 
 
 
@@ -1315,7 +1322,8 @@ const cv_oil=document.getElementById('c_oil');
 const cx_oil=cv_oil?cv_oil.getContext('2d'):null;
 function draw_oil(){
   if(!cv_oil||!cx_oil)return;
-  const W=cv_oil.width,H=cv_oil.height;if(!W||!H)return;
+  const W=Math.round(cv_oil.width/DPR),H=Math.round(cv_oil.height/DPR);if(!W||!H)return;
+  cx_oil.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:20,t:18,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const xMin=1,xMax=838;
@@ -1397,7 +1405,8 @@ POS_TEAMS.forEach(t=>{
 
 function draw_pos(){
   if(!c_pos||!cx_pos)return;
-  const W=c_pos.width,H=c_pos.height;
+  const W=Math.round(c_pos.width/DPR),H=Math.round(c_pos.height/DPR);
+  cx_pos.setTransform(DPR,0,0,DPR,0,0);
   if(!W||!H)return;
   const P={l:44,r:100,t:16,b:32};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
@@ -1477,7 +1486,8 @@ function draw_pos(){
 
 function draw_ot(){
   if(!c_ot||!cx_ot)return;
-  const W=c_ot.width,H=c_ot.height;
+  const W=Math.round(c_ot.width/DPR),H=Math.round(c_ot.height/DPR);
+  cx_ot.setTransform(DPR,0,0,DPR,0,0);
   if(!W||!H)return;
   const P={l:44,r:80,t:24,b:32};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
@@ -1527,17 +1537,18 @@ function draw_ot(){
   cx_ot.fillStyle='#c0c8d8';cx_ot.font='11px Segoe UI';cx_ot.fillText('Overtakes',0,0);cx_ot.restore();
 }
 
-function resize_pos(){if(!c_pos)return;const wrap=c_pos.parentElement;c_pos.width=(wrap.clientWidth||900)-20;c_pos.height=480;draw_pos();}
-function resize_ot(){if(!c_ot)return;const wrap=c_ot.parentElement;c_ot.width=(wrap.clientWidth||900)-20;c_ot.height=300;draw_ot();}
+function resize_pos(){if(!c_pos)return;const wrap=c_pos.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=480;c_pos.width=_w*DPR;c_pos.height=_h*DPR;c_pos.style.width=_w+'px';c_pos.style.height=_h+'px';}draw_pos();}
+function resize_ot(){if(!c_ot)return;const wrap=c_ot.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=300;c_ot.width=_w*DPR;c_ot.height=_h*DPR;c_ot.style.width=_w+'px';c_ot.style.height=_h+'px';}draw_ot();}
 
-function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;cv_oil.width=(wrap.clientWidth||900)-20;cv_oil.height=360;draw_oil();}
+function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_oil.width=_w*DPR;cv_oil.height=_h*DPR;cv_oil.style.width=_w+'px';cv_oil.style.height=_h+'px';}draw_oil();}
 
 // ── COOLANT TEMPERATURE ───────────────────────────────────────────────────────
 const cv_cool=document.getElementById('c_cool');
 const cx_cool=cv_cool?cv_cool.getContext('2d'):null;
 function draw_cool(){
   if(!cv_cool||!cx_cool)return;
-  const W=cv_cool.width,H=cv_cool.height;if(!W||!H)return;
+  const W=Math.round(cv_cool.width/DPR),H=Math.round(cv_cool.height/DPR);if(!W||!H)return;
+  cx_cool.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:20,t:18,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const xMin=1,xMax=838;
@@ -1585,14 +1596,15 @@ function draw_cool(){
   cx_cool.fillText('Max',W-P.r+4,pyF(COOL_MAX[838-1]||COOL_MAX.find(v=>v))+4);
   cx_cool.globalAlpha=0.55;cx_cool.fillText('Min',W-P.r+4,pyF(COOL_MIN[838-1]||COOL_MIN.find(v=>v))+4);cx_cool.globalAlpha=1;
 }
-function resize_cool(){if(!cv_cool)return;const wrap=cv_cool.parentElement;cv_cool.width=(wrap.clientWidth||900)-20;cv_cool.height=360;draw_cool();}
+function resize_cool(){if(!cv_cool)return;const wrap=cv_cool.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_cool.width=_w*DPR;cv_cool.height=_h*DPR;cv_cool.style.width=_w+'px';cv_cool.style.height=_h+'px';}draw_cool();}
 
 // ── FUEL CONSUMPTION ─────────────────────────────────────────────────────────
 const cv_fuel=document.getElementById('c_fuel');
 const cx_fuel=cv_fuel?cv_fuel.getContext('2d'):null;
 function draw_fuel(){
   if(!cv_fuel||!cx_fuel)return;
-  const W=cv_fuel.width,H=cv_fuel.height;if(!W||!H)return;
+  const W=Math.round(cv_fuel.width/DPR),H=Math.round(cv_fuel.height/DPR);if(!W||!H)return;
+  cx_fuel.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:20,t:18,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const xMin=1,xMax=838;
@@ -1645,14 +1657,15 @@ function draw_fuel(){
     cx_fuel.stroke();cx_fuel.globalAlpha=1;
   }
 }
-function resize_fuel(){if(!cv_fuel)return;const wrap=cv_fuel.parentElement;cv_fuel.width=(wrap.clientWidth||900)-20;cv_fuel.height=360;draw_fuel();}
+function resize_fuel(){if(!cv_fuel)return;const wrap=cv_fuel.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_fuel.width=_w*DPR;cv_fuel.height=_h*DPR;cv_fuel.style.width=_w+'px';cv_fuel.style.height=_h+'px';}draw_fuel();}
 
 // ── SETUP: DTC / ENGINE BRAKE / RIDING MODE ──────────────────────────────────
 const cv_setup=document.getElementById('c_setup');
 const cx_setup=cv_setup?cv_setup.getContext('2d'):null;
 function draw_setup(){
   if(!cv_setup||!cx_setup)return;
-  const W=cv_setup.width,H=cv_setup.height;if(!W||!H)return;
+  const W=Math.round(cv_setup.width/DPR),H=Math.round(cv_setup.height/DPR);if(!W||!H)return;
+  cx_setup.setTransform(DPR,0,0,DPR,0,0);
   const P={l:68,r:80,t:18,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const xMin=1,xMax=838;
@@ -1711,7 +1724,7 @@ function draw_setup(){
   cx_setup.strokeStyle='#555';cx_setup.lineWidth=1;cx_setup.strokeRect(P.l+pw-50,P.t+4,12,10);
   cx_setup.fillStyle='#9aa3b8';cx_setup.fillText('Dry 2',P.l+pw-34,P.t+12);
 }
-function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;cv_setup.width=(wrap.clientWidth||900)-20;cv_setup.height=360;draw_setup();}
+function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_setup.width=_w*DPR;cv_setup.height=_h*DPR;cv_setup.style.width=_w+'px';cv_setup.style.height=_h+'px';}draw_setup();}
 
 const c_otlt=document.getElementById('c_otlt');
 const cx_otlt=c_otlt?c_otlt.getContext('2d'):null;
@@ -1778,7 +1791,8 @@ function renderOTLTStats(items,groups){
 }
 function draw_otlt(){
   if(!c_otlt||!cx_otlt)return;
-  const W=c_otlt.width,H=c_otlt.height;if(!W||!H)return;
+  const W=Math.round(c_otlt.width/DPR),H=Math.round(c_otlt.height/DPR);if(!W||!H)return;
+  cx_otlt.setTransform(DPR,0,0,DPR,0,0);
   const P={l:52,r:52,t:24,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   cx_otlt.clearRect(0,0,W,H);cx_otlt.fillStyle='#12141c';cx_otlt.fillRect(0,0,W,H);
@@ -1834,12 +1848,14 @@ function draw_otlt(){
   riders.forEach(r=>{cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t-10,4,0,Math.PI*2);cx_otlt.fill();cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t-6);lx+=cx_otlt.measureText(name).width+22;});
   renderOTLTStats(items,groups);
 }
-function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;c_otlt.width=(wrap.clientWidth||900)-20;c_otlt.height=360;draw_otlt();}
+function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;c_otlt.width=_w*DPR;c_otlt.height=_h*DPR;c_otlt.style.width=_w+'px';c_otlt.style.height=_h+'px';}draw_otlt();}
 
 renderStandings();
 renderToggles();
 renderTeamToggles();
-window.addEventListener('resize',resize);
+window.addEventListener('resize',()=>{resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();});
+// Re-render all charts when DPR changes (e.g. moving window between screens)
+(function(){let mq=matchMedia('(resolution: '+DPR+'dppx)');function onDPRChange(){mq.removeEventListener('change',onDPRChange);resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();mq=matchMedia('(resolution: '+(window.devicePixelRatio||1)+'dppx)');mq.addEventListener('change',onDPRChange);}mq.addEventListener('change',onDPRChange);})();
 requestAnimationFrame(()=>{
   renderRiders();renderToggles2();renderToggles2b();renderToggles3();renderToggles4();renderToggles5();renderToggles7();
   resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize_pos();resize_ot();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();renderOTLTRiderToggles();
@@ -1909,12 +1925,17 @@ const rcol_rt    = {'Bálint':'#5B9BD5','Loris':'#D63B25','Máté':'#217346','Ja
 function rtSetup(id){
   const cv=document.getElementById(id);
   const wrap=cv.parentElement;
-  cv.width=Math.max(400,wrap.clientWidth-40);
-  return {cv,cx:cv.getContext('2d'),W:cv.width,H:cv.height};
+  const cssW=Math.max(400,wrap.clientWidth-40);
+  const cssH=parseInt(cv.getAttribute('height'))||300;
+  cv.width=cssW*DPR;cv.height=cssH*DPR;
+  cv.style.width=cssW+'px';cv.style.height=cssH+'px';
+  const cx=cv.getContext('2d');
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  return {cv,cx,W:cssW,H:cssH};
 }
 
 // CHART 1: WEATHER
-(function(){
+function drawRT1(){
   const {cv,cx,W,H}=rtSetup('rt_c1');
   const P={l:46,r:52,t:20,b:36};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
@@ -1931,10 +1952,10 @@ function rtSetup(id){
   segLine(WIND,WIND_INTERP,pyW,'#22d3ee','#fbbf24',2);
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#f87171';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Temperature (°C)',0,0);cx.restore();
   cx.save();cx.translate(W-10,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#22d3ee';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Wind Speed (km/h)',0,0);cx.restore();
-})();
+}
 
 // CHART 2: TYRE PRESSURES
-(function(){
+function drawRT2(){
   const {cv,cx,W,H}=rtSetup('rt_c2');
   const P={l:48,r:20,t:20,b:48};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
@@ -1947,10 +1968,10 @@ function rtSetup(id){
   function drawP(arr,col){const pts=arr.map((v,i)=>v!==null?{x:px(i),y:pyP(v),i,v}:null).filter(Boolean);cx.strokeStyle=col;cx.lineWidth=2.5;cx.setLineDash([5,4]);for(let j=0;j<pts.length-1;j++){cx.beginPath();cx.moveTo(pts[j].x,pts[j].y);cx.lineTo(pts[j+1].x,pts[j+1].y);cx.stroke();}cx.setLineDash([]);pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,5,0,Math.PI*2);cx.fillStyle=col;cx.fill();cx.fillStyle='#fff';cx.font='bold 10px Segoe UI';cx.textAlign='center';cx.fillText(p.v.toFixed(2),p.x,p.y-9);});}
   drawP(F_END,'#4ade80');drawP(R_END,'#a78bfa');
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Pressure (bar)',0,0);cx.restore();
-})();
+}
 
 // CHART 3: FUEL OUT
-(function(){
+function drawRT3(){
   const {cv,cx,W,H}=rtSetup('rt_c3');
   const P={l:48,r:60,t:20,b:48};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
@@ -1969,8 +1990,12 @@ function rtSetup(id){
   LAPS_ACT.forEach((v,i)=>{cx.fillStyle='rgba(255,255,255,0.45)';cx.font='9px Segoe UI';cx.textAlign='center';cx.fillText(v+'L',px(i),baseY-4);});
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
   cx.save();cx.translate(W-8,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#4ade80';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Consumed (L)',0,0);cx.restore();
-})();
-})();
+}
+// init + resize
+function resizeRT(){drawRT1();drawRT2();drawRT3();}
+requestAnimationFrame(resizeRT);
+window.addEventListener('resize',resizeRT);
+});
 </script>
 </body>
 </html>
