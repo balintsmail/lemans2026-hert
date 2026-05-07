@@ -550,7 +550,7 @@ function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
 }
 function resize(){
   const wrap=cv.parentElement;
-  {const _w=(wrap.clientWidth||900)-20,_h=630;cv.width=_w*DPR;cv.height=_h*DPR;cv.style.width=_w+'px';cv.style.height=_h+'px';}
+  {const _w=(wrap.clientWidth||900)-20,_h=630;cv.width=_w*DPR;cv.height=_h*DPR;}
   draw();
 }
 function getVisible(){return DATA.filter(d=>d.t!==null&&!hidden.has(d.r)&&(filter==='all'||d.t<115));}
@@ -830,7 +830,7 @@ cv2.addEventListener('mousemove',e=>{
 });
 cv2.addEventListener('mouseleave',()=>document.getElementById('tip').style.display='none');
 
-function resize2(){const wrap=cv2.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv2.width=_w*DPR;cv2.height=_h*DPR;cv2.style.width=_w+'px';cv2.style.height=_h+'px';}draw2();}
+function resize2(){const wrap=cv2.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv2.width=_w*DPR;cv2.height=_h*DPR;}draw2();}
 function renderToggles2(){
   document.getElementById('rtogs2').innerHTML=RIDERS.map(r=>`<span class="rtog" id="rt2_${r}" onclick="toggleRider('${r}')"><span class="dot" style="background:${RC[r]}"></span>${r.split(' ').pop()}</span>`).join('');
   document.getElementById('ttogs2').innerHTML=Object.entries(TC).map(([t,col])=>`<span class="rtog" id="tt2_${t}" onclick="toggleTeam2(${t})"><span class="dot" style="background:${col}"></span>${TNAMES[+t]||'#'+t}</span>`).join('');
@@ -940,7 +940,7 @@ function draw3(){
   });
 }
 
-function resize3(){const wrap=cv3.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv3.width=_w*DPR;cv3.height=_h*DPR;cv3.style.width=_w+'px';cv3.style.height=_h+'px';}draw3();}
+function resize3(){const wrap=cv3.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv3.width=_w*DPR;cv3.height=_h*DPR;}draw3();}
 
 const cv4=document.getElementById('c4'),cx4=cv4?cv4.getContext('2d'):null;
 function renderToggles4(){
@@ -1027,7 +1027,7 @@ function draw4(){
     cx4.restore();
   });
 }
-function resize4(){if(!cv4)return;const wrap=cv4.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv4.width=_w*DPR;cv4.height=_h*DPR;cv4.style.width=_w+'px';cv4.style.height=_h+'px';}draw4();}
+function resize4(){if(!cv4)return;const wrap=cv4.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv4.width=_w*DPR;cv4.height=_h*DPR;}draw4();}
 
 // ── STINT RANKING 2 (Early race / 0-16h default) ────────────────────────────
 const cv6=document.getElementById('c6');
@@ -1107,7 +1107,7 @@ function draw2b(){
     return `<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 6px"><span style="width:10px;height:10px;border-radius:50%;background:${col};display:inline-block"></span><span style="font-size:.7rem;color:#9aa3b8">${s.lbl}</span></span>`;
   }).join('');
 }
-function resize2b(){if(!cv6)return;const wrap=cv6.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=560;cv6.width=_w*DPR;cv6.height=_h*DPR;cv6.style.width=_w+'px';cv6.style.height=_h+'px';}draw2b();}
+function resize2b(){if(!cv6)return;const wrap=cv6.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=560;cv6.width=_w*DPR;cv6.height=_h*DPR;}draw2b();}
 
 // ── PITSTOPS 2 (clean stops only ≤150s) ─────────────────────────────────────
 const cv7=document.getElementById('c7');
@@ -1189,7 +1189,7 @@ function draw7(){
     cx7.restore();
   });
 }
-function resize7(){if(!cv7)return;const wrap=cv7.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv7.width=_w*DPR;cv7.height=_h*DPR;cv7.style.width=_w+'px';cv7.style.height=_h+'px';}draw7();}
+function resize7(){if(!cv7)return;const wrap=cv7.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv7.width=_w*DPR;cv7.height=_h*DPR;}draw7();}
 function initDualSlider(idMin,idMax,idFill,idLbl,onChange){
   const mn=document.getElementById(idMin),mx=document.getElementById(idMax);
   const fill=document.getElementById(idFill),lbl=document.getElementById(idLbl);
@@ -1311,7 +1311,7 @@ function draw5(){
     cx5.restore();
   });
 }
-function resize5(){if(!cv5)return;const wrap=cv5.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv5.width=_w*DPR;cv5.height=_h*DPR;cv5.style.width=_w+'px';cv5.style.height=_h+'px';}draw5();}
+function resize5(){if(!cv5)return;const wrap=cv5.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=510;cv5.width=_w*DPR;cv5.height=_h*DPR;}draw5();}
 
 
 
@@ -1537,10 +1537,10 @@ function draw_ot(){
   cx_ot.fillStyle='#c0c8d8';cx_ot.font='11px Segoe UI';cx_ot.fillText('Overtakes',0,0);cx_ot.restore();
 }
 
-function resize_pos(){if(!c_pos)return;const wrap=c_pos.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=480;c_pos.width=_w*DPR;c_pos.height=_h*DPR;c_pos.style.width=_w+'px';c_pos.style.height=_h+'px';}draw_pos();}
-function resize_ot(){if(!c_ot)return;const wrap=c_ot.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=300;c_ot.width=_w*DPR;c_ot.height=_h*DPR;c_ot.style.width=_w+'px';c_ot.style.height=_h+'px';}draw_ot();}
+function resize_pos(){if(!c_pos)return;const wrap=c_pos.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=480;c_pos.width=_w*DPR;c_pos.height=_h*DPR;}draw_pos();}
+function resize_ot(){if(!c_ot)return;const wrap=c_ot.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=300;c_ot.width=_w*DPR;c_ot.height=_h*DPR;}draw_ot();}
 
-function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_oil.width=_w*DPR;cv_oil.height=_h*DPR;cv_oil.style.width=_w+'px';cv_oil.style.height=_h+'px';}draw_oil();}
+function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_oil.width=_w*DPR;cv_oil.height=_h*DPR;}draw_oil();}
 
 // ── COOLANT TEMPERATURE ───────────────────────────────────────────────────────
 const cv_cool=document.getElementById('c_cool');
@@ -1596,7 +1596,7 @@ function draw_cool(){
   cx_cool.fillText('Max',W-P.r+4,pyF(COOL_MAX[838-1]||COOL_MAX.find(v=>v))+4);
   cx_cool.globalAlpha=0.55;cx_cool.fillText('Min',W-P.r+4,pyF(COOL_MIN[838-1]||COOL_MIN.find(v=>v))+4);cx_cool.globalAlpha=1;
 }
-function resize_cool(){if(!cv_cool)return;const wrap=cv_cool.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_cool.width=_w*DPR;cv_cool.height=_h*DPR;cv_cool.style.width=_w+'px';cv_cool.style.height=_h+'px';}draw_cool();}
+function resize_cool(){if(!cv_cool)return;const wrap=cv_cool.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_cool.width=_w*DPR;cv_cool.height=_h*DPR;}draw_cool();}
 
 // ── FUEL CONSUMPTION ─────────────────────────────────────────────────────────
 const cv_fuel=document.getElementById('c_fuel');
@@ -1657,7 +1657,7 @@ function draw_fuel(){
     cx_fuel.stroke();cx_fuel.globalAlpha=1;
   }
 }
-function resize_fuel(){if(!cv_fuel)return;const wrap=cv_fuel.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_fuel.width=_w*DPR;cv_fuel.height=_h*DPR;cv_fuel.style.width=_w+'px';cv_fuel.style.height=_h+'px';}draw_fuel();}
+function resize_fuel(){if(!cv_fuel)return;const wrap=cv_fuel.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_fuel.width=_w*DPR;cv_fuel.height=_h*DPR;}draw_fuel();}
 
 // ── SETUP: DTC / ENGINE BRAKE / RIDING MODE ──────────────────────────────────
 const cv_setup=document.getElementById('c_setup');
@@ -1724,7 +1724,7 @@ function draw_setup(){
   cx_setup.strokeStyle='#555';cx_setup.lineWidth=1;cx_setup.strokeRect(P.l+pw-50,P.t+4,12,10);
   cx_setup.fillStyle='#9aa3b8';cx_setup.fillText('Dry 2',P.l+pw-34,P.t+12);
 }
-function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_setup.width=_w*DPR;cv_setup.height=_h*DPR;cv_setup.style.width=_w+'px';cv_setup.style.height=_h+'px';}draw_setup();}
+function resize_setup(){if(!cv_setup)return;const wrap=cv_setup.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_setup.width=_w*DPR;cv_setup.height=_h*DPR;}draw_setup();}
 
 const c_otlt=document.getElementById('c_otlt');
 const cx_otlt=c_otlt?c_otlt.getContext('2d'):null;
@@ -1848,7 +1848,7 @@ function draw_otlt(){
   riders.forEach(r=>{cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t-10,4,0,Math.PI*2);cx_otlt.fill();cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t-6);lx+=cx_otlt.measureText(name).width+22;});
   renderOTLTStats(items,groups);
 }
-function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;c_otlt.width=_w*DPR;c_otlt.height=_h*DPR;c_otlt.style.width=_w+'px';c_otlt.style.height=_h+'px';}draw_otlt();}
+function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;c_otlt.width=_w*DPR;c_otlt.height=_h*DPR;}draw_otlt();}
 
 renderStandings();
 renderToggles();
@@ -1871,7 +1871,7 @@ requestAnimationFrame(()=>{
   <h2>Run Table — Weather · Tyres · Fuel</h2>
   <p class="hsub" style="margin-bottom:12px">Manually recorded pit-wall data. 14 stints · 14 Apr 2026 · 15:00 → 03:55. Tyre pressures recorded at end of stint (selected stints only). Fuel out = litres remaining when stopped.</p>
 
-  <div class="cwrap" style="margin-bottom:24px">
+  <div class="cwrap" style="margin-bottom:24px;height:auto">
     <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Weather — Air Temp · Track Temp · Wind Speed</p>
     <canvas id="rt_c1" height="300"></canvas>
     <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
@@ -1883,7 +1883,7 @@ requestAnimationFrame(()=>{
     <p style="font-size:.72rem;color:#fbbf24;margin-top:6px;font-style:italic">⚠ Interpolated: Air temp S7 (14.5°C), S9 (11.5°C) · Wind speed S2–S3, S7–S9 — online weather unavailable</p>
   </div>
 
-  <div class="cwrap" style="margin-bottom:24px">
+  <div class="cwrap" style="margin-bottom:24px;height:auto">
     <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Tyre Pressures — End of Stint (bar)</p>
     <canvas id="rt_c2" height="300"></canvas>
     <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
@@ -1893,7 +1893,7 @@ requestAnimationFrame(()=>{
     <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Only stints with recorded end pressures shown. Front Start S1 = 2.30 bar · Rear Start S1 = 1.40 bar</p>
   </div>
 
-  <div class="cwrap">
+  <div class="cwrap" style="height:auto">
     <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
     <canvas id="rt_c3" height="280"></canvas>
     <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
