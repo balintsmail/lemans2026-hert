@@ -2268,15 +2268,13 @@ function drawRT3(){
     cx.fillStyle='#fff';cx.font='bold 13px Segoe UI';cx.textAlign='center';
     cx.fillText(v.toFixed(2),xx,pyF(v)-5);
   });
-  // Stint labels — 45° rotated into bottom padding
+  // Stint labels — horizontal
   FUEL_OUT.forEach((v,i)=>{
     if(v===null||v===undefined)return;
     if(hiddenRidersRT3.has(RIDERS[i]))return;
     const xx=pxH(RACE_H[i]);
-    cx.save();cx.translate(xx,H-P.b+6);cx.rotate(Math.PI/4);
-    cx.fillStyle='#9aa3b8';cx.font='bold 10px Segoe UI';cx.textAlign='left';
-    cx.fillText('STINT '+(i+1),0,0);
-    cx.restore();
+    cx.fillStyle='#9aa3b8';cx.font='bold 9px Segoe UI';cx.textAlign='center';
+    cx.fillText('STINT '+(i+1),xx,H-P.b+22);
   });
   // Axis labels
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
