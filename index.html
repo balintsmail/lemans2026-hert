@@ -1787,7 +1787,8 @@ function draw_traffic(){
   const P={l:136,r:40,t:20,b:28};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const rowH=ph/nRows;
-  const pxH=h=>P.l+h/24*pw;
+  const hRange=Math.max(0.5,trHMax-trHMin);
+  const pxH=h=>P.l+(h-trHMin)/hRange*pw;
   const pyRow=i=>P.t+rowH*(i+0.5);
   cx_traffic.fillStyle='#12141c';cx_traffic.fillRect(0,0,W,H);
   // Filtered events
@@ -1798,13 +1799,16 @@ function draw_traffic(){
     const eh=e[1]/1000;if(eh<trHMin||eh>trHMax)return false;
     return true;
   });
-  // Hour grid
-  for(let h=0;h<=24;h+=2){
-    const xx=pxH(h);
+  // Hour grid — step adapts to zoom level
+  const hStep=hRange<=1?0.25:hRange<=3?0.5:hRange<=6?1:hRange<=12?2:4;
+  const hStart=Math.ceil(trHMin/hStep)*hStep;
+  for(let h=hStart;h<=trHMax+0.001;h=Math.round((h+hStep)*1000)/1000){
+    const xx=pxH(h);if(xx<P.l-1||xx>W-P.r+1)continue;
     cx_traffic.strokeStyle='#1e2233';cx_traffic.lineWidth=1;cx_traffic.setLineDash([]);
     cx_traffic.beginPath();cx_traffic.moveTo(xx,P.t);cx_traffic.lineTo(xx,H-P.b);cx_traffic.stroke();
     cx_traffic.fillStyle='#9aa3b8';cx_traffic.font='10px Segoe UI';cx_traffic.textAlign='center';
-    cx_traffic.fillText(h+'h',xx,H-P.b+12);
+    const lbl=hStep>=1?Math.round(h)+'h':(Math.round(h*4)/4).toFixed(2).replace(/\.?0+$/,'')+'h';
+    cx_traffic.fillText(lbl,xx,H-P.b+12);
   }
   // Row backgrounds + labels
   TR_TEAMS_SORTED.forEach((t,i)=>{
