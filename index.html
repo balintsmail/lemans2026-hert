@@ -2080,7 +2080,7 @@ requestAnimationFrame(()=>{
     <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
     <canvas id="rt_c3" height="280"></canvas>
     <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) · numbers inside bar = laps on that stint</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) — left axis 0–4 L · Lap count circles on line (right axis 0–40), coloured by rider</div>
     </div>
     <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = more laps on tank. Rider initial shown below each bar.</p>
   </div>
@@ -2236,13 +2236,13 @@ function drawRT3(){
   const P={l:48,r:42,t:20,b:50};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const pxH=rh=>P.l+rh/24*pw;
-  const fMin=0,fMax=2,pyF=v=>P.t+ph-(v-fMin)/(fMax-fMin)*ph;
+  const fMin=0,fMax=4,pyF=v=>P.t+ph-(v-fMin)/(fMax-fMin)*ph;
   const bw=Math.max(6,pw/24*0.6); // bar width scaled to 24h
   cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
-  const lMin=30,lMax=40,pyL=v=>P.t+ph-(v-lMin)/(lMax-lMin)*ph;
-  for(let y=0;y<=2+0.01;y+=0.5){const yy=pyF(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y.toFixed(1)+'L',P.l-5,yy+4);}
+  const lMin=0,lMax=40,pyL=v=>P.t+ph-(v-lMin)/(lMax-lMin)*ph;
+  for(let y=0;y<=4+0.01;y+=0.5){const yy=pyF(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y.toFixed(1)+'L',P.l-5,yy+4);}
   // Right axis — laps
-  for(let y=30;y<=40;y+=2){const yy=pyL(y);cx.fillStyle='#a5f3fc';cx.font='10px Segoe UI';cx.textAlign='left';cx.fillText(y,W-P.r+4,yy+4);}
+  for(let y=0;y<=40;y+=10){const yy=pyL(y);cx.strokeStyle='#1a2235';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#a5f3fc';cx.font='10px Segoe UI';cx.textAlign='left';cx.fillText(y,W-P.r+4,yy+4);}
   drawTimeAxis(cx,W,H,P,pw,ph);
   const baseY=pyF(0);
   FUEL_OUT.forEach((v,i)=>{
@@ -2255,8 +2255,6 @@ function drawRT3(){
     // Fuel out value above bar
     cx.fillStyle='#fff';cx.font='bold 13px Segoe UI';cx.textAlign='center';
     cx.fillText(v.toFixed(2),xx,pyF(v)-5);
-    // Lap count inside bar
-    if(barH>18&&LAPS_ACT[i]!=null){cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.fillText(LAPS_ACT[i]+'L',xx,baseY-6);}
     // Stint label
     cx.fillStyle='#6b7280';cx.font='bold 9px Segoe UI';
     cx.fillText(STINTS[i],xx,H-P.b+22);
@@ -2267,10 +2265,18 @@ function drawRT3(){
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
   // LAPS_ACT line chart
   {
-    const pts=LAPS_ACT.map((v,i)=>v!=null?{x:pxH(RACE_H[i]),y:pyL(v),v}:null).filter(Boolean);
+    const pts=LAPS_ACT.map((v,i)=>v!=null?{x:pxH(RACE_H[i]),y:pyL(v),v,i}:null).filter(Boolean);
     cx.strokeStyle='#a5f3fc';cx.lineWidth=2;cx.setLineDash([4,3]);
     cx.beginPath();pts.forEach((p,j)=>j===0?cx.moveTo(p.x,p.y):cx.lineTo(p.x,p.y));cx.stroke();cx.setLineDash([]);
-    pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,3,0,Math.PI*2);cx.fillStyle='#a5f3fc';cx.fill();});
+    pts.forEach(p=>{
+      const col=rcol_rt[RIDERS[p.i]]||'#a5f3fc';
+      cx.beginPath();cx.arc(p.x,p.y,10,0,Math.PI*2);
+      cx.fillStyle=col;cx.fill();
+      cx.strokeStyle='rgba(0,0,0,0.4)';cx.lineWidth=1.5;cx.stroke();
+      cx.fillStyle='#fff';cx.font='bold 9px Segoe UI';cx.textAlign='center';cx.textBaseline='middle';
+      cx.fillText(p.v,p.x,p.y);
+      cx.textBaseline='alphabetic';
+    });
   }
   cx.save();cx.translate(W-8,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#a5f3fc';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Laps',0,0);cx.restore();
 }
