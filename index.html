@@ -1843,14 +1843,14 @@ function draw_traffic(){
     cx_traffic.fillStyle='rgba('+r+','+g+','+b+','+alpha.toFixed(3)+')';cx_traffic.fill();
   });
   // State 2: strict catch-up, no overtake — bigger colored dot
-  filtered.filter(e=>e[6]===1&&!(OT_NP[e[0]-1]>0)).forEach(e=>{
+  filtered.filter(e=>e[6]===1&&!OT_NP[e[0]-1]).forEach(e=>{
     const i=teamIdxMap[e[2]];if(i===undefined)return;
     const xx=pxH(e[1]/1000),yy=pyRow(i);
     cx_traffic.beginPath();cx_traffic.arc(xx,yy,5,0,Math.PI*2);
     cx_traffic.fillStyle=TR_RIDERS_COL[e[5]];cx_traffic.fill();
   });
-  // State 3: overtake in that lap (any traffic event) — bigger white dot, on top
-  filtered.filter(e=>OT_NP[e[0]-1]>0).forEach(e=>{
+  // State 3: strict catch-up AND overtake that lap — white dot
+  filtered.filter(e=>e[6]===1&&OT_NP[e[0]-1]>0).forEach(e=>{
     const i=teamIdxMap[e[2]];if(i===undefined)return;
     const xx=pxH(e[1]/1000),yy=pyRow(i);
     cx_traffic.beginPath();cx_traffic.arc(xx,yy,5,0,Math.PI*2);
