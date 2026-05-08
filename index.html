@@ -1838,7 +1838,7 @@ function resize_traffic(){
   if(!c_traffic)return;
   const wrap=c_traffic.parentElement;
   const _w=(wrap.clientWidth||900)-20;
-  const _h=Math.round(TR_TEAMS_SORTED.length*20)+50;
+  const _h=Math.round(TR_TEAMS_SORTED.length*60)+50;
   c_traffic.width=_w*DPR;c_traffic.height=_h*DPR;
   draw_traffic();
 }
