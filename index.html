@@ -2078,11 +2078,19 @@ requestAnimationFrame(()=>{
 
   <div class="cwrap" style="height:auto">
     <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
-    <canvas id="rt_c3" height="280"></canvas>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) — left axis 0–4 L · Lap count circles on line (right axis 0–40), coloured by rider</div>
+    <div class="ctrl" style="margin-bottom:8px">
+      <span class="lbl">RIDERS</span>
+      <span class="rtog on" id="rrtt_Balint" onclick="toggleRiderRT3('Balint')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
+      <span class="rtog on" id="rrtt_Loris" onclick="toggleRiderRT3('Loris')"><span class="dot" style="background:#D63B25"></span>Loris</span>
+      <span class="rtog on" id="rrtt_Mate" onclick="toggleRiderRT3('Mate')"><span class="dot" style="background:#217346"></span>Máté</span>
+      <span class="rtog on" id="rrtt_Jan" onclick="toggleRiderRT3('Jan')"><span class="dot" style="background:#FFC000"></span>Jan</span>
     </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = more laps on tank. Rider initial shown below each bar.</p>
+    <canvas id="rt_c3" height="320"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) — left axis 0–4 L</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#a5f3fc"></div>Laps per stint — right axis 0–40, circles coloured by rider</div>
+    </div>
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = more laps on tank.</p>
   </div>
 </section>
 
@@ -2231,54 +2239,63 @@ function drawRT2(){
 }
 
 // CHART 3: FUEL OUT (no fuel consumed line)
+let hiddenRidersRT3=new Set();
+window.toggleRiderRT3=function(r){hiddenRidersRT3.has(r)?hiddenRidersRT3.delete(r):hiddenRidersRT3.add(r);const el=document.getElementById('rrtt_'+r);if(el)el.classList.toggle('off',hiddenRidersRT3.has(r));drawRT3();};
 function drawRT3(){
   const {cv,cx,W,H}=rtSetup('rt_c3');
-  const P={l:48,r:42,t:20,b:50};
+  const P={l:48,r:42,t:20,b:70};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const pxH=rh=>P.l+rh/24*pw;
   const fMin=0,fMax=4,pyF=v=>P.t+ph-(v-fMin)/(fMax-fMin)*ph;
-  const bw=Math.max(6,pw/24*0.6); // bar width scaled to 24h
+  const bw=Math.max(6,pw/24*0.6);
   cx.fillStyle='#12141c';cx.fillRect(0,0,W,H);
   const lMin=0,lMax=40,pyL=v=>P.t+ph-(v-lMin)/(lMax-lMin)*ph;
+  // Fuel grid left axis
   for(let y=0;y<=4+0.01;y+=0.5){const yy=pyF(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y.toFixed(1)+'L',P.l-5,yy+4);}
-  // Right axis — laps
+  // Laps grid right axis
   for(let y=0;y<=40;y+=10){const yy=pyL(y);cx.strokeStyle='#1a2235';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#a5f3fc';cx.font='10px Segoe UI';cx.textAlign='left';cx.fillText(y,W-P.r+4,yy+4);}
   drawTimeAxis(cx,W,H,P,pw,ph);
   const baseY=pyF(0);
+  // Fuel bars (rider-filtered)
   FUEL_OUT.forEach((v,i)=>{
     if(v===null||v===undefined)return;
+    if(hiddenRidersRT3.has(RIDERS[i]))return;
     const xx=pxH(RACE_H[i]);
     const barH=baseY-pyF(v);
     const g=cx.createLinearGradient(0,pyF(v),0,baseY);
     g.addColorStop(0,'#fbbf24');g.addColorStop(1,'#92400e');
     cx.fillStyle=g;cx.fillRect(xx-bw/2,pyF(v),bw,barH);
-    // Fuel out value above bar
     cx.fillStyle='#fff';cx.font='bold 13px Segoe UI';cx.textAlign='center';
     cx.fillText(v.toFixed(2),xx,pyF(v)-5);
-    // Stint label
-    cx.fillStyle='#6b7280';cx.font='bold 9px Segoe UI';
-    cx.fillText(STINTS[i],xx,H-P.b+22);
-    // Rider initial
-    cx.fillStyle=rcol_rt[RIDERS[i]]||'#9aa3b8';cx.font='bold 9px Segoe UI';
-    cx.fillText(RIDERS[i][0],xx,H-P.b+33);
   });
+  // Stint labels — 45° rotated into bottom padding
+  FUEL_OUT.forEach((v,i)=>{
+    if(v===null||v===undefined)return;
+    if(hiddenRidersRT3.has(RIDERS[i]))return;
+    const xx=pxH(RACE_H[i]);
+    cx.save();cx.translate(xx,H-P.b+6);cx.rotate(Math.PI/4);
+    cx.fillStyle='#9aa3b8';cx.font='bold 10px Segoe UI';cx.textAlign='left';
+    cx.fillText('STINT '+(i+1),0,0);
+    cx.restore();
+  });
+  // Axis labels
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
-  // LAPS_ACT line chart
+  cx.save();cx.translate(W-8,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#a5f3fc';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Laps',0,0);cx.restore();
+  // LAPS_ACT line + rider-coloured circles
   {
-    const pts=LAPS_ACT.map((v,i)=>v!=null?{x:pxH(RACE_H[i]),y:pyL(v),v,i}:null).filter(Boolean);
+    const allPts=LAPS_ACT.map((v,i)=>v!=null?{x:pxH(RACE_H[i]),y:pyL(v),v,i}:null).filter(Boolean);
     cx.strokeStyle='#a5f3fc';cx.lineWidth=2;cx.setLineDash([4,3]);
-    cx.beginPath();pts.forEach((p,j)=>j===0?cx.moveTo(p.x,p.y):cx.lineTo(p.x,p.y));cx.stroke();cx.setLineDash([]);
-    pts.forEach(p=>{
+    cx.beginPath();allPts.forEach((p,j)=>j===0?cx.moveTo(p.x,p.y):cx.lineTo(p.x,p.y));cx.stroke();cx.setLineDash([]);
+    allPts.filter(p=>!hiddenRidersRT3.has(RIDERS[p.i])).forEach(p=>{
       const col=rcol_rt[RIDERS[p.i]]||'#a5f3fc';
-      cx.beginPath();cx.arc(p.x,p.y,10,0,Math.PI*2);
+      cx.beginPath();cx.arc(p.x,p.y,12,0,Math.PI*2);
       cx.fillStyle=col;cx.fill();
       cx.strokeStyle='rgba(0,0,0,0.4)';cx.lineWidth=1.5;cx.stroke();
-      cx.fillStyle='#fff';cx.font='bold 9px Segoe UI';cx.textAlign='center';cx.textBaseline='middle';
+      cx.fillStyle='#fff';cx.font='bold 13px Segoe UI';cx.textAlign='center';cx.textBaseline='middle';
       cx.fillText(p.v,p.x,p.y);
       cx.textBaseline='alphabetic';
     });
   }
-  cx.save();cx.translate(W-8,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#a5f3fc';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Laps',0,0);cx.restore();
 }
 // init + resize
 function resizeRT(){drawRT1();drawRT2();drawRT3();}
