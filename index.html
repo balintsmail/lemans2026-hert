@@ -2051,7 +2051,7 @@ function drawRT2(){
 // CHART 3: FUEL OUT (no fuel consumed line)
 function drawRT3(){
   const {cv,cx,W,H}=rtSetup('rt_c3');
-  const P={l:48,r:20,t:20,b:40};
+  const P={l:48,r:20,t:20,b:50};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   const pxH=rh=>P.l+rh/24*pw;
   const fMin=0,fMax=2,pyF=v=>P.t+ph-(v-fMin)/(fMax-fMin)*ph;
@@ -2061,26 +2061,22 @@ function drawRT3(){
   drawTimeAxis(cx,W,H,P,pw,ph);
   const baseY=pyF(0);
   FUEL_OUT.forEach((v,i)=>{
+    if(v===null||v===undefined)return;
     const xx=pxH(RACE_H[i]);
     const barH=baseY-pyF(v);
     const g=cx.createLinearGradient(0,pyF(v),0,baseY);
     g.addColorStop(0,'#fbbf24');g.addColorStop(1,'#92400e');
     cx.fillStyle=g;cx.fillRect(xx-bw/2,pyF(v),bw,barH);
-    cx.fillStyle='#fff';cx.font='bold 10px Segoe UI';cx.textAlign='center';
-    cx.fillText(v.toFixed(2),xx,pyF(v)-4);
+    // Fuel out value above bar
+    cx.fillStyle='#fff';cx.font='bold 13px Segoe UI';cx.textAlign='center';
+    cx.fillText(v.toFixed(2),xx,pyF(v)-5);
     // Lap count inside bar
-    if(barH>14){cx.fillStyle='rgba(255,255,255,0.55)';cx.font='8px Segoe UI';cx.fillText(LAPS_ACT[i]+'L',xx,baseY-5);}
-    // Rider initial below
+    if(barH>18&&LAPS_ACT[i]!=null){cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.fillText(LAPS_ACT[i]+'L',xx,baseY-6);}
+    // Stint label
+    cx.fillStyle='#6b7280';cx.font='bold 9px Segoe UI';
+    cx.fillText(STINTS[i],xx,H-P.b+22);
+    // Rider initial
     cx.fillStyle=rcol_rt[RIDERS[i]]||'#9aa3b8';cx.font='bold 9px Segoe UI';
-    cx.fillText(RIDERS[i][0],xx,H-P.b+32);
+    cx.fillText(RIDERS[i][0],xx,H-P.b+33);
   });
-  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
-}
-// init + resize
-function resizeRT(){drawRT1();drawRT2();drawRT3();}
-requestAnimationFrame(resizeRT);
-window.addEventListener('resize',resizeRT);
-})();
-</script>
-</body>
-</html>
+  cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.rest
