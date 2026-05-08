@@ -2074,4 +2074,10 @@ function drawRT3(){
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#fbbf24';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Fuel Out (L)',0,0);cx.restore();
 }
 // init + resize
-function resizeR
+function resizeRT(){drawRT1();drawRT2();drawRT3();}
+requestAnimationFrame(resizeRT);
+window.addEventListener('resize',resizeRT);
+})();
+</script>
+</body>
+</html>
