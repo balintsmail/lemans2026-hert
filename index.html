@@ -1883,7 +1883,7 @@ requestAnimationFrame(()=>{
       <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#4169E1"></div>Wind Speed km/h (right axis)</div>
       <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated</div>
     </div>
-    <p style="font-size:.72rem;color:#fbbf24;margin-top:6px;font-style:italic">⚠ Interpolated: Air temp S7 (14.5°C), S9 (11.5°C) · Wind speed S2–S3, S7–S9 — online weather unavailable</p>
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:6px;font-style:italic">Missing stints shown as line breaks. S25 (14:35) has no weather data recorded.</p>
   </div>
 
   <div class="cwrap" style="margin-bottom:24px;height:auto">
@@ -1909,20 +1909,17 @@ requestAnimationFrame(()=>{
 <script>
 // ── RUN TABLE CHARTS ─────────────────────────────────────────────────────────
 (function(){
-const STINTS  = ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12','S13','S14'];
-const TIMES   = ['15:00','15:50','16:50','17:50','18:50','19:50','20:50','21:50','22:50','23:50','00:55','01:55','02:55','03:55'];
-const RIDERS  = ['Bálint','Loris','Máté','Jan','Bálint','Loris','Máté','Bálint','Jan','Loris','Máté','Bálint','Jan','Loris'];
-const AIR_TEMP   = [18,19,19,18,17,16,14.5,13,11.5,10,9,8,7,7];
-const AIR_INTERP = [false,false,false,false,false,false,true,false,true,false,false,false,false,false];
-const TRACK_TEMP = [25,25,26,24,21,21,18,17,14,13.6,12.3,12.4,12.2,11];
-const WIND       = [16,16.3,16.7,17,16,16,15,14,13,12,11,9,8,6];
-const WIND_INTERP= [false,true,true,false,false,false,true,true,true,false,false,false,false,false];
-const F_END = [null,2.25,null,2.24,null,2.24,null,2.00,null,null,null,2.17,null,2.15];
-const R_END = [null,1.41,null,1.25,null,1.24,null,1.22,null,null,null,1.21,null,1.15];
-const FUEL_OUT   = [0.40,1.20,0.80,1.00,0.93,0.85,1.10,0.70,0.70,1.30,1.20,0.74,0.90,1.20];
-const FUEL_CONS  = [23.6,22.8,23.2,23.0,23.07,23.15,22.9,23.3,23.3,22.7,22.8,23.26,23.1,22.8];
-const LAPS_ACT   = [34,34,36,34,34,38,36,34,34,34,35,34,34,34];
-const rcol_rt    = {'Bálint':'#5B9BD5','Loris':'#D63B25','Máté':'#217346','Jan':'#FFC000'};
+const STINTS  = ["S1","S2","S3","S4","S5","S6","S7","S8","S9","S10","S11","S12","S13","S14","S15","S16","S17","S18","S19","S20","S21","S22","S23","S24","S25"];
+const TIMES   = ["15:00","15:50","16:50","17:50","18:50","19:50","20:50","21:50","22:50","23:50","00:55","01:55","02:55","03:55","04:55","05:55","06:46","07:42","08:38","09:38","10:52","11:47","12:44","13:40","14:35"];
+const RIDERS  = ["Balint","Loris","Mate","Jan","Balint","Loris","Mate","Balint","Jan","Loris","Mate","Balint","Jan","Loris","Mate","Loris","Balint","Jan","Balint","Mate","Loris","Jan","Balint","Mate","Loris"];
+const AIR_TEMP   = [18,19,19,18,17,16,null,13,null,10,9,8,7,7,6,5,5,6,7,9,11,14,16,17,null];
+const TRACK_TEMP = [25,25,26,24,21,21,18,17,14,13.6,12.3,12.4,12.2,11,10.7,9.3,8.5,null,8.6,9.4,10.7,13.5,23.8,28.8,null];
+const WIND       = [16,null,null,17,16,16,null,null,null,12,11,9,8,6,5,5,5,null,8,9,10,13,14,14,null];
+const F_END = [null,2.25,null,2.24,null,2.24,null,2.00,null,null,null,2.17,null,2.15,null,2.10,null,2.13,null,null,null,2.23,null,null,null];
+const R_END = [null,1.41,null,1.25,null,1.24,null,1.22,null,null,null,1.21,null,1.15,null,1.11,null,1.17,null,null,null,1.21,null,null,null];
+const FUEL_OUT   = [0.40,1.20,0.80,1.00,0.93,0.85,1.10,0.70,0.70,1.30,1.20,0.74,0.90,1.20,0.95,1.45,1.30,0.80,1.25,null,1.70,null,null,null,null];
+const LAPS_ACT   = [34,34,36,34,34,38,36,34,34,34,35,34,34,34,35,33,34,34,34,37,34,34,null,null,null];
+const rcol_rt    = {'Bálint':'#5B9BD5','Balint':'#5B9BD5','Loris':'#D63B25','Máté':'#217346','Mate':'#217346','Jan':'#FFC000'};
 
 function rtSetup(id){
   const cv=document.getElementById(id);
@@ -1990,27 +1987,33 @@ function drawRT1(){
   // Time axis
   drawTimeAxis(cx,W,H,P,pw,ph);
   // TRACK TEMP (red)
+  // Track temp — break line at nulls
   cx.strokeStyle='#ef4444';cx.lineWidth=2.5;cx.setLineDash([]);
-  cx.beginPath();TRACK_TEMP.forEach((v,i)=>{const xx=pxH(RACE_H[i]);i===0?cx.moveTo(xx,pyT(v)):cx.lineTo(xx,pyT(v));});cx.stroke();
-  // Segmented line helper
-  function segLine(vals,isInterp,pyFn,solidColor,interpColor,lw){
+  let ttStarted=false;cx.beginPath();
+  TRACK_TEMP.forEach((v,i)=>{if(v===null){ttStarted=false;return;}const xx=pxH(RACE_H[i]),yy=pyT(v);if(!ttStarted){cx.moveTo(xx,yy);ttStarted=true;}else cx.lineTo(xx,yy);});
+  cx.stroke();
+  TRACK_TEMP.forEach((v,i)=>{if(v===null)return;cx.beginPath();cx.arc(pxH(RACE_H[i]),pyT(v),3.5,0,Math.PI*2);cx.fillStyle='#ef4444';cx.fill();});
+  // Segmented line helper — null values break the line, no interpolation
+  function segLine(vals,pyFn,color,lw){
     lw=lw||2.5;
-    for(let i=0;i<vals.length-1;i++){
-      const interp=isInterp[i]||isInterp[i+1];
-      cx.strokeStyle=interp?interpColor:solidColor;cx.lineWidth=lw;cx.setLineDash(interp?[4,3]:[]);
-      cx.beginPath();cx.moveTo(pxH(RACE_H[i]),pyFn(vals[i]));cx.lineTo(pxH(RACE_H[i+1]),pyFn(vals[i+1]));cx.stroke();
-    }
-    cx.setLineDash([]);
+    cx.strokeStyle=color;cx.lineWidth=lw;cx.setLineDash([]);
+    let started=false;
+    cx.beginPath();
     vals.forEach((v,i)=>{
-      cx.beginPath();cx.arc(pxH(RACE_H[i]),pyFn(v),isInterp[i]?3.5:4,0,Math.PI*2);
-      cx.fillStyle=isInterp[i]?'#fbbf24':solidColor;cx.fill();
-      if(isInterp[i]){cx.strokeStyle=solidColor;cx.lineWidth=1.5;cx.stroke();}
+      if(v===null||v===undefined){started=false;return;}
+      const xx=pxH(RACE_H[i]),yy=pyFn(v);
+      if(!started){cx.moveTo(xx,yy);started=true;}else{cx.lineTo(xx,yy);}
+    });
+    cx.stroke();
+    // Dots
+    vals.forEach((v,i)=>{
+      if(v===null||v===undefined)return;
+      cx.beginPath();cx.arc(pxH(RACE_H[i]),pyFn(v),3.5,0,Math.PI*2);
+      cx.fillStyle=color;cx.fill();
     });
   }
-  // AIR TEMP (cyan)
-  segLine(AIR_TEMP,AIR_INTERP,pyT,'#22d3ee','#fbbf24');
-  // WIND (king blue)
-  segLine(WIND,WIND_INTERP,pyW,'#4169E1','#fbbf24',2);
+  segLine(AIR_TEMP,pyT,'#22d3ee');
+  segLine(WIND,pyW,'#4169E1',2);
   // Axis labels
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#9aa3b8';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Temperature (°C)',0,0);cx.restore();
   cx.save();cx.translate(W-10,P.t+ph/2);cx.rotate(Math.PI/2);cx.fillStyle='#4169E1';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Wind Speed (km/h)',0,0);cx.restore();
