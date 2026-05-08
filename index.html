@@ -357,7 +357,7 @@ footer a:hover{color:var(--tx2)}
 <section id="traffic">
   <p class="stag">Race · traffic</p>
   <h2>Traffic Ahead per Lap</h2>
-  <p class="hsub" style="margin-bottom:8px">All 59 competitors. Dot colour = our rider (blue=Bálint, red=Loris, green=Máté, yellow=Jan). <strong>Large dot (2×)</strong> = Strict catch-up (pace diff > gap at lap start). <strong>Small dot</strong> = Approaching (gap ≤30s, pace faster). White ring = overtake also happened that lap.</p>
+  <p class="hsub" style="margin-bottom:8px">All 59 competitors. Dot colour = our rider (blue=Bálint, red=Loris, green=Máté, yellow=Jan). <strong style="color:#fff">White dot</strong> = overtake happened that lap. <strong>Large coloured dot</strong> = strict catch-up (pace diff > gap). <strong>Small fading dot</strong> = approaching (opacity = proximity).</p>
   <div class="ctrl" style="margin-bottom:8px">
     <span class="lbl">FILTER</span>
     <span class="rtog on" id="trfilt_all" onclick="setTrafficFilter('all')">All Traffic</span>
@@ -1831,8 +1831,8 @@ function draw_traffic(){
     cx_traffic.fillStyle='#7a8399';cx_traffic.font='9px Segoe UI';cx_traffic.textAlign='left';
     cx_traffic.fillText(cnt+(scnt>0?' '+scnt+'★':''),W-P.r+3,yy+3.5);
   });
-  // Draw approach dots (under strict) — opacity scales with proximity (gap=30→0%, gap=0→100%)
-  filtered.filter(e=>e[6]===0).forEach(e=>{
+  // State 1: approach — small colored dot, opacity by gap proximity
+  filtered.filter(e=>e[6]===0&&!(OT_NP[e[0]-1]>0)).forEach(e=>{
     const i=teamIdxMap[e[2]];if(i===undefined)return;
     const xx=pxH(e[1]/1000),yy=pyRow(i);
     const gap=e[3]/10;
@@ -1842,13 +1842,19 @@ function draw_traffic(){
     cx_traffic.beginPath();cx_traffic.arc(xx,yy,2.5,0,Math.PI*2);
     cx_traffic.fillStyle='rgba('+r+','+g+','+b+','+alpha.toFixed(3)+')';cx_traffic.fill();
   });
-  // Draw strict catch-up dots on top (2× larger, no extra ring)
-  filtered.filter(e=>e[6]===1).forEach(e=>{
+  // State 2: strict catch-up, no overtake — bigger colored dot
+  filtered.filter(e=>e[6]===1&&!(OT_NP[e[0]-1]>0)).forEach(e=>{
     const i=teamIdxMap[e[2]];if(i===undefined)return;
     const xx=pxH(e[1]/1000),yy=pyRow(i);
     cx_traffic.beginPath();cx_traffic.arc(xx,yy,5,0,Math.PI*2);
     cx_traffic.fillStyle=TR_RIDERS_COL[e[5]];cx_traffic.fill();
-    if(OT_NP[e[0]-1]>0){cx_traffic.strokeStyle='#fff';cx_traffic.lineWidth=1.2;cx_traffic.stroke();}
+  });
+  // State 3: overtake in that lap (any traffic event) — bigger white dot, on top
+  filtered.filter(e=>OT_NP[e[0]-1]>0).forEach(e=>{
+    const i=teamIdxMap[e[2]];if(i===undefined)return;
+    const xx=pxH(e[1]/1000),yy=pyRow(i);
+    cx_traffic.beginPath();cx_traffic.arc(xx,yy,5,0,Math.PI*2);
+    cx_traffic.fillStyle='#ffffff';cx_traffic.fill();
   });
   // Summary annotation
   const ts=filtered.filter(e=>e[6]===1).length,ta=filtered.length-ts;
