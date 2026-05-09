@@ -492,14 +492,17 @@ footer a:hover{color:var(--tx2)}
     Bands: outer 15% = full range · middle 15% = IQR 50% · inner 15% = middle 25%.
     Faded dots = excluded laps.
   </p>
-  <div id="rchart_controls" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-    <span class="lbl">RIDER</span>
-    <span class="rtog on" id="rc_B" onclick="rcSetRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
-    <span class="rtog" id="rc_L" onclick="rcSetRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
-    <span class="rtog" id="rc_M" onclick="rcSetRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
-    <span class="rtog" id="rc_J" onclick="rcSetRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
-    <span id="rc_stint_btns" style="display:none"></span>
-
+  <div id="rchart_controls" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <span class="lbl">SHOW</span>
+    <span class="rtog on" id="rc_tog_dots"  onclick="rcToggle('dots')" >Dots</span>
+    <span class="rtog on" id="rc_tog_bands" onclick="rcToggle('bands')">Bands</span>
+    <span class="rtog on" id="rc_tog_pace"  onclick="rcToggle('pace')" >Pace line</span>
+    <span class="rtog on" id="rc_tog_fast"  onclick="rcToggle('fast')" >Best line</span>
+    <span class="lbl" style="margin-left:8px">BAND %</span>
+    <span id="rcBandPctLbl" style="font-size:.75rem;color:var(--tx2);min-width:36px">25/50</span>
+    <input type="range" id="rcBandPctSlider" min="5" max="45" value="25" step="5"
+      style="width:90px;vertical-align:middle;accent-color:#5B9BD5"
+      oninput="rcBandPct=+this.value;document.getElementById('rcBandPctLbl').textContent=this.value+'/'+(this.value*2);draw_rider_chart()">
   </div>
   <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_rider"></canvas></div>
 </section>
@@ -2485,25 +2488,22 @@ renderTeamToggles();
 // ── RIDER PERFORMANCE CHART ──────────────────────────────────────────────────
 const cvRC=document.getElementById('c_rider');
 const cxRC=cvRC?cvRC.getContext('2d'):null;
-let rcRider='B', rcStint=1;
 
 const RC_RIDER_MAP={'B':'Bálint','L':'Loris','M':'Máté','J':'Jan'};
 const RC_RIDER_COL={'B':'#5B9BD5','L':'#D63B25','M':'#217346','J':'#FFC000'};
+const RC_RIDERS=['B','L','M','J'];
 
-function rcSetRider(r){
-  rcRider=r;
-  ['B','L','M','J'].forEach(k=>{
-    const el=document.getElementById('rc_'+k);
-    if(el)el.classList.toggle('on',k===r);
-  });
-  // Reset to stint 1 for this rider
-  rcStint=1;
-  rcBuildStintBtns();
+// Toggle state
+const rcShow={dots:true,bands:true,pace:true,fast:true};
+let rcBandPct=25; // each band = pct%, pct*2% wide
+function rcToggle(k){
+  rcShow[k]=!rcShow[k];
+  const el=document.getElementById('rc_tog_'+k);
+  if(el)el.classList.toggle('on',rcShow[k]);
   draw_rider_chart();
 }
 
-function rcGetStints(){
-  // Parse DATA into stints: array of arrays of {lap, t, r}
+function rcGetAllStints(){
   const stints=[],cur=[];
   for(const d of DATA){
     if(d.t===null){if(cur.length){stints.push([...cur]);cur.length=0;}}
@@ -2513,22 +2513,9 @@ function rcGetStints(){
   return stints;
 }
 
-function rcGetRiderStints(){
-  const rName=RC_RIDER_MAP[rcRider];
-  return rcGetStints().filter(s=>s.some(d=>d.r&&d.r.includes(rName)));
-}
-
-function rcBuildStintBtns(){
-  const el=document.getElementById('rc_stint_btns');
-  if(!el)return;
-  const stints=rcGetRiderStints();
-  el.innerHTML=stints.map((_,i)=>`<span class="rtog${rcStint===i+1?' on':''}" onclick="rcSetStint(${i+1})">${i+1}</span>`).join('');
-}
-
-function rcSetStint(n){
-  rcStint=n;
-  rcBuildStintBtns();
-  draw_rider_chart();
+function rcGetRiderStintsFor(rKey){
+  const rName=RC_RIDER_MAP[rKey];
+  return rcGetAllStints().filter(s=>s.some(d=>d.r&&d.r.includes(rName)));
 }
 
 function rcScInLap(lap){
@@ -2539,13 +2526,30 @@ function rcScInLap(lap){
 
 function rcPct(arr,p){
   const s=[...arr].sort((a,b)=>a-b);
-  const idx=(s.length-1)*p;
-  const lo=Math.floor(idx),hi=Math.ceil(idx);
-  if(lo===hi)return s[lo];
-  return s[lo]+(s[hi]-s[lo])*(idx-lo);
+  const idx=(s.length-1)*p,lo=Math.floor(idx),hi=Math.ceil(idx);
+  return lo===hi?s[lo]:s[lo]+(s[hi]-s[lo])*(idx-lo);
 }
 
-// Boost saturation +25% and lightness +18% of a hex colour for the avg line
+function rcClassify(stints){
+  return stints.map(s=>{
+    const firstLap=s[0].lap,lastLap=s[s.length-1].lap;
+    const pitLaps=new Set([firstLap,lastLap]);
+    const scLaps=new Set(s.filter(d=>rcScInLap(d.lap)).map(d=>d.lap));
+    const cands=s.filter(d=>!pitLaps.has(d.lap)&&!scLaps.has(d.lap)&&d.t!=null);
+    const fastestCand=cands.length?Math.min(...cands.map(d=>d.t)):Infinity;
+    const thr=fastestCand*1.08;
+    const clean=cands.filter(d=>d.t<=thr);
+    const cleanT=clean.map(d=>d.t);
+    const avgT=cleanT.length?cleanT.reduce((a,b)=>a+b,0)/cleanT.length:null;
+    const fastestClean=cleanT.length?Math.min(...cleanT):null;
+    const allT=s.filter(d=>d.t!=null&&!pitLaps.has(d.lap)&&!scLaps.has(d.lap)).map(d=>d.t);
+    function pct(p){return allT.length?rcPct(allT,p):null;}
+    return{s,firstLap,lastLap,pitLaps,scLaps,thr,cleanT,avgT,fastestClean,allT,
+      p25:pct(.25),p75:pct(.75),p375:pct(.375),p625:pct(.625)};
+  });
+}
+
+// Brighten colour for pace line
 function rcBrightCol(hex){
   const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
   const max=Math.max(r,g,b),min=Math.min(r,g,b);
@@ -2560,6 +2564,7 @@ function rcBrightCol(hex){
   else{const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;nr=h2r(p,q,h+1/3);ng=h2r(p,q,h);nb=h2r(p,q,h-1/3);}
   return '#'+[nr,ng,nb].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('');
 }
+
 function draw_rider_chart(){
   if(!cvRC||!cxRC)return;
   const W=Math.round(cvRC.width/DPR),H=Math.round(cvRC.height/DPR);
@@ -2567,202 +2572,193 @@ function draw_rider_chart(){
   if(!W||!H)return;
   cxRC.fillStyle='#12141c';cxRC.fillRect(0,0,W,H);
 
-  const rName=RC_RIDER_MAP[rcRider],col=RC_RIDER_COL[rcRider];
-  const colR=parseInt(col.slice(1,3),16),colG=parseInt(col.slice(3,5),16),colB=parseInt(col.slice(5,7),16);
-  const colRGB=colR+','+colG+','+colB;
-  const riderStints=rcGetRiderStints();
-  if(!riderStints.length)return;
+  // Classify all riders
+  const riderData=RC_RIDERS.map(rKey=>({
+    rKey,col:RC_RIDER_COL[rKey],name:RC_RIDER_MAP[rKey],
+    SD:rcClassify(rcGetRiderStintsFor(rKey))
+  }));
 
-  // ── Per-stint classification ─────────────────────────────────────────────
-  function pct(arr,p){
-    const s=[...arr].sort((a,b)=>a-b);
-    const idx=(s.length-1)*p,lo=Math.floor(idx),hi=Math.ceil(idx);
-    return lo===hi?s[lo]:s[lo]+(s[hi]-s[lo])*(idx-lo);
-  }
-  const SD=riderStints.map(s=>{
-    const firstLap=s[0].lap,lastLap=s[s.length-1].lap;
-    const pitLaps=new Set([firstLap,lastLap]);
-    const scLaps=new Set(s.filter(d=>rcScInLap(d.lap)).map(d=>d.lap));
-    const cands=s.filter(d=>!pitLaps.has(d.lap)&&!scLaps.has(d.lap)&&d.t!=null);
-    const fastestCand=cands.length?Math.min(...cands.map(d=>d.t)):Infinity;
-    const thr=fastestCand*1.08;
-    const clean=cands.filter(d=>d.t<=thr);
-    const cleanT=clean.map(d=>d.t);
-    const avgT=cleanT.length?cleanT.reduce((a,b)=>a+b,0)/cleanT.length:null;
-    const fastestClean=cleanT.length?Math.min(...cleanT):null;
-    const allT=s.filter(d=>d.t!=null&&!pitLaps.has(d.lap)&&!scLaps.has(d.lap)).map(d=>d.t);
-    return{s,firstLap,lastLap,pitLaps,scLaps,thr,clean,cleanT,avgT,fastestClean,allT,
-      p25:allT.length?pct(allT,.25):null, p75:allT.length?pct(allT,.75):null,
-      p375:allT.length?pct(allT,.375):null, p625:allT.length?pct(allT,.625):null};
-  });
-
-  // ── Y range from clean laps + 20% padding ────────────────────────────────
-  const allCleanT=SD.flatMap(d=>d.cleanT);
+  // Global Y from all clean laps across all riders + 20%
+  const allCleanT=riderData.flatMap(r=>r.SD.flatMap(d=>d.cleanT));
   if(!allCleanT.length)return;
   const gMin=Math.min(...allCleanT),gMax=Math.max(...allCleanT);
   const gRange=gMax-gMin;
   const yMin=gMin-gRange*0.20,yMax=gMax+gRange*0.20;
-  const py=t=>P.t+ph*(1-(t-yMin)/(yMax-yMin));
-  const pyC=t=>Math.min(P.t+ph,Math.max(P.t,py(t)));
 
-  // ── Layout ───────────────────────────────────────────────────────────────
-  const P={l:60,r:24,t:28,b:36};
-  const SGAP=10,nStints=SD.length;
-  const pw=W-P.l-P.r-SGAP*(nStints-1);
-  const ph=H-P.t-P.b;
-  const totalL=SD.reduce((a,d)=>a+d.s.length,0);
-  let xOff=P.l;
-  SD.forEach(d=>{d.xS=xOff;d.sW=pw*d.s.length/totalL;xOff+=d.sW+SGAP;});
+  // Layout
+  const PL=64,PR=28,PT=18,PB=28;
+  const ROW_GAP=14;
+  const nRows=RC_RIDERS.length;
+  const totalRowH=H-PT-PB-ROW_GAP*(nRows-1);
+  const rowH=Math.floor(totalRowH/nRows);
+  const SGAP=8;
 
-  // ── Y grid ───────────────────────────────────────────────────────────────
+  const pyInRow=(t,rTop,rH)=>rTop+rH*(1-(t-yMin)/(yMax-yMin));
+  const pyC=(t,rTop,rH)=>Math.min(rTop+rH,Math.max(rTop,pyInRow(t,rTop,rH)));
+
+  // Y grid step
   const nGridT=6;
   const rawStep=(yMax-yMin)/nGridT;
   const yStep=[0.25,0.5,1,2,5].find(s=>s>=rawStep)||5;
   const yStart=Math.ceil(yMin/yStep)*yStep;
+
+  // Y grid lines (across all rows)
   for(let y=yStart;y<=yMax+0.001;y=Math.round((y+yStep)*1000)/1000){
-    const yy=py(y);if(yy<P.t-2||yy>P.t+ph+2)continue;
-    cxRC.strokeStyle='#1e2233';cxRC.lineWidth=1;cxRC.setLineDash([]);
-    cxRC.beginPath();cxRC.moveTo(P.l,yy);cxRC.lineTo(W-P.r,yy);cxRC.stroke();
-    cxRC.fillStyle='#6b7280';cxRC.font='10px Segoe UI';cxRC.textAlign='right';
-    const m=Math.floor(y/60),sc=(y%60).toFixed(1);
-    cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,P.l-4,yy+3.5);
+    const frac=(y-yMin)/(yMax-yMin);
+    RC_RIDERS.forEach((_,ri)=>{
+      const rTop=PT+ri*(rowH+ROW_GAP);
+      const yy=rTop+rowH*(1-frac);
+      if(yy<rTop-1||yy>rTop+rowH+1)return;
+      cxRC.strokeStyle='#1a1e2e';cxRC.lineWidth=1;cxRC.setLineDash([]);
+      cxRC.beginPath();cxRC.moveTo(PL,yy);cxRC.lineTo(W-PR,yy);cxRC.stroke();
+    });
+    // Y label on left (first row only)
+    const rTop0=PT;
+    const yy0=rTop0+rowH*(1-frac);
+    if(yy0>=rTop0-2&&yy0<=rTop0+rowH+2){
+      cxRC.fillStyle='#5a6278';cxRC.font='9px Segoe UI';cxRC.textAlign='right';
+      const m=Math.floor(y/60),sc=(y%60).toFixed(1);
+      cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,PL-4,yy0+3);
+    }
   }
 
-  // ── Rider label ───────────────────────────────────────────────────────────
-  cxRC.fillStyle='#9aa3b8';cxRC.font='bold 11px Segoe UI';cxRC.textAlign='left';
-  cxRC.fillText(rName+' · all stints',P.l+4,14);
+  // Draw each rider row
+  riderData.forEach(({rKey,col,name,SD},ri)=>{
+    const rTop=PT+ri*(rowH+ROW_GAP);
+    const rH=rowH;
+    const colRGB=parseInt(col.slice(1,3),16)+','+parseInt(col.slice(3,5),16)+','+parseInt(col.slice(5,7),16);
 
-  // ── Draw each stint ───────────────────────────────────────────────────────
-  SD.forEach((d,si)=>{
-    const{xS,sW,firstLap,lastLap,s,pitLaps,scLaps,thr,avgT,fastestClean,
-          p25,p75,p375,p625,allT}=d;
-    const xE=xS+sW;
-    const pxL=lap=>xS+(lap-firstLap)/Math.max(1,lastLap-firstLap)*sW;
+    // Row border
+    cxRC.strokeStyle='#252a3d';cxRC.lineWidth=1;cxRC.setLineDash([]);
+    cxRC.strokeRect(PL,rTop,W-PL-PR,rH);
 
-    // Background stripe
-    cxRC.fillStyle=si%2===0?'rgba(255,255,255,0.02)':'rgba(0,0,0,0)';
-    cxRC.fillRect(xS,P.t,sW,ph);
+    // Rider label on left
+    cxRC.save();
+    cxRC.translate(PL-8,rTop+rH/2);cxRC.rotate(-Math.PI/2);
+    cxRC.fillStyle=col;cxRC.font='bold 10px Segoe UI';cxRC.textAlign='center';
+    cxRC.fillText(name,0,0);
+    cxRC.restore();
 
-    // Stint separator line
-    if(si>0){
-      cxRC.strokeStyle='#2a2f42';cxRC.lineWidth=1;cxRC.setLineDash([]);
-      cxRC.beginPath();cxRC.moveTo(xS-SGAP/2,P.t);cxRC.lineTo(xS-SGAP/2,P.t+ph);cxRC.stroke();
-    }
+    if(!SD.length)return;
+    const pw=W-PL-PR-SGAP*(SD.length-1);
+    const totalL=SD.reduce((a,d)=>a+d.s.length,0);
+    let xOff=PL;
+    SD.forEach(d=>{d.xS=xOff;d.sW=Math.max(1,pw*d.s.length/totalL);xOff+=d.sW+SGAP;});
 
-    // Stint label
-    cxRC.fillStyle='#7a8399';cxRC.font='bold 9px Segoe UI';cxRC.textAlign='center';
-    cxRC.fillText('S'+(si+1),xS+sW/2,P.t-8);
+    SD.forEach((d,si)=>{
+      const{xS,sW,firstLap,lastLap,s,pitLaps,scLaps,thr,avgT,fastestClean,
+            cleanT,p25,p75,p375,p625}=d;
+      const xE=xS+sW;
+      const pxL=lap=>xS+(lap-firstLap)/Math.max(1,lastLap-firstLap)*sW;
+      const py=t=>pyInRow(t,rTop,rH);
+      const pyCl=t=>pyC(t,rTop,rH);
 
-    // Lap range label
-    cxRC.fillStyle='#454d63';cxRC.font='8px Segoe UI';
-    cxRC.fillText(firstLap+'–'+lastLap,xS+sW/2,P.t-1);
-
-    // ── Bands ──────────────────────────────────────────────────────────────
-    // Full clean range → 10%
-    const cleanForBand=d.cleanT;
-    if(cleanForBand.length>0){
-      const rMin=Math.max(yMin,Math.min(...cleanForBand));
-      const rMax=Math.min(yMax,Math.max(...cleanForBand));
-      if(rMax>rMin){
-        cxRC.fillStyle='rgba('+colRGB+',0.10)';
-        cxRC.fillRect(xS,py(rMax),sW,pyC(rMin)-py(rMax));
+      // Alternating stint bg
+      if(si%2===0){
+        cxRC.fillStyle='rgba(255,255,255,0.015)';
+        cxRC.fillRect(xS,rTop,sW,rH);
       }
-    }
-    // IQR 50% band → 30%
-    if(p25!=null&&p75!=null&&p75>p25){
-      const y1=pyC(Math.min(p75,yMax)),y2=pyC(Math.max(p25,yMin));
-      cxRC.fillStyle='rgba('+colRGB+',0.30)';
-      cxRC.fillRect(xS,y1,sW,y2-y1);
-    }
-    // Middle 25% band → 50%
-    if(p375!=null&&p625!=null&&p625>p375){
-      const y1=pyC(Math.min(p625,yMax)),y2=pyC(Math.max(p375,yMin));
-      cxRC.fillStyle='rgba('+colRGB+',0.50)';
-      cxRC.fillRect(xS,y1,sW,y2-y1);
-    }
 
-    // ── Lines ─────────────────────────────────────────────────────────────
-    if(avgT!=null){
-      const ay=py(avgT);
-      cxRC.strokeStyle=rcBrightCol(col);cxRC.lineWidth=2;cxRC.setLineDash([]);
-      cxRC.beginPath();cxRC.moveTo(xS,ay);cxRC.lineTo(xE,ay);cxRC.stroke();
-      // Label on last stint only (or each)
-      const m=Math.floor(avgT/60),sc=(avgT%60).toFixed(2);
-      cxRC.fillStyle=col;cxRC.font='8px Segoe UI';cxRC.textAlign='center';
-      cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,ay-3);
-    }
-    if(fastestClean!=null){
-      const fy=py(fastestClean);
-      cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([3,3]);
-      cxRC.beginPath();cxRC.moveTo(xS,fy);cxRC.lineTo(xE,fy);cxRC.stroke();
-      cxRC.setLineDash([]);
-      const m=Math.floor(fastestClean/60),sc=(fastestClean%60).toFixed(2);
-      cxRC.fillStyle='rgba('+colRGB+',0.7)';cxRC.font='8px Segoe UI';cxRC.textAlign='center';
-      cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,fy-3);
-    }
+      // Stint label
+      cxRC.fillStyle='#454d63';cxRC.font='8px Segoe UI';cxRC.textAlign='center';
+      cxRC.fillText('S'+(si+1)+'  '+firstLap+'–'+lastLap,xS+sW/2,rTop+10);
 
-    // ── Dots ──────────────────────────────────────────────────────────────
-    // Count clipped dots
-    let clipCount=0;
-    s.forEach(lap=>{
-      if(lap.t==null)return;
-      if(pitLaps.has(lap.lap)||scLaps.has(lap.lap))return; // hide entirely
-      const dirty=lap.t>thr;
-      const xx=pxL(lap.lap);
-      if(lap.t>yMax){clipCount++;return;}
-      const yy=py(lap.t);
-      cxRC.beginPath();cxRC.arc(xx,yy,dirty?2:2.8,0,Math.PI*2);
-      cxRC.fillStyle=dirty?'rgba('+colRGB+',0.30)':col;cxRC.fill();
-    });
-    // Clipped dots indicator (triangle at top)
-    if(clipCount>0){
-      const cx2=xS+sW/2,cy=P.t+5;
-      cxRC.fillStyle='rgba('+colRGB+',0.7)';
-      cxRC.beginPath();cxRC.moveTo(cx2,cy-5);cxRC.lineTo(cx2+5,cy+3);cxRC.lineTo(cx2-5,cy+3);cxRC.closePath();cxRC.fill();
-      cxRC.fillStyle='#bbb';cxRC.font='8px Segoe UI';cxRC.textAlign='left';
-      cxRC.fillText('+'+clipCount,cx2+7,cy+3);
+      // ── Bands ─────────────────────────────────────────────────────────
+      if(rcShow.bands){
+        if(cleanT.length>0){
+          const rMin=Math.max(yMin,Math.min(...cleanT)),rMax=Math.min(yMax,Math.max(...cleanT));
+          if(rMax>rMin){
+            cxRC.fillStyle='rgba('+colRGB+',0.10)';
+            cxRC.fillRect(xS,py(rMax),sW,pyCl(rMin)-py(rMax));
+          }
+        }
+        {
+          // Middle rcBandPct*2 % band (e.g. 25%→50% = p25–p75)
+          const lo=rcBandPct/100,hi=1-rcBandPct/100;
+          const pLo=allT.length?rcPct(allT,lo):null,pHi=allT.length?rcPct(allT,hi):null;
+          if(pLo!=null&&pHi!=null&&pHi>pLo){
+            const y1=pyCl(Math.min(pHi,yMax)),y2=pyCl(Math.max(pLo,yMin));
+            cxRC.fillStyle='rgba('+colRGB+',0.30)';
+            cxRC.fillRect(xS,y1,sW,y2-y1);
+          }
+          // Inner half of that (middle rcBandPct% band)
+          const lo2=(0.5-rcBandPct/200),hi2=(0.5+rcBandPct/200);
+          const pLo2=allT.length?rcPct(allT,lo2):null,pHi2=allT.length?rcPct(allT,hi2):null;
+          if(pLo2!=null&&pHi2!=null&&pHi2>pLo2){
+            const y1=pyCl(Math.min(pHi2,yMax)),y2=pyCl(Math.max(pLo2,yMin));
+            cxRC.fillStyle='rgba('+colRGB+',0.50)';
+            cxRC.fillRect(xS,y1,sW,y2-y1);
+          }
+        }
+      }
+
+      // ── Pace avg line ─────────────────────────────────────────────────
+      if(rcShow.pace&&avgT!=null){
+        const ay=py(avgT);
+        cxRC.strokeStyle=rcBrightCol(col);cxRC.lineWidth=2;cxRC.setLineDash([]);
+        cxRC.beginPath();cxRC.moveTo(xS,ay);cxRC.lineTo(xE,ay);cxRC.stroke();
+        const m=Math.floor(avgT/60),sc=(avgT%60).toFixed(2);
+        cxRC.fillStyle=rcBrightCol(col);cxRC.font='7px Segoe UI';cxRC.textAlign='center';
+        cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,ay-3);
+      }
+
+      // ── Fastest clean line ─────────────────────────────────────────────
+      if(rcShow.fast&&fastestClean!=null){
+        const fy=py(fastestClean);
+        cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([3,3]);
+        cxRC.beginPath();cxRC.moveTo(xS,fy);cxRC.lineTo(xE,fy);cxRC.stroke();
+        cxRC.setLineDash([]);
+        const m=Math.floor(fastestClean/60),sc=(fastestClean%60).toFixed(2);
+        cxRC.fillStyle='rgba('+colRGB+',0.7)';cxRC.font='7px Segoe UI';cxRC.textAlign='center';
+        cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,fy+(fy<rTop+rH-12?4:-2));
+      }
+
+      // ── Dots ──────────────────────────────────────────────────────────
+      if(rcShow.dots){
+        let clipCount=0;
+        s.forEach(lap=>{
+          if(lap.t==null)return;
+          if(pitLaps.has(lap.lap)||scLaps.has(lap.lap))return;
+          const dirty=lap.t>thr;
+          const xx=pxL(lap.lap);
+          if(lap.t>yMax){clipCount++;return;}
+          if(lap.t<yMin)return;
+          const yy=py(lap.t);
+          cxRC.beginPath();cxRC.arc(xx,yy,dirty?1.5:2.2,0,Math.PI*2);
+          cxRC.fillStyle=dirty?'rgba('+colRGB+',0.28)':col;cxRC.fill();
+        });
+        if(clipCount>0){
+          const cx2=xS+sW/2,cy=rTop+5;
+          cxRC.fillStyle='rgba('+colRGB+',0.7)';
+          cxRC.beginPath();cxRC.moveTo(cx2,cy-4);cxRC.lineTo(cx2+4,cy+3);cxRC.lineTo(cx2-4,cy+3);cxRC.closePath();cxRC.fill();
+        }
+      }
+    }); // end stint loop
+
+    // X axis on last row only
+    if(ri===nRows-1){
+      SD.forEach(d=>{
+        const{xS,sW,firstLap,lastLap}=d;
+        const pxL=lap=>xS+(lap-firstLap)/Math.max(1,lastLap-firstLap)*sW;
+        const lapSpan=lastLap-firstLap;
+        const xStep=lapSpan<=20?5:10;
+        const xTS=Math.ceil(firstLap/xStep)*xStep;
+        for(let l=xTS;l<=lastLap;l+=xStep){
+          const xx=pxL(l);
+          cxRC.fillStyle='#454d63';cxRC.font='8px Segoe UI';cxRC.textAlign='center';
+          cxRC.fillText(l,xx,rTop+rH+12);
+        }
+      });
+      cxRC.fillStyle='#7a8399';cxRC.font='9px Segoe UI';cxRC.textAlign='center';
+      cxRC.fillText('Lap',PL+(W-PL-PR)/2,H-4);
     }
-
-    // ── X axis ticks ──────────────────────────────────────────────────────
-    const lapSpan=lastLap-firstLap;
-    const xStep=lapSpan<=20?5:10;
-    const xTS=Math.ceil(firstLap/xStep)*xStep;
-    for(let l=xTS;l<=lastLap;l+=xStep){
-      const xx=pxL(l);
-      cxRC.strokeStyle='#2a2f42';cxRC.lineWidth=1;
-      cxRC.beginPath();cxRC.moveTo(xx,P.t+ph);cxRC.lineTo(xx,P.t+ph+3);cxRC.stroke();
-      cxRC.fillStyle='#555';cxRC.font='8px Segoe UI';cxRC.textAlign='center';
-      cxRC.fillText(l,xx,P.t+ph+12);
-    }
-  });
-
-  // ── Axis labels ──────────────────────────────────────────────────────────
-  cxRC.fillStyle='#9aa3b8';cxRC.font='10px Segoe UI';cxRC.textAlign='center';
-  cxRC.fillText('Lap',P.l+pw/2,H-4);
-  cxRC.save();cxRC.translate(11,P.t+ph/2);cxRC.rotate(-Math.PI/2);
-  cxRC.fillText('Lap time',0,0);cxRC.restore();
-
-  // ── Legend ───────────────────────────────────────────────────────────────
-  const lx=P.l+8,ly=P.t+ph-6;
-  cxRC.fillStyle='rgba(12,14,28,0.8)';cxRC.fillRect(lx-3,ly-16,252,20);
-  cxRC.strokeStyle=rcBrightCol(col);cxRC.lineWidth=2;cxRC.setLineDash([]);
-  cxRC.beginPath();cxRC.moveTo(lx,ly-6);cxRC.lineTo(lx+18,ly-6);cxRC.stroke();
-  cxRC.fillStyle='#bbb';cxRC.font='9px Segoe UI';cxRC.textAlign='left';
-  cxRC.fillText('Clean avg',lx+22,ly-3);
-  cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([3,3]);
-  cxRC.beginPath();cxRC.moveTo(lx+82,ly-6);cxRC.lineTo(lx+100,ly-6);cxRC.stroke();
-  cxRC.setLineDash([]);
-  cxRC.fillStyle='#bbb';cxRC.fillText('Best',lx+104,ly-3);
-  cxRC.beginPath();cxRC.arc(lx+134,ly-7,2.8,0,Math.PI*2);cxRC.fillStyle=col;cxRC.fill();
-  cxRC.fillStyle='#bbb';cxRC.fillText('Clean lap',lx+140,ly-3);
-  cxRC.beginPath();cxRC.arc(lx+200,ly-7,2,0,Math.PI*2);cxRC.fillStyle='rgba('+colRGB+',0.35)';cxRC.fill();
-  cxRC.fillStyle='#bbb';cxRC.fillText('>8% slow',lx+206,ly-3);
+  }); // end rider loop
 }
 
 function resize_rider_chart(){
   if(!cvRC)return;
   const wrap=cvRC.parentElement;
-  const _w=(wrap.clientWidth||900)-20, _h=640;
+  const _w=(wrap.clientWidth||900)-20, _h=800;
   cvRC.width=_w*DPR;cvRC.height=_h*DPR;
   cvRC.style.width=_w+'px';cvRC.style.height=_h+'px';
   draw_rider_chart();
@@ -2990,7 +2986,7 @@ requestAnimationFrame(()=>{
   renderRiders();renderToggles2();renderToggles2b();renderToggles3();renderToggles4();renderToggles5();renderToggles7();renderToggles8();renderToggles9();
   resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize8();resize9();resize_pos();resize_ot();resize_traffic();resize_sector_traffic();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();renderOTLTRiderToggles();
   setTimeout(autoShowFirstTrafficTT,100);
-  rcBuildStintBtns();resize_rider_chart();
+  resize_rider_chart();
   initDualSlider('sdsMinTR','sdsMaxTR','sdsFillTR','ssLblTR',(a,b)=>{sTrHMin=a;sTrHMax=b;draw_sector_traffic();});
   resize_sector_traffic();
   initDualSlider('dsMinOTLT','dsMaxOTLT','dsFillOTLT','sLblOTLT',(a,b)=>{lapMinOTLT=Math.max(1,Math.round(a*838/24));lapMaxOTLT=Math.min(838,b>=24?838:Math.round(b*838/24));draw_otlt();});
