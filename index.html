@@ -2943,8 +2943,7 @@ function update_sector_rider_stats(filtered){
       +'</div>';
   }).join('');
 }
-window.addEventListener('resize',()=>{resize_rider_chart();
-  initDualSlider('rcHMin','rcHMax','rcHFill','rcHLbl',(a,b)=>{rcHMin=a;rcHMax=b;draw_rider_chart();});});
+window.addEventListener('resize',()=>{resize_rider_chart();});
 function resize_sector_traffic(){
   if(!c_sector)return;
   const wrap=c_sector.parentElement;
@@ -2977,6 +2976,7 @@ requestAnimationFrame(()=>{
   setTimeout(autoShowFirstTrafficTT,100);
   resize_rider_chart();
   initDualSlider('sdsMinTR','sdsMaxTR','sdsFillTR','ssLblTR',(a,b)=>{sTrHMin=a;sTrHMax=b;draw_sector_traffic();});
+  initDualSlider('rcHMin','rcHMax','rcHFill','rcHLbl',(a,b)=>{rcHMin=a;rcHMax=b;draw_rider_chart();});
   resize_sector_traffic();
   initDualSlider('dsMinOTLT','dsMaxOTLT','dsFillOTLT','sLblOTLT',(a,b)=>{lapMinOTLT=Math.max(1,Math.round(a*838/24));lapMaxOTLT=Math.min(838,b>=24?838:Math.round(b*838/24));draw_otlt();});
   initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=Math.max(1,Math.round(a*838/24));lapMax2=Math.min(838,b>=24?838:Math.round(b*838/24));draw2();});
