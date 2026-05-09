@@ -498,8 +498,7 @@ footer a:hover{color:var(--tx2)}
     <span class="rtog" id="rc_L" onclick="rcSetRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
     <span class="rtog" id="rc_M" onclick="rcSetRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
     <span class="rtog" id="rc_J" onclick="rcSetRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
-    <span class="lbl" style="margin-left:8px">STINT</span>
-    <span id="rc_stint_btns" style="display:flex;gap:4px"></span>
+    <span id="rc_stint_btns" style="display:none"></span>
   </div>
   <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_rider"></canvas></div>
 </section>
@@ -2552,150 +2551,195 @@ function draw_rider_chart(){
   if(!W||!H)return;
   cxRC.fillStyle='#12141c';cxRC.fillRect(0,0,W,H);
 
-  const rName=RC_RIDER_MAP[rcRider];
-  const col=RC_RIDER_COL[rcRider];
+  const rName=RC_RIDER_MAP[rcRider],col=RC_RIDER_COL[rcRider];
+  const colR=parseInt(col.slice(1,3),16),colG=parseInt(col.slice(3,5),16),colB=parseInt(col.slice(5,7),16);
+  const colRGB=colR+','+colG+','+colB;
   const riderStints=rcGetRiderStints();
   if(!riderStints.length)return;
-  const stintIdx=Math.min(rcStint-1,riderStints.length-1);
-  const s1=riderStints[stintIdx];
-  if(!s1||!s1.length)return;
 
-  const firstLap=s1[0].lap, lastLap=s1[s1.length-1].lap;
-  const allLaps=s1.map(d=>d.lap);
+  // ── Per-stint classification ─────────────────────────────────────────────
+  function pct(arr,p){
+    const s=[...arr].sort((a,b)=>a-b);
+    const idx=(s.length-1)*p,lo=Math.floor(idx),hi=Math.ceil(idx);
+    return lo===hi?s[lo]:s[lo]+(s[hi]-s[lo])*(idx-lo);
+  }
+  const SD=riderStints.map(s=>{
+    const firstLap=s[0].lap,lastLap=s[s.length-1].lap;
+    const pitLaps=new Set([firstLap,lastLap]);
+    const scLaps=new Set(s.filter(d=>rcScInLap(d.lap)).map(d=>d.lap));
+    const cands=s.filter(d=>!pitLaps.has(d.lap)&&!scLaps.has(d.lap)&&d.t!=null);
+    const fastestCand=cands.length?Math.min(...cands.map(d=>d.t)):Infinity;
+    const thr=fastestCand*1.08;
+    const clean=cands.filter(d=>d.t<=thr);
+    const cleanT=clean.map(d=>d.t);
+    const avgT=cleanT.length?cleanT.reduce((a,b)=>a+b,0)/cleanT.length:null;
+    const fastestClean=cleanT.length?Math.min(...cleanT):null;
+    const allT=s.filter(d=>d.t!=null).map(d=>d.t);
+    return{s,firstLap,lastLap,pitLaps,scLaps,thr,clean,cleanT,avgT,fastestClean,allT,
+      p25:allT.length?pct(allT,.25):null, p75:allT.length?pct(allT,.75):null,
+      p375:allT.length?pct(allT,.375):null, p625:allT.length?pct(allT,.625):null};
+  });
 
-  // Classify laps
-  const pitLaps=new Set([firstLap,lastLap]);
-  const scLaps=new Set(s1.filter(d=>rcScInLap(d.lap)).map(d=>d.lap));
-
-  // Candidates for "fastest" = exclude pit + SC
-  const cands=s1.filter(d=>!pitLaps.has(d.lap)&&!scLaps.has(d.lap)&&d.t!==null);
-  if(!cands.length)return;
-  const fastestCand=Math.min(...cands.map(d=>d.t));
-  const threshold=fastestCand*1.08;
-
-  // Clean laps
-  const cleanLaps=cands.filter(d=>d.t<=threshold);
-  const cleanT=cleanLaps.map(d=>d.t);
-  const avgT=cleanT.reduce((a,b)=>a+b,0)/cleanT.length;
-  const fastestClean=Math.min(...cleanT);
-
-  // All lap times (for percentile bands)
-  const allT=s1.filter(d=>d.t!==null).map(d=>d.t);
-  const minT=Math.min(...allT),maxT=Math.max(...allT);
-  const p25=rcPct(allT,.25),p75=rcPct(allT,.75);
-  const p375=rcPct(allT,.375),p625=rcPct(allT,.625);
-
-  // Layout
-  const P={l:62,r:24,t:24,b:38};
-  const pw=W-P.l-P.r,ph=H-P.t-P.b;
-  const yPad=(maxT-minT)*0.12;
-  const yMin=minT-yPad,yMax=maxT+yPad;
-
-  const px=lap=>P.l+(lap-firstLap)/(Math.max(1,lastLap-firstLap))*pw;
+  // ── Y range from clean laps + 20% padding ────────────────────────────────
+  const allCleanT=SD.flatMap(d=>d.cleanT);
+  if(!allCleanT.length)return;
+  const gMin=Math.min(...allCleanT),gMax=Math.max(...allCleanT);
+  const gRange=gMax-gMin;
+  const yMin=gMin-gRange*0.20,yMax=gMax+gRange*0.20;
   const py=t=>P.t+ph*(1-(t-yMin)/(yMax-yMin));
+  const pyC=t=>Math.min(P.t+ph,Math.max(P.t,py(t)));
 
-  // Y grid
-  const yStepCands=[0.5,1,2,5];
-  const nGridTarget=6;
-  let yStep=1;
-  for(const s of yStepCands){if((yMax-yMin)/s<=nGridTarget+1){yStep=s;break;}}
+  // ── Layout ───────────────────────────────────────────────────────────────
+  const P={l:60,r:24,t:28,b:36};
+  const SGAP=10,nStints=SD.length;
+  const pw=W-P.l-P.r-SGAP*(nStints-1);
+  const ph=H-P.t-P.b;
+  const totalL=SD.reduce((a,d)=>a+d.s.length,0);
+  let xOff=P.l;
+  SD.forEach(d=>{d.xS=xOff;d.sW=pw*d.s.length/totalL;xOff+=d.sW+SGAP;});
+
+  // ── Y grid ───────────────────────────────────────────────────────────────
+  const nGridT=6;
+  const rawStep=(yMax-yMin)/nGridT;
+  const yStep=[0.25,0.5,1,2,5].find(s=>s>=rawStep)||5;
   const yStart=Math.ceil(yMin/yStep)*yStep;
-  for(let y=yStart;y<=yMax+0.001;y=Math.round((y+yStep)*100)/100){
-    const yy=py(y);
-    if(yy<P.t-2||yy>H-P.b+2)continue;
+  for(let y=yStart;y<=yMax+0.001;y=Math.round((y+yStep)*1000)/1000){
+    const yy=py(y);if(yy<P.t-2||yy>P.t+ph+2)continue;
     cxRC.strokeStyle='#1e2233';cxRC.lineWidth=1;cxRC.setLineDash([]);
     cxRC.beginPath();cxRC.moveTo(P.l,yy);cxRC.lineTo(W-P.r,yy);cxRC.stroke();
     cxRC.fillStyle='#6b7280';cxRC.font='10px Segoe UI';cxRC.textAlign='right';
-    const mins=Math.floor(y/60),secs=(y%60).toFixed(1);
-    cxRC.fillText(mins+':'+(secs<10?'0':'')+secs,P.l-5,yy+3.5);
+    const m=Math.floor(y/60),sc=(y%60).toFixed(1);
+    cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,P.l-4,yy+3.5);
   }
 
-  // X axis ticks (every 5 laps)
-  const lapRange=lastLap-firstLap;
-  const xStep=lapRange<=20?2:lapRange<=40?5:lapRange<=80?10:20;
-  const xStart=Math.ceil(firstLap/xStep)*xStep;
-  for(let l=xStart;l<=lastLap;l+=xStep){
-    const xx=px(l);
-    cxRC.strokeStyle='#1e2233';cxRC.lineWidth=1;
-    cxRC.beginPath();cxRC.moveTo(xx,H-P.b);cxRC.lineTo(xx,H-P.b+4);cxRC.stroke();
-    cxRC.fillStyle='#6b7280';cxRC.font='10px Segoe UI';cxRC.textAlign='center';
-    cxRC.fillText('L'+l,xx,H-P.b+14);
-  }
-
-  // Axis labels
-  cxRC.fillStyle='#9aa3b8';cxRC.font='10px Segoe UI';cxRC.textAlign='center';
-  cxRC.fillText('Lap',P.l+pw/2,H-4);
-  cxRC.save();cxRC.translate(12,P.t+ph/2);cxRC.rotate(-Math.PI/2);
-  cxRC.fillText('Lap time',0,0);cxRC.restore();
-
-  // Stint/rider label
+  // ── Rider label ───────────────────────────────────────────────────────────
   cxRC.fillStyle='#9aa3b8';cxRC.font='bold 11px Segoe UI';cxRC.textAlign='left';
-  cxRC.fillText(rName+' · Stint '+(stintIdx+1)+' · Laps '+firstLap+'–'+lastLap,P.l+4,P.t+14);
+  cxRC.fillText(rName+' · all stints',P.l+4,14);
 
-  // ── Bands (drawn before lines and dots) ──────────────────────────────────
-  const bx1=P.l, bx2=W-P.r, bw=bx2-bx1;
-  const colRGB=parseInt(col.slice(1,3),16)+','+parseInt(col.slice(3,5),16)+','+parseInt(col.slice(5,7),16);
+  // ── Draw each stint ───────────────────────────────────────────────────────
+  SD.forEach((d,si)=>{
+    const{xS,sW,firstLap,lastLap,s,pitLaps,scLaps,thr,avgT,fastestClean,
+          p25,p75,p375,p625,allT}=d;
+    const xE=xS+sW;
+    const pxL=lap=>xS+(lap-firstLap)/Math.max(1,lastLap-firstLap)*sW;
 
-  // Full range band
-  const fy1=py(maxT),fy2=py(minT);
-  cxRC.fillStyle='rgba('+colRGB+',0.13)';
-  cxRC.fillRect(bx1,fy1,bw,fy2-fy1);
+    // Background stripe
+    cxRC.fillStyle=si%2===0?'rgba(255,255,255,0.02)':'rgba(0,0,0,0)';
+    cxRC.fillRect(xS,P.t,sW,ph);
 
-  // IQR 50% band
-  const iy1=py(p75),iy2=py(p25);
-  cxRC.fillStyle='rgba('+colRGB+',0.13)';
-  cxRC.fillRect(bx1,iy1,bw,iy2-iy1);
+    // Stint separator line
+    if(si>0){
+      cxRC.strokeStyle='#2a2f42';cxRC.lineWidth=1;cxRC.setLineDash([]);
+      cxRC.beginPath();cxRC.moveTo(xS-SGAP/2,P.t);cxRC.lineTo(xS-SGAP/2,P.t+ph);cxRC.stroke();
+    }
 
-  // Middle 25% band
-  const my1=py(p625),my2=py(p375);
-  cxRC.fillStyle='rgba('+colRGB+',0.13)';
-  cxRC.fillRect(bx1,my1,bw,my2-my1);
+    // Stint label
+    cxRC.fillStyle='#7a8399';cxRC.font='bold 9px Segoe UI';cxRC.textAlign='center';
+    cxRC.fillText('S'+(si+1),xS+sW/2,P.t-8);
 
-  // ── Lines ────────────────────────────────────────────────────────────────
-  // Average (2px solid)
-  const avgY=py(avgT);
-  cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([]);
-  cxRC.beginPath();cxRC.moveTo(bx1,avgY);cxRC.lineTo(bx2,avgY);cxRC.stroke();
-  // Avg label
-  cxRC.fillStyle=col;cxRC.font='bold 9px Segoe UI';cxRC.textAlign='left';
-  const avgMins=Math.floor(avgT/60),avgSecs=(avgT%60).toFixed(2);
-  cxRC.fillText('avg '+avgMins+':'+(avgSecs<10?'0':'')+avgSecs,bx2+2,avgY+3);
+    // Lap range label
+    cxRC.fillStyle='#454d63';cxRC.font='8px Segoe UI';
+    cxRC.fillText(firstLap+'–'+lastLap,xS+sW/2,P.t-1);
 
-  // Fastest clean lap (1px dotted)
-  const fY=py(fastestClean);
-  cxRC.strokeStyle=col;cxRC.lineWidth=1;cxRC.setLineDash([4,4]);
-  cxRC.beginPath();cxRC.moveTo(bx1,fY);cxRC.lineTo(bx2,fY);cxRC.stroke();
-  cxRC.setLineDash([]);
-  // Fast label
-  cxRC.fillStyle=col;cxRC.font='9px Segoe UI';cxRC.textAlign='left';
-  const fMins=Math.floor(fastestClean/60),fSecs=(fastestClean%60).toFixed(2);
-  cxRC.fillText('best '+fMins+':'+(fSecs<10?'0':'')+fSecs,bx2+2,fY+3);
+    // ── Bands ──────────────────────────────────────────────────────────────
+    // Full range: only laps included in clean avg (exclude SC, pit, >8% off fastest)
+    const cleanForBand=d.cleanT;
+    if(cleanForBand.length>0){
+      const rMin=Math.max(yMin,Math.min(...cleanForBand));
+      const rMax=Math.min(yMax,Math.max(...cleanForBand));
+      if(rMax>rMin){
+        cxRC.fillStyle='rgba('+colRGB+',0.13)';
+        cxRC.fillRect(xS,py(rMax),sW,pyC(rMin)-py(rMax));
+      }
+    }
+    // IQR 50% band
+    if(p25!=null&&p75!=null&&p75>p25){
+      const y1=pyC(Math.min(p75,yMax)),y2=pyC(Math.max(p25,yMin));
+      cxRC.fillStyle='rgba('+colRGB+',0.13)';
+      cxRC.fillRect(xS,y1,sW,y2-y1);
+    }
+    // Middle 25% band
+    if(p375!=null&&p625!=null&&p625>p375){
+      const y1=pyC(Math.min(p625,yMax)),y2=pyC(Math.max(p375,yMin));
+      cxRC.fillStyle='rgba('+colRGB+',0.13)';
+      cxRC.fillRect(xS,y1,sW,y2-y1);
+    }
 
-  // ── Dots ─────────────────────────────────────────────────────────────────
-  s1.forEach(d=>{
-    if(d.t===null)return;
-    const xx=px(d.lap),yy=py(d.t);
-    const dirty=pitLaps.has(d.lap)||scLaps.has(d.lap)||d.t>threshold;
-    cxRC.beginPath();cxRC.arc(xx,yy,dirty?2.5:3,0,Math.PI*2);
-    cxRC.fillStyle=dirty?'rgba('+colRGB+',0.35)':col;
-    cxRC.fill();
-    // Dim outline on dirty
-    if(dirty){cxRC.strokeStyle='rgba('+colRGB+',0.5)';cxRC.lineWidth=0.5;cxRC.stroke();}
+    // ── Lines ─────────────────────────────────────────────────────────────
+    if(avgT!=null){
+      const ay=py(avgT);
+      cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([]);
+      cxRC.beginPath();cxRC.moveTo(xS,ay);cxRC.lineTo(xE,ay);cxRC.stroke();
+      // Label on last stint only (or each)
+      const m=Math.floor(avgT/60),sc=(avgT%60).toFixed(2);
+      cxRC.fillStyle=col;cxRC.font='8px Segoe UI';cxRC.textAlign='center';
+      cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,ay-3);
+    }
+    if(fastestClean!=null){
+      const fy=py(fastestClean);
+      cxRC.strokeStyle=col;cxRC.lineWidth=1;cxRC.setLineDash([3,3]);
+      cxRC.beginPath();cxRC.moveTo(xS,fy);cxRC.lineTo(xE,fy);cxRC.stroke();
+      cxRC.setLineDash([]);
+      const m=Math.floor(fastestClean/60),sc=(fastestClean%60).toFixed(2);
+      cxRC.fillStyle='rgba('+colRGB+',0.7)';cxRC.font='8px Segoe UI';cxRC.textAlign='center';
+      cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,fy-3);
+    }
+
+    // ── Dots ──────────────────────────────────────────────────────────────
+    // Count clipped dots
+    let clipCount=0;
+    s.forEach(lap=>{
+      if(lap.t==null)return;
+      const dirty=pitLaps.has(lap.lap)||scLaps.has(lap.lap)||lap.t>thr;
+      const xx=pxL(lap.lap);
+      if(lap.t>yMax){clipCount++;return;} // will draw indicator
+      const yy=py(lap.t);
+      cxRC.beginPath();cxRC.arc(xx,yy,dirty?2:2.8,0,Math.PI*2);
+      cxRC.fillStyle=dirty?'rgba('+colRGB+',0.30)':col;cxRC.fill();
+    });
+    // Clipped dots indicator (triangle at top)
+    if(clipCount>0){
+      const cx2=xS+sW/2,cy=P.t+5;
+      cxRC.fillStyle='rgba('+colRGB+',0.7)';
+      cxRC.beginPath();cxRC.moveTo(cx2,cy-5);cxRC.lineTo(cx2+5,cy+3);cxRC.lineTo(cx2-5,cy+3);cxRC.closePath();cxRC.fill();
+      cxRC.fillStyle='#bbb';cxRC.font='8px Segoe UI';cxRC.textAlign='left';
+      cxRC.fillText('+'+clipCount,cx2+7,cy+3);
+    }
+
+    // ── X axis ticks ──────────────────────────────────────────────────────
+    const lapSpan=lastLap-firstLap;
+    const xStep=lapSpan<=20?5:10;
+    const xTS=Math.ceil(firstLap/xStep)*xStep;
+    for(let l=xTS;l<=lastLap;l+=xStep){
+      const xx=pxL(l);
+      cxRC.strokeStyle='#2a2f42';cxRC.lineWidth=1;
+      cxRC.beginPath();cxRC.moveTo(xx,P.t+ph);cxRC.lineTo(xx,P.t+ph+3);cxRC.stroke();
+      cxRC.fillStyle='#555';cxRC.font='8px Segoe UI';cxRC.textAlign='center';
+      cxRC.fillText(l,xx,P.t+ph+12);
+    }
   });
 
-  // Legend
-  const lx=P.l+8, ly=H-P.b-8;
-  cxRC.fillStyle='rgba(0,0,0,0.5)';cxRC.fillRect(lx-4,ly-22,220,26);
+  // ── Axis labels ──────────────────────────────────────────────────────────
+  cxRC.fillStyle='#9aa3b8';cxRC.font='10px Segoe UI';cxRC.textAlign='center';
+  cxRC.fillText('Lap',P.l+pw/2,H-4);
+  cxRC.save();cxRC.translate(11,P.t+ph/2);cxRC.rotate(-Math.PI/2);
+  cxRC.fillText('Lap time',0,0);cxRC.restore();
+
+  // ── Legend ───────────────────────────────────────────────────────────────
+  const lx=P.l+8,ly=P.t+ph-6;
+  cxRC.fillStyle='rgba(12,14,28,0.8)';cxRC.fillRect(lx-3,ly-16,252,20);
   cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([]);
-  cxRC.beginPath();cxRC.moveTo(lx,ly-9);cxRC.lineTo(lx+20,ly-9);cxRC.stroke();
-  cxRC.fillStyle='#ccc';cxRC.font='9px Segoe UI';cxRC.textAlign='left';
-  cxRC.fillText('Clean avg',lx+24,ly-6);
-  cxRC.strokeStyle=col;cxRC.lineWidth=1;cxRC.setLineDash([4,4]);
-  cxRC.beginPath();cxRC.moveTo(lx+80,ly-9);cxRC.lineTo(lx+100,ly-9);cxRC.stroke();
+  cxRC.beginPath();cxRC.moveTo(lx,ly-6);cxRC.lineTo(lx+18,ly-6);cxRC.stroke();
+  cxRC.fillStyle='#bbb';cxRC.font='9px Segoe UI';cxRC.textAlign='left';
+  cxRC.fillText('Clean avg',lx+22,ly-3);
+  cxRC.strokeStyle=col;cxRC.lineWidth=1;cxRC.setLineDash([3,3]);
+  cxRC.beginPath();cxRC.moveTo(lx+82,ly-6);cxRC.lineTo(lx+100,ly-6);cxRC.stroke();
   cxRC.setLineDash([]);
-  cxRC.fillText('Fastest',lx+104,ly-6);
-  cxRC.beginPath();cxRC.arc(lx+148,ly-9,3,0,Math.PI*2);cxRC.fillStyle='rgba('+colRGB+',0.35)';cxRC.fill();
-  cxRC.fillStyle='#ccc';cxRC.fillText('Excluded lap',lx+154,ly-6);
+  cxRC.fillStyle='#bbb';cxRC.fillText('Best',lx+104,ly-3);
+  cxRC.beginPath();cxRC.arc(lx+134,ly-7,2.8,0,Math.PI*2);cxRC.fillStyle=col;cxRC.fill();
+  cxRC.fillStyle='#bbb';cxRC.fillText('Clean lap',lx+140,ly-3);
+  cxRC.beginPath();cxRC.arc(lx+200,ly-7,2,0,Math.PI*2);cxRC.fillStyle='rgba('+colRGB+',0.35)';cxRC.fill();
+  cxRC.fillStyle='#bbb';cxRC.fillText('Excluded',lx+206,ly-3);
 }
 
 function resize_rider_chart(){
