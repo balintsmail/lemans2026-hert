@@ -499,6 +499,11 @@ footer a:hover{color:var(--tx2)}
     <span class="rtog" id="rc_M" onclick="rcSetRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
     <span class="rtog" id="rc_J" onclick="rcSetRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
     <span id="rc_stint_btns" style="display:none"></span>
+    <span class="lbl" style="margin-left:8px">BAND OPACITY</span>
+    <span id="rcOpacityLbl" style="font-size:.75rem;color:var(--tx2);min-width:32px;display:inline-block">13%</span>
+    <input type="range" id="rcOpacitySlider" min="1" max="40" value="13" step="1"
+      style="width:100px;vertical-align:middle;accent-color:#5B9BD5"
+      oninput="rcBandOpacity=+this.value/100;document.getElementById('rcOpacityLbl').textContent=this.value+'%';draw_rider_chart()">
   </div>
   <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_rider"></canvas></div>
 </section>
@@ -2484,7 +2489,7 @@ renderTeamToggles();
 // ── RIDER PERFORMANCE CHART ──────────────────────────────────────────────────
 const cvRC=document.getElementById('c_rider');
 const cxRC=cvRC?cvRC.getContext('2d'):null;
-let rcRider='B', rcStint=1;
+let rcRider='B', rcStint=1, rcBandOpacity=0.13;
 
 const RC_RIDER_MAP={'B':'Bálint','L':'Loris','M':'Máté','J':'Jan'};
 const RC_RIDER_COL={'B':'#5B9BD5','L':'#D63B25','M':'#217346','J':'#FFC000'};
@@ -2648,20 +2653,20 @@ function draw_rider_chart(){
       const rMin=Math.max(yMin,Math.min(...cleanForBand));
       const rMax=Math.min(yMax,Math.max(...cleanForBand));
       if(rMax>rMin){
-        cxRC.fillStyle='rgba('+colRGB+',0.13)';
+        cxRC.fillStyle='rgba('+colRGB+','+rcBandOpacity+')';
         cxRC.fillRect(xS,py(rMax),sW,pyC(rMin)-py(rMax));
       }
     }
     // IQR 50% band
     if(p25!=null&&p75!=null&&p75>p25){
       const y1=pyC(Math.min(p75,yMax)),y2=pyC(Math.max(p25,yMin));
-      cxRC.fillStyle='rgba('+colRGB+',0.13)';
+      cxRC.fillStyle='rgba('+colRGB+','+rcBandOpacity+')';
       cxRC.fillRect(xS,y1,sW,y2-y1);
     }
     // Middle 25% band
     if(p375!=null&&p625!=null&&p625>p375){
       const y1=pyC(Math.min(p625,yMax)),y2=pyC(Math.max(p375,yMin));
-      cxRC.fillStyle='rgba('+colRGB+',0.13)';
+      cxRC.fillStyle='rgba('+colRGB+','+rcBandOpacity+')';
       cxRC.fillRect(xS,y1,sW,y2-y1);
     }
 
