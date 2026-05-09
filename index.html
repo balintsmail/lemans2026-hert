@@ -2579,7 +2579,7 @@ function draw_rider_chart(){
     const cleanT=clean.map(d=>d.t);
     const avgT=cleanT.length?cleanT.reduce((a,b)=>a+b,0)/cleanT.length:null;
     const fastestClean=cleanT.length?Math.min(...cleanT):null;
-    const allT=s.filter(d=>d.t!=null).map(d=>d.t);
+    const allT=s.filter(d=>d.t!=null&&!pitLaps.has(d.lap)&&!scLaps.has(d.lap)).map(d=>d.t);
     return{s,firstLap,lastLap,pitLaps,scLaps,thr,clean,cleanT,avgT,fastestClean,allT,
       p25:allT.length?pct(allT,.25):null, p75:allT.length?pct(allT,.75):null,
       p375:allT.length?pct(allT,.375):null, p625:allT.length?pct(allT,.625):null};
@@ -2695,9 +2695,10 @@ function draw_rider_chart(){
     let clipCount=0;
     s.forEach(lap=>{
       if(lap.t==null)return;
-      const dirty=pitLaps.has(lap.lap)||scLaps.has(lap.lap)||lap.t>thr;
+      if(pitLaps.has(lap.lap)||scLaps.has(lap.lap))return; // hide entirely
+      const dirty=lap.t>thr;
       const xx=pxL(lap.lap);
-      if(lap.t>yMax){clipCount++;return;} // will draw indicator
+      if(lap.t>yMax){clipCount++;return;}
       const yy=py(lap.t);
       cxRC.beginPath();cxRC.arc(xx,yy,dirty?2:2.8,0,Math.PI*2);
       cxRC.fillStyle=dirty?'rgba('+colRGB+',0.30)':col;cxRC.fill();
@@ -2744,7 +2745,7 @@ function draw_rider_chart(){
   cxRC.beginPath();cxRC.arc(lx+134,ly-7,2.8,0,Math.PI*2);cxRC.fillStyle=col;cxRC.fill();
   cxRC.fillStyle='#bbb';cxRC.fillText('Clean lap',lx+140,ly-3);
   cxRC.beginPath();cxRC.arc(lx+200,ly-7,2,0,Math.PI*2);cxRC.fillStyle='rgba('+colRGB+',0.35)';cxRC.fill();
-  cxRC.fillStyle='#bbb';cxRC.fillText('Excluded',lx+206,ly-3);
+  cxRC.fillStyle='#bbb';cxRC.fillText('>8% slow',lx+206,ly-3);
 }
 
 function resize_rider_chart(){
