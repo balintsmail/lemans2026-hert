@@ -1900,8 +1900,13 @@ function showTrafficTT(h,clientX,clientY){
   const gap=(e[3]/10).toFixed(1),pd=(e[4]/100).toFixed(2);
   const ourP=(e[7]!=null?(e[7]/10).toFixed(2):'?'),theirP=(e[8]!=null?(e[8]/10).toFixed(2):'?');
   const team=TR_TEAM_NAMES[e[2]]||'#'+e[2];
-  tt.innerHTML='<div class="tt-team">Lap '+e[0]+' · '+team+'</div>'
-    +'<div class="tt-row"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
+  // Compute stint number: count how many pit stops occurred before this lap's hour
+  const evH=e[1]/1000;
+  const stintNum=PIT38_H.filter(p=>p<evH).length+1;
+  tt.innerHTML='<div class="tt-team">'+team+'</div>'
+    +'<div class="tt-row"><span class="tt-label">Lap</span><span class="tt-val">'+e[0]+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Stint</span><span class="tt-val">'+stintNum+'</span></div>'
+    +'<div class="tt-row" style="margin-top:5px;border-top:1px solid #2a2e42;padding-top:5px"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
     +'<div class="tt-row"><span class="tt-label">Their pace</span><span class="tt-val">'+theirP+'s</span></div>'
     +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
     +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
