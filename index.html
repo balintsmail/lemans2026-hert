@@ -92,7 +92,7 @@ footer{text-align:center;padding:24px;font-size:.7rem;color:var(--tx3);border-to
 footer a:hover{color:var(--tx2)}
 .dslider{position:relative;width:200px;height:18px;display:inline-flex;align-items:center;vertical-align:middle;margin:0 4px}
 .dslider .ds-track{position:absolute;left:0;right:0;height:3px;background:#1e2130;border-radius:2px}
-.dslider .ds-fill{position:absolute;height:3px;background:#4ade80;border-radius:2px;pointer-events:none}
+.dslider .ds-fill{position:absolute;height:3px;background:#4ade80;border-radius:2px;pointer-events:none;user-select:none;-webkit-user-select:none}
 .dslider input[type=range]{position:absolute;width:100%;height:3px;background:none;-webkit-appearance:none;appearance:none;pointer-events:none}
 .dslider input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:#4ade80;cursor:pointer;pointer-events:all;border:2px solid #0f1117}
 .dslider input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#4ade80;cursor:pointer;pointer-events:all;border:2px solid #0f1117;box-sizing:border-box}
@@ -388,8 +388,8 @@ footer a:hover{color:var(--tx2)}
   </div>
   <div class="ctrl" style="margin-bottom:8px">
     <span class="lbl">APPROACH RANGE</span>
-    <span id="trGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">30s</span>
-    <input type="range" id="trGapSlider" min="1" max="30" value="30" step="1"
+    <span id="trGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
+    <input type="range" id="trGapSlider" min="1" max="30" value="10" step="1"
       style="width:160px;vertical-align:middle;accent-color:#22d3ee"
       oninput="trGapMax=+this.value;document.getElementById('trGapLbl').textContent=this.value+'s';draw_traffic()">
   </div>
@@ -412,13 +412,13 @@ footer a:hover{color:var(--tx2)}
   <div class="sctrl" style="margin-bottom:8px">
     <div class="ctrl">
       <span class="lbl">RACE TIME</span>
-      <span id="sLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+      <span id="ssLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
       <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="sdsFillTR"></div><input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="sdsMaxTR" min="0" max="24" value="24" step="0.5"></div>
     </div>
     <div class="ctrl">
       <span class="lbl">APPROACH RANGE</span>
-      <span id="sTrGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">30s</span>
-      <input type="range" id="sTrGapSlider" min="1" max="30" value="30" step="1"
+      <span id="sTrGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
+      <input type="range" id="sTrGapSlider" min="1" max="30" value="10" step="1"
         style="width:160px;vertical-align:middle;accent-color:#22d3ee"
         oninput="sTrGapMax=+this.value;document.getElementById('sTrGapLbl').textContent=this.value+'s';draw_sector_traffic()">
     </div>
@@ -1465,15 +1465,74 @@ function initDualSlider(idMin,idMax,idFill,idLbl,onChange){
   const mn=document.getElementById(idMin),mx=document.getElementById(idMax);
   const fill=document.getElementById(idFill),lbl=document.getElementById(idLbl);
   if(!mn||!mx||!fill||!lbl)return;
+  const TOTAL=24,STEP=0.5;
   function upd(e){
     let a=+mn.value,b=+mx.value;
-    if(a>b-0.5){if(e&&e.target===mn){mn.value=b-0.5;a=+mn.value;}else{mx.value=a+0.5;b=+mx.value;}}
-    const p=v=>v/24*100;
+    if(a>b-STEP){if(e&&e.target===mn){mn.value=b-STEP;a=+mn.value;}else{mx.value=a+STEP;b=+mx.value;}}
+    const p=v=>v/TOTAL*100;
     fill.style.left=p(a)+'%';fill.style.width=(p(b)-p(a))+'%';
-    lbl.textContent=a+'h\u2013'+b+'h';
+    const span=b-a;
+    fill.style.cursor=(span<TOTAL-0.01)?'grab':'default';
+    lbl.textContent=a+'h–'+b+'h';
     onChange(a,b);
   }
-  mn.addEventListener('input',upd);mx.addEventListener('input',upd);upd(null);
+  mn.addEventListener('input',upd);mx.addEventListener('input',upd);
+  // Pan: drag the filled region to shift both handles simultaneously
+  let panDrag=false,panStartX=0,panStartA=0,panStartB=0;
+  fill.style.pointerEvents='auto';
+  fill.addEventListener('mousedown',ev=>{
+    const span=+mx.value-+mn.value;
+    if(span>=TOTAL-0.01)return; // full range → no pan
+    panDrag=true;
+    panStartX=ev.clientX;
+    panStartA=+mn.value;
+    panStartB=+mx.value;
+    fill.style.cursor='grabbing';
+    ev.preventDefault();
+    ev.stopPropagation();
+  });
+  window.addEventListener('mousemove',ev=>{
+    if(!panDrag)return;
+    const trackW=fill.parentElement.getBoundingClientRect().width||200;
+    const deltaPx=ev.clientX-panStartX;
+    const deltaH=Math.round((deltaPx/trackW*TOTAL)/STEP)*STEP;
+    const span=panStartB-panStartA;
+    let newA=Math.min(Math.max(panStartA+deltaH,0),TOTAL-span);
+    let newB=newA+span;
+    newA=Math.round(newA/STEP)*STEP;
+    newB=Math.round(newB/STEP)*STEP;
+    mn.value=newA;mx.value=newB;
+    upd(null);
+  });
+  window.addEventListener('mouseup',()=>{
+    if(!panDrag)return;
+    panDrag=false;
+    fill.style.cursor='grab';
+  });
+  // Touch support
+  fill.addEventListener('touchstart',ev=>{
+    const span=+mx.value-+mn.value;
+    if(span>=TOTAL-0.01)return;
+    panDrag=true;
+    panStartX=ev.touches[0].clientX;
+    panStartA=+mn.value;
+    panStartB=+mx.value;
+    ev.preventDefault();
+  },{passive:false});
+  window.addEventListener('touchmove',ev=>{
+    if(!panDrag)return;
+    const trackW=fill.parentElement.getBoundingClientRect().width||200;
+    const deltaPx=ev.touches[0].clientX-panStartX;
+    const deltaH=Math.round((deltaPx/trackW*TOTAL)/STEP)*STEP;
+    const span=panStartB-panStartA;
+    let newA=Math.min(Math.max(panStartA+deltaH,0),TOTAL-span);
+    let newB=newA+span;
+    mn.value=Math.round(newA/STEP)*STEP;
+    mx.value=Math.round(newB/STEP)*STEP;
+    upd(null);
+  },{passive:false});
+  window.addEventListener('touchend',()=>{panDrag=false;});
+  upd(null);
 }
 
 const cv5=document.getElementById('c5'),cx5=cv5?cv5.getContext('2d'):null;
@@ -1814,7 +1873,7 @@ function resize_ot(){if(!c_ot)return;const wrap=c_ot.parentElement;{const _w=(wr
 const c_traffic=document.getElementById('c_traffic');
 const cx_traffic=c_traffic?c_traffic.getContext('2d'):null;
 let trafficFilter='all';
-let trGapMax=30;
+let trGapMax=10;
 let trHMin=0,trHMax=24;
 const hiddenTrafficRiders=new Set();
 const TR_RIDERS_COL=['#5B9BD5','#FFC000','#D63B25','#217346']; // B,J,L,M idx
@@ -2376,7 +2435,7 @@ renderTeamToggles();
 // ── SECTOR TRAFFIC CHART ─────────────────────────────────────────────────────
 const c_sector=document.getElementById('c_sector_traffic');
 const cx_sector=c_sector?c_sector.getContext('2d'):null;
-let sTrGapMax=30,sTrHMin=0,sTrHMax=24;
+let sTrGapMax=10,sTrHMin=0,sTrHMax=24;
 const hiddenSectorRiders=new Set();
 function toggleSectorRider(r){
   hiddenSectorRiders.has(r)?hiddenSectorRiders.delete(r):hiddenSectorRiders.add(r);
