@@ -1887,6 +1887,7 @@ function resize_traffic(){
   const _w=(wrap.clientWidth||900)-20;
   const _h=Math.round(TR_TEAMS_SORTED.length*20)+50;
   c_traffic.width=_w*DPR;c_traffic.height=_h*DPR;
+  c_traffic.style.width=_w+'px';c_traffic.style.height=_h+'px';
   draw_traffic();
 }
 if(c_traffic){
