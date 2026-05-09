@@ -2580,10 +2580,11 @@ function draw_rider_chart(){
       p375:allT.length?pct(allT,.375):null, p625:allT.length?pct(allT,.625):null};
   });
 
-  // ── Y range from clean laps + 20% padding ────────────────────────────────
+  // ── Y range from ALL laps (incl. dirty) + 20% padding ───────────────────
   const allCleanT=SD.flatMap(d=>d.cleanT);
   if(!allCleanT.length)return;
-  const gMin=Math.min(...allCleanT),gMax=Math.max(...allCleanT);
+  const allLapT=SD.flatMap(d=>d.allT);
+  const gMin=Math.min(...allLapT),gMax=Math.max(...allLapT);
   const gRange=gMax-gMin;
   const yMin=gMin-gRange*0.20,yMax=gMax+gRange*0.20;
   const py=t=>P.t+ph*(1-(t-yMin)/(yMax-yMin));
@@ -2745,7 +2746,7 @@ function draw_rider_chart(){
 function resize_rider_chart(){
   if(!cvRC)return;
   const wrap=cvRC.parentElement;
-  const _w=(wrap.clientWidth||900)-20, _h=320;
+  const _w=(wrap.clientWidth||900)-20, _h=640;
   cvRC.width=_w*DPR;cvRC.height=_h*DPR;
   cvRC.style.width=_w+'px';cvRC.style.height=_h+'px';
   draw_rider_chart();
