@@ -2736,7 +2736,7 @@ function draw_rider_chart(){
 function resize_rider_chart(){
   if(!cvRC)return;
   const wrap=cvRC.parentElement;
-  const _w=(wrap.clientWidth||900)-20, _h=500;
+  const _w=(wrap.clientWidth||900)-20, _h=1000;
   cvRC.width=_w*DPR;cvRC.height=_h*DPR;
   cvRC.style.width=_w+'px';cvRC.style.height=_h+'px';
   draw_rider_chart();
