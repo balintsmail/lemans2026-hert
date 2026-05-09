@@ -2647,7 +2647,7 @@ function draw_rider_chart(){
 
     SD.forEach((d,si)=>{
       const{xS,sW,firstLap,lastLap,s,pitLaps,scLaps,thr,avgT,fastestClean,
-            cleanT,p25,p75,p375,p625}=d;
+            cleanT,allT,p25,p75,p375,p625}=d;
       const xE=xS+sW;
       const pxL=lap=>xS+(lap-firstLap)/Math.max(1,lastLap-firstLap)*sW;
       const py=t=>pyInRow(t,rTop,rH);
