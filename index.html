@@ -498,11 +498,16 @@ footer a:hover{color:var(--tx2)}
     <span class="rtog on" id="rc_tog_bands" onclick="rcToggle('bands')">Bands</span>
     <span class="rtog on" id="rc_tog_pace"  onclick="rcToggle('pace')" >Pace line</span>
     <span class="rtog on" id="rc_tog_fast"  onclick="rcToggle('fast')" >Best line</span>
-    <span class="lbl" style="margin-left:8px">BAND %</span>
-    <span id="rcBandPctLbl" style="font-size:.75rem;color:var(--tx2);min-width:36px">25/50</span>
-    <input type="range" id="rcBandPctSlider" min="5" max="45" value="25" step="5"
-      style="width:90px;vertical-align:middle;accent-color:#5B9BD5"
-      oninput="rcBandPct=+this.value;document.getElementById('rcBandPctLbl').textContent=this.value+'/'+(this.value*2);draw_rider_chart()">
+    <span class="lbl" style="margin-left:8px">OUTER BAND</span>
+    <span id="rcBand1Lbl" style="font-size:.75rem;color:var(--tx2);min-width:28px">80%</span>
+    <input type="range" id="rcBand1Slider" min="10" max="100" value="80" step="5"
+      style="width:80px;vertical-align:middle;accent-color:#5B9BD5"
+      oninput="rcBand1Pct=+this.value;document.getElementById('rcBand1Lbl').textContent=this.value+'%';draw_rider_chart()">
+    <span class="lbl" style="margin-left:8px">INNER BAND</span>
+    <span id="rcBand2Lbl" style="font-size:.75rem;color:var(--tx2);min-width:28px">50%</span>
+    <input type="range" id="rcBand2Slider" min="10" max="100" value="50" step="5"
+      style="width:80px;vertical-align:middle;accent-color:#5B9BD5"
+      oninput="rcBand2Pct=+this.value;document.getElementById('rcBand2Lbl').textContent=this.value+'%';draw_rider_chart()">
     <span class="lbl" style="margin-left:8px">ORDER</span>
     <span class="rtog on" id="rc_ord_chrono" onclick="rcSetOrder('chrono')">Chronological</span>
     <span class="rtog"    id="rc_ord_rider"  onclick="rcSetOrder('rider')" >By rider</span>
@@ -2503,7 +2508,7 @@ const RC_RIDERS=['B','L','M','J'];
 
 // Toggle state
 const rcShow={dots:true,bands:true,pace:true,fast:true};
-let rcBandPct=25;
+let rcBand1Pct=80,rcBand2Pct=50;
 let rcOrder='chrono', rcHMin=0, rcHMax=24;
 function rcSetOrder(o){
   rcOrder=o;
@@ -2683,23 +2688,19 @@ function draw_rider_chart(){
 
     // ── Bands ───────────────────────────────────────────────────────────────
     if(rcShow.bands){
-      // Outer: full clean range 10%
-      if(cleanT.length>0){
-        const rMin=Math.max(yMin,Math.min(...cleanT)),rMax=Math.min(yMax,Math.max(...cleanT));
-        if(rMax>rMin){cxRC.fillStyle='rgba('+colRGB+',0.10)';cxRC.fillRect(xS,py(rMax),sW,pyC(rMin)-py(rMax));}
-      }
-      // Middle band: rcBandPct*2 %
-      const lo=rcBandPct/100,hi=1-rcBandPct/100;
-      const pLo=allT.length?rcPct(allT,lo):null,pHi=allT.length?rcPct(allT,hi):null;
-      if(pLo!=null&&pHi!=null&&pHi>pLo){
-        const y1=pyC(Math.min(pHi,yMax)),y2=pyC(Math.max(pLo,yMin));
+      // (outer full-range band removed; controlled by OUTER BAND slider)
+      // Outer band: rcBand1Pct% of laps (exclude (100-pct)/2 from each end)
+      const exc1=(1-rcBand1Pct/100)/2;
+      const b1Lo=allT.length?rcPct(allT,exc1):null,b1Hi=allT.length?rcPct(allT,1-exc1):null;
+      if(b1Lo!=null&&b1Hi!=null&&b1Hi>b1Lo){
+        const y1=pyC(Math.min(b1Hi,yMax)),y2=pyC(Math.max(b1Lo,yMin));
         cxRC.fillStyle='rgba('+colRGB+',0.30)';cxRC.fillRect(xS,y1,sW,y2-y1);
       }
-      // Inner band: rcBandPct %
-      const lo2=0.5-rcBandPct/200,hi2=0.5+rcBandPct/200;
-      const pLo2=allT.length?rcPct(allT,lo2):null,pHi2=allT.length?rcPct(allT,hi2):null;
-      if(pLo2!=null&&pHi2!=null&&pHi2>pLo2){
-        const y1=pyC(Math.min(pHi2,yMax)),y2=pyC(Math.max(pLo2,yMin));
+      // Inner band: rcBand2Pct% of laps (exclude (100-pct)/2 from each end)
+      const exc2=(1-rcBand2Pct/100)/2;
+      const b2Lo=allT.length?rcPct(allT,exc2):null,b2Hi=allT.length?rcPct(allT,1-exc2):null;
+      if(b2Lo!=null&&b2Hi!=null&&b2Hi>b2Lo){
+        const y1=pyC(Math.min(b2Hi,yMax)),y2=pyC(Math.max(b2Lo,yMin));
         cxRC.fillStyle='rgba('+colRGB+',0.50)';cxRC.fillRect(xS,y1,sW,y2-y1);
       }
     }
