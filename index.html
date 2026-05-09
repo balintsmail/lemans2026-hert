@@ -2669,7 +2669,7 @@ function draw_rider_chart(){
     // ── Lines ─────────────────────────────────────────────────────────────
     if(avgT!=null){
       const ay=py(avgT);
-      cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([]);
+      cxRC.strokeStyle=col;cxRC.lineWidth=4;cxRC.setLineDash([]);
       cxRC.beginPath();cxRC.moveTo(xS,ay);cxRC.lineTo(xE,ay);cxRC.stroke();
       // Label on last stint only (or each)
       const m=Math.floor(avgT/60),sc=(avgT%60).toFixed(2);
@@ -2678,7 +2678,7 @@ function draw_rider_chart(){
     }
     if(fastestClean!=null){
       const fy=py(fastestClean);
-      cxRC.strokeStyle=col;cxRC.lineWidth=1;cxRC.setLineDash([3,3]);
+      cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([3,3]);
       cxRC.beginPath();cxRC.moveTo(xS,fy);cxRC.lineTo(xE,fy);cxRC.stroke();
       cxRC.setLineDash([]);
       const m=Math.floor(fastestClean/60),sc=(fastestClean%60).toFixed(2);
@@ -2730,11 +2730,11 @@ function draw_rider_chart(){
   // ── Legend ───────────────────────────────────────────────────────────────
   const lx=P.l+8,ly=P.t+ph-6;
   cxRC.fillStyle='rgba(12,14,28,0.8)';cxRC.fillRect(lx-3,ly-16,252,20);
-  cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([]);
+  cxRC.strokeStyle=col;cxRC.lineWidth=4;cxRC.setLineDash([]);
   cxRC.beginPath();cxRC.moveTo(lx,ly-6);cxRC.lineTo(lx+18,ly-6);cxRC.stroke();
   cxRC.fillStyle='#bbb';cxRC.font='9px Segoe UI';cxRC.textAlign='left';
   cxRC.fillText('Clean avg',lx+22,ly-3);
-  cxRC.strokeStyle=col;cxRC.lineWidth=1;cxRC.setLineDash([3,3]);
+  cxRC.strokeStyle=col;cxRC.lineWidth=2;cxRC.setLineDash([3,3]);
   cxRC.beginPath();cxRC.moveTo(lx+82,ly-6);cxRC.lineTo(lx+100,ly-6);cxRC.stroke();
   cxRC.setLineDash([]);
   cxRC.fillStyle='#bbb';cxRC.fillText('Best',lx+104,ly-3);
