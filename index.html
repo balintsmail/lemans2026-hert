@@ -46,7 +46,7 @@ canvas{display:block;cursor:crosshair;width:100%;height:100%}
 .li{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2)}
 .ld{width:8px;height:8px;border-radius:50%}
 #tip{position:fixed;pointer-events:none;display:none;z-index:200;background:rgba(12,14,22,.96);border:1px solid #2a2e42;border-radius:8px;padding:10px 14px;font-size:.74rem;min-width:145px}
-#trTooltip{position:fixed;pointer-events:none;display:none;z-index:201;background:rgba(12,14,22,.97);border:1px solid #2a2e42;border-radius:8px;padding:10px 14px;font-size:.74rem;min-width:160px;color:#c0c8d8;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+#trTooltip,#secTooltip{position:fixed;pointer-events:none;display:none;z-index:201;background:rgba(12,14,22,.97);border:1px solid #2a2e42;border-radius:8px;padding:10px 14px;font-size:.74rem;min-width:160px;color:#c0c8d8;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 .tt-team{font-weight:700;color:#fff;margin-bottom:6px;font-size:.76rem}
 .tt-row{display:flex;justify-content:space-between;gap:18px;margin-top:2px}
 .tt-label{color:#7a8399}.tt-val{color:#22d3ee;font-weight:600}
@@ -409,26 +409,28 @@ footer a:hover{color:var(--tx2)}
     laps &gt;5% slower than stint pace (yellow flags / slow zones).
     Le Mans uses 3 sectors — S1 ≈ 44 s (pit straight + chicanes), S2 ≈ 27 s (Ford chicanes + Dunlop), S3 ≈ 26 s (Porsche + Maison Blanche).
   </p>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-    <span style="font-size:.75rem;color:var(--tx2)">Approach range:</span>
-    <input type="range" min="1" max="30" value="30" id="sTrGapSlider"
-      oninput="sTrGapMax=+this.value;document.getElementById('sTrGapLbl').textContent=this.value+'s';draw_sector_traffic()"
-      style="width:120px">
-    <span id="sTrGapLbl" style="font-size:.75rem;color:#fff;min-width:28px">30s</span>
-    <span style="font-size:.75rem;color:var(--tx2);margin-left:8px">Race hours:</span>
-    <input type="range" min="0" max="24" step="0.25" value="0"  id="sdsMinTR" style="width:80px">
-    <input type="range" min="0" max="24" step="0.25" value="24" id="sdsMaxTR" style="width:80px">
-    <span id="sdsFillTR" style="font-size:.72rem;color:#fff;min-width:80px" id="ssLblTR">0 h – 24 h</span>
-    <span style="margin-left:8px;display:flex;gap:6px">
+  <div class="sctrl" style="margin-bottom:8px">
+    <div class="ctrl">
+      <span class="lbl">RACE TIME</span>
+      <span id="sLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+      <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="sdsFillTR"></div><input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="sdsMaxTR" min="0" max="24" value="24" step="0.5"></div>
+    </div>
+    <div class="ctrl">
+      <span class="lbl">APPROACH RANGE</span>
+      <span id="sTrGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">30s</span>
+      <input type="range" id="sTrGapSlider" min="1" max="30" value="30" step="1"
+        style="width:160px;vertical-align:middle;accent-color:#22d3ee"
+        oninput="sTrGapMax=+this.value;document.getElementById('sTrGapLbl').textContent=this.value+'s';draw_sector_traffic()">
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
       <span class="rtog on" id="str_B" onclick="toggleSectorRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
       <span class="rtog on" id="str_L" onclick="toggleSectorRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
       <span class="rtog on" id="str_M" onclick="toggleSectorRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
       <span class="rtog on" id="str_J" onclick="toggleSectorRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
-    </span>
+    </div>
   </div>
   <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_sector_traffic"></canvas></div>
   <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
-</section>
 </section>
 
 
@@ -2485,7 +2487,43 @@ function draw_sector_traffic(){
     cx_sector.beginPath();cx_sector.moveTo(xx,P.t);cx_sector.lineTo(xx,H-P.b);cx_sector.stroke();
     cx_sector.setLineDash([]);
   });
+  // Build hit list for sector tooltips
+  secDotHits=[];
+  filtered.forEach(e=>{
+    const i=teamIdxMap[e[2]];if(i===undefined)return;
+    secDotHits.push({x:pxH(e[1]/1000),y:pyRow(i),e});
+  });
   update_sector_rider_stats(filtered);
+}
+let secDotHits=[];
+function showSectorTT(h,clientX,clientY){
+  const tt=document.getElementById('secTooltip');
+  const e=h.e;
+  const gap=(e[3]/10).toFixed(1),pd=(e[4]/100).toFixed(2);
+  const ourP=(e[7]!=null?(e[7]/10).toFixed(2):'?'),theirP=(e[8]!=null?(e[8]/10).toFixed(2):'?');
+  const team='#'+e[2]+(CLEAN_TEAM_NAMES[e[2]]?' · '+CLEAN_TEAM_NAMES[e[2]]:'');
+  const sNames=['S1','S2','S3'];
+  const sColors=['#38bdf8','#a3e635','#fb923c'];
+  const sIdx=e[10]||0;
+  const evH=e[1]/1000;
+  const stintNum=PIT38_H.filter(p=>p<evH).length+1;
+  const compRider=(e[9]>=0&&COMP_RIDER_NAMES[e[9]])?COMP_RIDER_NAMES[e[9]]:'';
+  tt.innerHTML='<div class="tt-team">'+team+'</div>'
+    +(compRider?'<div class="tt-row" style="margin-bottom:4px"><span class="tt-label">Rider</span><span class="tt-val" style="color:#a3e635">'+compRider+'</span></div>':'')
+    +'<div class="tt-row"><span class="tt-label">Lap</span><span class="tt-val">'+e[0]+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Stint</span><span class="tt-val">'+stintNum+'</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Sector</span><span class="tt-val" style="color:'+sColors[sIdx]+'">'+sNames[sIdx]+'</span></div>'
+    +'<div class="tt-row" style="margin-top:5px;border-top:1px solid #2a2e42;padding-top:5px"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Their pace</span><span class="tt-val">'+theirP+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
+  tt.style.display='block';
+  if(clientX!=null){
+    const vw=window.innerWidth,vh=window.innerHeight;
+    let lx=clientX+14,ty=clientY-10;
+    if(lx+190>vw)lx=clientX-190;if(ty+200>vh)ty=clientY-200;
+    tt.style.left=Math.max(4,lx)+'px';tt.style.top=Math.max(4,ty)+'px';
+  }
 }
 function update_sector_rider_stats(filtered){
   const container=document.getElementById('sector_rider_stats');if(!container)return;
@@ -2524,6 +2562,20 @@ function resize_sector_traffic(){
   c_sector.style.width=_w+'px';c_sector.style.height=_h+'px';
   draw_sector_traffic();
 }
+if(c_sector){
+  c_sector.addEventListener('mousemove',function(ev){
+    const rect=c_sector.getBoundingClientRect();
+    const mx=ev.clientX-rect.left,my=ev.clientY-rect.top;
+    let near=null,minD=14;
+    secDotHits.forEach(h=>{const d=Math.hypot(h.x-mx,h.y-my);if(d<minD){minD=d;near=h;}});
+    if(near){showSectorTT(near,ev.clientX,ev.clientY);}
+    else{document.getElementById('secTooltip').style.display='none';}
+  });
+  c_sector.addEventListener('mouseleave',()=>document.getElementById('secTooltip').style.display='none');
+}
+document.addEventListener('click',function(ev){
+  if(c_sector&&!c_sector.contains(ev.target))document.getElementById('secTooltip').style.display='none';
+});
 window.addEventListener('resize',()=>{resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize8();resize9();resize_pos();resize_ot();resize_traffic();resize_sector_traffic();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();});
 // Re-render all charts when DPR changes (e.g. moving window between screens)
 (function(){let mq=matchMedia('(resolution: '+DPR+'dppx)');function onDPRChange(){mq.removeEventListener('change',onDPRChange);resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize8();resize9();resize_pos();resize_ot();resize_traffic();resize_sector_traffic();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();mq=matchMedia('(resolution: '+(window.devicePixelRatio||1)+'dppx)');mq.addEventListener('change',onDPRChange);}mq.addEventListener('change',onDPRChange);})();
@@ -2794,5 +2846,6 @@ window.addEventListener('resize',resizeRT);
 })();
 </script>
 <div id="trTooltip"></div>
+<div id="secTooltip"></div>
 </body>
 </html>
