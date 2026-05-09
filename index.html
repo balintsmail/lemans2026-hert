@@ -1890,29 +1890,41 @@ function resize_traffic(){
   c_traffic.style.width=_w+'px';c_traffic.style.height=_h+'px';
   draw_traffic();
 }
+function showTrafficTT(h,clientX,clientY){
+  const tt=document.getElementById('trTooltip');
+  const e=h.e;
+  const gap=(e[3]/10).toFixed(1),pd=(e[4]/100).toFixed(2);
+  const ourP=(e[7]!=null?(e[7]/10).toFixed(2):'?'),theirP=(e[8]!=null?(e[8]/10).toFixed(2):'?');
+  const team=TR_TEAM_NAMES[e[2]]||'#'+e[2];
+  tt.innerHTML='<div class="tt-team">Lap '+e[0]+' · '+team+'</div>'
+    +'<div class="tt-row"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Their pace</span><span class="tt-val">'+theirP+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
+  tt.style.display='block';
+  if(clientX!=null){tt.style.left=(clientX+14)+'px';tt.style.top=(clientY-10)+'px';}
+  else{
+    const r=c_traffic.getBoundingClientRect();
+    tt.style.left=(r.left+h.x+14)+'px';
+    tt.style.top=Math.max(10,r.top+h.y-30)+'px';
+  }
+}
 if(c_traffic){
   c_traffic.addEventListener('mousemove',function(ev){
     const rect=c_traffic.getBoundingClientRect();
     const mx=ev.clientX-rect.left,my=ev.clientY-rect.top;
-    let near=null,minD=10;
+    let near=null,minD=14;
     trDotHits.forEach(h=>{const d=Math.hypot(h.x-mx,h.y-my);if(d<minD){minD=d;near=h;}});
-    const tt=document.getElementById('trTooltip');
-    if(near){
-      const e=near.e;
-      const gap=(e[3]/10).toFixed(1),pd=(e[4]/100).toFixed(2);
-      const ourP=(e[7]/10).toFixed(2),theirP=(e[8]/10).toFixed(2);
-      const team=TR_TEAM_NAMES[e[2]]||'#'+e[2];
-      tt.innerHTML='<div class="tt-team">'+team+'</div>'
-        +'<div class="tt-row"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
-        +'<div class="tt-row"><span class="tt-label">Their pace</span><span class="tt-val">'+theirP+'s</span></div>'
-        +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
-        +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
-      tt.style.display='block';
-      tt.style.left=(ev.clientX+14)+'px';
-      tt.style.top=(ev.clientY-10)+'px';
-    } else {tt.style.display='none';}
+    if(near){showTrafficTT(near,ev.clientX,ev.clientY);}
+    else{document.getElementById('trTooltip').style.display='none';}
   });
   c_traffic.addEventListener('mouseleave',()=>document.getElementById('trTooltip').style.display='none');
+}
+document.addEventListener('click',function(ev){
+  if(!c_traffic||!c_traffic.contains(ev.target))document.getElementById('trTooltip').style.display='none';
+});
+function autoShowFirstTrafficTT(){
+  if(trDotHits.length>0){showTrafficTT(trDotHits[0],null,null);}
 }
 function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_oil.width=_w*DPR;cv_oil.height=_h*DPR;}draw_oil();}
 
@@ -2233,6 +2245,7 @@ window.addEventListener('resize',()=>{resize();resize2();resize2b();resize3();re
 requestAnimationFrame(()=>{
   renderRiders();renderToggles2();renderToggles2b();renderToggles3();renderToggles4();renderToggles5();renderToggles7();renderToggles8();renderToggles9();
   resize();resize2();resize2b();resize3();resize4();resize5();resize7();resize8();resize9();resize_pos();resize_ot();resize_traffic();resize_oil();resize_cool();resize_fuel();resize_setup();resize_otlt();renderOTLTRiderToggles();
+  setTimeout(autoShowFirstTrafficTT,100);
   initDualSlider('dsMinOTLT','dsMaxOTLT','dsFillOTLT','sLblOTLT',(a,b)=>{lapMinOTLT=Math.max(1,Math.round(a*838/24));lapMaxOTLT=Math.min(838,b>=24?838:Math.round(b*838/24));draw_otlt();});
   initDualSlider('dsMin2','dsMax2','dsFill2','sLbl2',(a,b)=>{lapMin2=Math.max(1,Math.round(a*838/24));lapMax2=Math.min(838,b>=24?838:Math.round(b*838/24));draw2();});
   initDualSlider('dsMin2b','dsMax2b','dsFill2b','sLbl2b',(a,b)=>{lapMin2b=Math.max(1,Math.round(a*838/24));lapMax2b=Math.min(838,b>=24?838:Math.round(b*838/24));draw2b();});
