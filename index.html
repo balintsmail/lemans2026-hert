@@ -1863,6 +1863,7 @@ function draw_traffic(){
   cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='10px Segoe UI';cx_traffic.textAlign='center';
   cx_traffic.fillText('Race hours',P.l+pw/2,H-6);
 }
+let trDotHits=[];
 function resize_traffic(){
   if(!c_traffic)return;
   const wrap=c_traffic.parentElement;
@@ -1870,6 +1871,30 @@ function resize_traffic(){
   const _h=Math.round(TR_TEAMS_SORTED.length*20)+50;
   c_traffic.width=_w*DPR;c_traffic.height=_h*DPR;
   draw_traffic();
+}
+if(c_traffic){
+  c_traffic.addEventListener('mousemove',function(ev){
+    const rect=c_traffic.getBoundingClientRect();
+    const mx=ev.clientX-rect.left,my=ev.clientY-rect.top;
+    let near=null,minD=10;
+    trDotHits.forEach(h=>{const d=Math.hypot(h.x-mx,h.y-my);if(d<minD){minD=d;near=h;}});
+    const tt=document.getElementById('trTooltip');
+    if(near){
+      const e=near.e;
+      const gap=(e[3]/10).toFixed(1),pd=(e[4]/100).toFixed(2);
+      const ourP=(e[7]/10).toFixed(2),theirP=(e[8]/10).toFixed(2);
+      const team=TR_TEAM_NAMES[e[2]]||'#'+e[2];
+      tt.innerHTML='<div class="tt-team">'+team+'</div>'
+        +'<div class="tt-row"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
+        +'<div class="tt-row"><span class="tt-label">Their pace</span><span class="tt-val">'+theirP+'s</span></div>'
+        +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
+        +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
+      tt.style.display='block';
+      tt.style.left=(ev.clientX+14)+'px';
+      tt.style.top=(ev.clientY-10)+'px';
+    } else {tt.style.display='none';}
+  });
+  c_traffic.addEventListener('mouseleave',()=>document.getElementById('trTooltip').style.display='none');
 }
 function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_oil.width=_w*DPR;cv_oil.height=_h*DPR;}draw_oil();}
 
