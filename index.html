@@ -46,6 +46,10 @@ canvas{display:block;cursor:crosshair;width:100%;height:100%}
 .li{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--tx2)}
 .ld{width:8px;height:8px;border-radius:50%}
 #tip{position:fixed;pointer-events:none;display:none;z-index:200;background:rgba(12,14,22,.96);border:1px solid #2a2e42;border-radius:8px;padding:10px 14px;font-size:.74rem;min-width:145px}
+#trTooltip{position:fixed;pointer-events:none;display:none;z-index:201;background:rgba(12,14,22,.97);border:1px solid #2a2e42;border-radius:8px;padding:10px 14px;font-size:.74rem;min-width:160px;color:#c0c8d8;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.tt-team{font-weight:700;color:#fff;margin-bottom:6px;font-size:.76rem}
+.tt-row{display:flex;justify-content:space-between;gap:18px;margin-top:2px}
+.tt-label{color:#7a8399}.tt-val{color:#22d3ee;font-weight:600}
 .tl{font-size:1rem;font-weight:700;color:#fff}.tr{color:var(--tx2);margin-top:2px}.tt{color:#7dd3fc;font-weight:600;margin-top:4px}.tn{color:#f59e0b;font-size:.68rem;margin-top:3px}
 .sctrl{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
 .stwrap{overflow-x:auto}
@@ -1902,11 +1906,25 @@ function showTrafficTT(h,clientX,clientY){
     +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
     +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
   tt.style.display='block';
-  if(clientX!=null){tt.style.left=(clientX+14)+'px';tt.style.top=(clientY-10)+'px';}
-  else{
+  if(clientX!=null){
+    const vw=window.innerWidth,vh=window.innerHeight;
+    let lx=clientX+14,ty=clientY-10;
+    if(lx+180>vw)lx=clientX-180;
+    if(ty+160>vh)ty=clientY-160;
+    tt.style.left=Math.max(4,lx)+'px';tt.style.top=Math.max(4,ty)+'px';
+  }else{
+    // auto-show: position in visible viewport area based on dot's canvas position
     const r=c_traffic.getBoundingClientRect();
-    tt.style.left=(r.left+h.x+14)+'px';
-    tt.style.top=Math.max(10,r.top+h.y-30)+'px';
+    // r.top may be off-screen; clamp to visible viewport
+    const dotViewY=r.top+h.y;
+    const clampedY=dotViewY>0&&dotViewY<window.innerHeight?dotViewY:window.innerHeight*0.35;
+    const dotViewX=r.left+h.x;
+    const clampedX=dotViewX>0&&dotViewX<window.innerWidth?dotViewX:window.innerWidth*0.5;
+    const vw=window.innerWidth,vh=window.innerHeight;
+    let lx=clampedX+14,ty=clampedY-10;
+    if(lx+180>vw)lx=clampedX-180;
+    if(ty+160>vh)ty=clampedY-160;
+    tt.style.left=Math.max(4,lx)+'px';tt.style.top=Math.max(4,ty)+'px';
   }
 }
 if(c_traffic){
@@ -1924,7 +1942,15 @@ document.addEventListener('click',function(ev){
   if(!c_traffic||!c_traffic.contains(ev.target))document.getElementById('trTooltip').style.display='none';
 });
 function autoShowFirstTrafficTT(){
-  if(trDotHits.length>0){showTrafficTT(trDotHits[0],null,null);}
+  if(!trDotHits.length)return;
+  // Pick a strict catch-up dot if available, else first dot
+  const h=trDotHits.find(d=>d.e[6]===1)||trDotHits[0];
+  // Scroll canvas into view so dot is visible, then show tooltip
+  c_traffic.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>{
+    const r=c_traffic.getBoundingClientRect();
+    showTrafficTT(h,r.left+h.x,r.top+h.y);
+  },400);
 }
 function resize_oil(){if(!cv_oil)return;const wrap=cv_oil.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;cv_oil.width=_w*DPR;cv_oil.height=_h*DPR;}draw_oil();}
 
