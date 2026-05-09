@@ -2524,6 +2524,9 @@ function draw_sector_traffic(){
   });
   // Sector colour tints (slight modifier per sector for visual grouping)
   const sAlphaMod=[1.0,0.8,0.65];
+  // otSecMap: "bike_lap" → sector index where overtake crossed zero
+  const otSecMap={};
+  OT_SECTOR_SPEC.forEach(k=>{const p=k.lastIndexOf('_');otSecMap[k.slice(0,p)]=+k.slice(p+1);});
   // State 1: approach dots
   filtered.filter(e=>e[6]===0).forEach(e=>{
     const i=teamIdxMap[e[2]];if(i===undefined)return;
@@ -2535,7 +2538,15 @@ function draw_sector_traffic(){
     cx_sector.fillStyle='rgba('+r+','+g+','+b+','+alpha.toFixed(3)+')';cx_sector.fill();
   });
   // State 2: hold-up, no position change
-  filtered.filter(e=>e[6]===1&&!OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0))).forEach(e=>{
+  // Skip sectors that come AFTER the overtake sector within the same lap
+  // (those sectors the competitor is already ahead — hold-up no longer applies)
+  filtered.filter(e=>{
+    if(e[6]!==1)return false;
+    if(OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0)))return false; // this sector = white dot
+    const otS=otSecMap[e[2]+'_'+e[0]];
+    if(otS!==undefined&&(e[10]||0)>otS)return false; // post-overtake sector: suppress
+    return true;
+  }).forEach(e=>{
     const i=teamIdxMap[e[2]];if(i===undefined)return;
     const xx=pxH(e[1]/1000),yy=pyRow(i);
     cx_sector.beginPath();cx_sector.arc(xx,yy,4,0,Math.PI*2);
