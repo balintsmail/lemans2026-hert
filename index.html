@@ -98,6 +98,10 @@ footer a:hover{color:var(--tx2)}
 .dslider input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:#4ade80;cursor:pointer;pointer-events:all;border:2px solid #0f1117;box-sizing:border-box}
 @media(max-width:600px){.nlinks{display:none}nav{padding:0 16px}section{padding:68px 16px 36px}}
 @media(min-width:1400px){section{padding:72px 60px 48px}}
+
+.chapter-title{padding:52px 40px 24px;border-top:2px solid #1e2233;margin-top:8px}
+.chapter-title h2{font-size:2rem;font-weight:800;letter-spacing:-.5px;color:#e2e8f4;margin:0 0 4px}
+.chapter-sub{font-size:.82rem;color:#6b7280;margin:0;font-weight:400}
 </style>
 </head>
 <body>
@@ -106,28 +110,36 @@ footer a:hover{color:var(--tx2)}
   <div class="nbrand">#38 <span>HERT</span> · Le Mans 2026</div>
   <div class="nlinks">
     <a href="#overview">Overview</a>
+    <a href="#poschart">Positions</a>
+    <a href="#gap">Gap</a>
+    <a href="#standings">Standings</a>
     <a href="#laptimes">Lap times</a>
     <a href="#stintavg">Stint avg</a>
+    <a href="#rider_perf">Rider Perf</a>
+    <a href="#riders">Riders</a>
     <a href="#stints">Stints</a>
     <a href="#stints2">Early Stints</a>
-    <a href="#gap">Gap</a>
-    <a href="#pitstops">Pit Stops</a>
-    <a href="#pitstops2">Clean Pits</a>
-    <a href="#pitstops3">Fuel Stops</a>
-    <a href="#pitstops4">Wheel Stops</a>
-    <a href="#poschart">Positions</a>
     <a href="#overtakes">Overtakes</a>
+    <a href="#otlap">Overtake log</a>
     <a href="#traffic">Traffic</a>
+    <a href="#sector_traffic">Sector traffic</a>
     <a href="#oiltemp">Oil</a>
     <a href="#cooltemp">Coolant</a>
     <a href="#fuelchart">Fuel</a>
     <a href="#setupchart">Setup</a>
-    <a href="#standings">Standings</a>
-    <a href="#rider_perf">Rider Perf</a><a href="#riders">Riders</a>
+    <a href="#pitstops">Pit Stops</a>
+    <a href="#pitstops2">Clean Pits</a>
+    <a href="#pitstops3">Fuel Stops</a>
+    <a href="#pitstops4">Wheel Stops</a>
     <a href="#runtable">Run Table</a>
   </div>
   <div class="nbadge">P1 Stock · P6 Overall</div>
 </nav>
+
+
+<div class="chapter-title">
+  <h2>Overview</h2>
+</div>
 
 <section id="overview">
   <p class="stag">24 Heures Motos · Le Mans · 3–4 May 2026</p>
@@ -149,6 +161,62 @@ footer a:hover{color:var(--tx2)}
   </div>
   <div class="insight"><strong>Race story:</strong> #38 won Stock on consistency, not outright pace. Six rivals — #49 Aprilia (1:37.796), #77 Honda (1:37.376), #41 Honda (1:37.923), #18 Yamaha (1:37.808), #25 BMW (1:37.094), #9 BMW (1:37.657) — all posted faster single laps, yet all finished behind. BMW completed 838 laps, more than any other Stock team, while faster rivals came up short on distance. Zero retirements, clean pit execution, and a 24-hour strategy were the deciding factors.</div>
 </section>
+
+<div class="chapter-title">
+  <h2>Race Position &amp; Gap</h2>
+  <p class="chapter-sub">Championship standings · position evolution · gap to competitors</p>
+</div>
+
+<section id="poschart">
+  <p class="stag">Race · position history</p>
+  <h2>Race Position Chart</h2>
+  <p class="hsub" style="margin-bottom:12px">SST (Stock) category position per lap. #38 in white. Pit laps shown as orange ticks. SC periods shaded yellow.</p>
+  <div class="ctrl">
+    <span class="lbl">TEAMS</span>
+    <span class="rtog" id="pos_t38" onclick="togglePOS(38)"><span class="dot" style="background:#ffffff"></span>#38 HERT</span><span class="rtog" id="pos_t9" onclick="togglePOS(9)"><span class="dot" style="background:#92C020"></span>#9 Tecmas</span><span class="rtog" id="pos_t25" onclick="togglePOS(25)"><span class="dot" style="background:#F5A623"></span>#25 Étoile</span><span class="rtog" id="pos_t41" onclick="togglePOS(41)"><span class="dot" style="background:#922B21"></span>#41 Dafy</span><span class="rtog" id="pos_t49" onclick="togglePOS(49)"><span class="dot" style="background:#9B59B6"></span>#49 Revo</span><span class="rtog" id="pos_t77" onclick="togglePOS(77)"><span class="dot" style="background:#4F6CBF"></span>#77 Penz</span>
+  </div>
+  <div class="cwrap" style="height:480px"><canvas id="c_pos"></canvas></div>
+</section>
+
+<section id="gap">
+  <p class="stag">Comparison · gap to #38</p>
+  <h2>Gap to #38</h2>
+  <p class="hsub" style="margin-bottom:12px">Real on-track gap — positive = #38 leads, negative = #38 behind. X axis = race hours elapsed.</p>
+  <div class="ctrl">
+    <span class="lbl">TEAMS</span>
+    <span id="ttogs5"></span>
+    &nbsp;
+    <span class="lbl">MODE</span>
+    <button id="bGapRaw" class="on" onclick="setGapMode('raw')">Raw</button>
+    <button id="bGapSmooth" onclick="setGapMode('smooth')">Smoothed</button>
+  </div>
+  <div class="cwrap"><canvas id="c5"></canvas></div>
+</section>
+
+<section id="standings">
+  <p class="stag">FIM EWC 2026 · Stock Superbike (SST)</p>
+  <h2>Stock standings</h2>
+  <p class="hsub" style="margin-bottom:12px">Click headers to sort. &#9889; = faster best lap than #38 despite finishing lower.</p>
+  <div class="sctrl">
+    <span class="lbl">SORT</span>
+    <button id="srtL" class="on" onclick="sortTable('laps')">Laps</button>
+    <button id="srtB" onclick="sortTable('best')">Best lap</button>
+  </div>
+  <div class="stwrap"><table><thead><tr>
+    <th onclick="sortTable('pos')">Pos</th>
+    <th>#</th>
+    <th>Team</th>
+    <th>Bike</th>
+    <th onclick="sortTable('laps')">Laps</th>
+    <th onclick="sortTable('best')">Best lap</th>
+    <th>Gap to #38</th>
+  </tr></thead><tbody id="stbody"></tbody></table></div>
+</section>
+
+<div class="chapter-title">
+  <h2>Lap Times</h2>
+  <p class="chapter-sub">Stint averages · lap-by-lap pace · performance bands</p>
+</div>
 
 <section id="laptimes">
   <p class="stag">Chronological · all 838 laps</p>
@@ -204,6 +272,60 @@ footer a:hover{color:var(--tx2)}
   </div>
 </section>
 
+<div class="chapter-title">
+  <h2>Rider Performance</h2>
+  <p class="chapter-sub">Per-rider pace · stint bands · clean-lap analysis</p>
+</div>
+
+<section id="rider_perf">
+  <p class="stag">#38 internal · rider performance</p>
+  <h2>Rider Lap Analysis</h2>
+  <p class="hsub" style="margin-bottom:12px">
+    Lap times by stint. <strong style="color:#5B9BD5">Solid line</strong> = clean average (excludes SC, pit in/out, laps &gt;8% off fastest).
+    <strong style="color:#5B9BD5">Dotted line</strong> = fastest clean lap.
+    Bands: outer 15% = full range · middle 15% = IQR 50% · inner 15% = middle 25%.
+    Faded dots = excluded laps.
+  </p>
+  <div id="rchart_controls" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <span class="lbl">SHOW</span>
+    <span class="rtog on" id="rc_tog_dots"  onclick="rcToggle('dots')" >Dots</span>
+    <span class="rtog on" id="rc_tog_bands" onclick="rcToggle('bands')">Bands</span>
+    <span class="rtog on" id="rc_tog_pace"  onclick="rcToggle('pace')" >Pace line</span>
+    <span class="rtog on" id="rc_tog_fast"  onclick="rcToggle('fast')" >Best line</span>
+    <span class="lbl" style="margin-left:8px">OUTER BAND</span>
+    <span id="rcBand1Lbl" style="font-size:.75rem;color:var(--tx2);min-width:28px">80%</span>
+    <input type="range" id="rcBand1Slider" min="10" max="100" value="80" step="5"
+      style="width:80px;vertical-align:middle;accent-color:#5B9BD5"
+      oninput="rcBand1Pct=+this.value;document.getElementById('rcBand1Lbl').textContent=this.value+'%';draw_rider_chart()">
+    <span class="lbl" style="margin-left:8px">INNER BAND</span>
+    <span id="rcBand2Lbl" style="font-size:.75rem;color:var(--tx2);min-width:28px">50%</span>
+    <input type="range" id="rcBand2Slider" min="10" max="100" value="50" step="5"
+      style="width:80px;vertical-align:middle;accent-color:#5B9BD5"
+      oninput="rcBand2Pct=+this.value;document.getElementById('rcBand2Lbl').textContent=this.value+'%';draw_rider_chart()">
+    <span class="lbl" style="margin-left:8px">ORDER</span>
+    <span class="rtog on" id="rc_ord_chrono" onclick="rcSetOrder('chrono')">Chronological</span>
+    <span class="rtog"    id="rc_ord_rider"  onclick="rcSetOrder('rider')" >By rider</span>
+    <span class="rtog"    id="rc_ord_pace"   onclick="rcSetOrder('pace')"  >Fastest first</span>
+    <span class="rtog"    id="rc_ord_band"   onclick="rcSetOrder('band')"  >Smallest range</span>
+    <span class="lbl" style="margin-left:8px">RACE TIME</span>
+    <span id="rcHLbl" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="rcHFill"></div><input type="range" id="rcHMin" min="0" max="24" value="0" step="0.5"><input type="range" id="rcHMax" min="0" max="24" value="24" step="0.5"></div>
+  </div>
+  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_rider"></canvas></div>
+</section>
+
+<section id="riders">
+  <p class="stag">#38 internal · rider analysis</p>
+  <h2>Rider split</h2>
+  <p class="hsub" style="margin-bottom:16px">Stats from clean laps (&lt;115s). Pace bar = average relative to fastest team member.</p>
+  <div class="rgrid" id="rgrid"></div>
+</section>
+
+<div class="chapter-title">
+  <h2>Stints</h2>
+  <p class="chapter-sub">Stint summary tables · early-race breakdown</p>
+</div>
+
 <section id="stints">
   <p class="stag">Performance · ranked by pace</p>
   <h2>Stint ranking</h2>
@@ -246,20 +368,147 @@ footer a:hover{color:var(--tx2)}
   <div class="lgnd" id="lgnd2b"></div>
 </section>
 
-<section id="gap">
-  <p class="stag">Comparison · gap to #38</p>
-  <h2>Gap to #38</h2>
-  <p class="hsub" style="margin-bottom:12px">Real on-track gap — positive = #38 leads, negative = #38 behind. X axis = race hours elapsed.</p>
-  <div class="ctrl">
-    <span class="lbl">TEAMS</span>
-    <span id="ttogs5"></span>
-    &nbsp;
-    <span class="lbl">MODE</span>
-    <button id="bGapRaw" class="on" onclick="setGapMode('raw')">Raw</button>
-    <button id="bGapSmooth" onclick="setGapMode('smooth')">Smoothed</button>
+<div class="chapter-title">
+  <h2>Overtakes</h2>
+  <p class="chapter-sub">Position changes · lap-by-lap overtake log</p>
+</div>
+
+<section id="overtakes">
+  <p class="stag">Race · overtaking</p>
+  <h2>Overtakes per Lap</h2>
+  <p class="hsub" style="margin-bottom:8px">Lap-by-lap overtakes vs all 59 competitors (official EWC lap-by-lap data). Toggle series below.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">    
   </div>
-  <div class="cwrap"><canvas id="c5"></canvas></div>
+  <div class="cwrap" style="height:300px"><canvas id="c_ot"></canvas></div>
 </section>
+
+<section id="otlap">
+  <p class="stag">Race · overtaking</p>
+  <h2>Lap Time by Overtake Count</h2>
+  <p class="hsub" style="margin-bottom:8px">Clean laps (&lt;115s) sorted by clean on-track overtakes (high→low). Dots = rider colour. Dashed line = segment average. Step line = overtake count (right axis).</p>
+  <div class="ctrl">
+    <span class="lbl">RIDERS</span>
+    <span id="otlt-rtogs"></span>
+    &nbsp;
+    <span class="lbl">RACE TIME</span>
+    <span id="sLblOTLT" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillOTLT"></div><input type="range" id="dsMinOTLT" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxOTLT" min="0" max="24" value="24" step="0.5"></div>
+  </div>
+  <div class="cwrap" style="height:360px"><canvas id="c_otlt"></canvas></div>
+  <div id="otlt-stats" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px"></div>
+</section>
+
+<div class="chapter-title">
+  <h2>Traffic</h2>
+  <p class="chapter-sub">Lap-resolution &amp; sector-resolution traffic ahead</p>
+</div>
+
+<section id="traffic">
+  <p class="stag">Race · traffic</p>
+  <h2>Traffic Ahead per Lap</h2>
+  <p class="hsub" style="margin-bottom:8px">All 59 competitors. Dot colour = our rider (blue=Bálint, red=Loris, green=Máté, yellow=Jan). <strong style="color:#fff">White dot</strong> = overtake happened that lap. <strong>Large coloured dot</strong> = strict catch-up (pace diff > gap). <strong>Small fading dot</strong> = approaching (opacity = proximity).</p>
+  <p class="hsub" style="margin-bottom:8px;font-size:.72rem;color:#6b7280"><strong style="color:#9ca3af">How it's calculated:</strong> Each dot = one competitor within range during one of our laps. Dot colour = our rider. <strong style="color:#9ca3af">Paces</strong> = per-team stint median (each team's own rider stints), laps within 5% of stint fastest. <strong style="color:#9ca3af">Hold-up</strong> = competitor's pace slower than ours AND pace advantage > current gap. <strong style="color:#fff">White dot</strong> = gap ≤ 1.5 s then reset ≥ 5 s (position change). <strong style="color:#9ca3af">Excluded:</strong> pit laps, out-laps, SC periods (yellow bands), laps with no timing data.</p>
+  <div class="ctrl" style="margin-bottom:8px">
+    <span class="lbl">FILTER</span>
+    <span class="rtog on" id="trfilt_all" onclick="setTrafficFilter('all')">All Traffic</span>
+    <span class="rtog" id="trfilt_strict" onclick="setTrafficFilter('strict')">Hold-ups Only</span>
+    &nbsp;
+    <span class="lbl">RIDERS</span>
+    <span class="rtog on" id="tr_B" onclick="toggleTrafficRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
+    <span class="rtog on" id="tr_L" onclick="toggleTrafficRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
+    <span class="rtog on" id="tr_M" onclick="toggleTrafficRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
+    <span class="rtog on" id="tr_J" onclick="toggleTrafficRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
+  </div>
+  <div class="ctrl" style="margin-bottom:8px">
+    <span class="lbl">RACE TIME</span>
+    <span id="sLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillTR"></div><input type="range" id="dsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxTR" min="0" max="24" value="24" step="0.5"></div>
+  </div>
+  <div class="ctrl" style="margin-bottom:8px">
+    <span class="lbl">APPROACH RANGE</span>
+    <span id="trGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
+    <input type="range" id="trGapSlider" min="1" max="30" value="10" step="1"
+      style="width:160px;vertical-align:middle;accent-color:#22d3ee"
+      oninput="trGapMax=+this.value;document.getElementById('trGapLbl').textContent=this.value+'s';draw_traffic()">
+  </div>
+  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_traffic"></canvas></div>
+  <div id="rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
+
+<section id="sector_traffic">
+  <p class="stag">EWC timing · sector analysis</p>
+  <h2>Traffic Ahead — Sector Resolution</h2>
+  <p class="hsub" style="margin-bottom:8px">Each lap produces 3 dots (S1 · S2 · S3). Dot colour = our rider. Approach/hold-up/white logic identical to lap chart.</p>
+  <p class="hsub" style="margin-bottom:8px;font-size:.72rem;color:#6b7280">
+    <strong style="color:#9ca3af">How it's calculated:</strong>
+    Gap evolves through each sector: gap after S<em>k</em> = gap before S<em>k</em> − (competitor S<em>k</em> − our S<em>k</em>).
+    Sector paces = per-team stint median by sector, filtered to laps within 5% of stint fastest.
+    A cluster of 3 large dots = held up the full lap. Only S1 large = held up in the opening sector only.
+    <strong style="color:#9ca3af">Excluded:</strong> laps where sector data is unavailable, SC periods (yellow bands),
+    laps &gt;5% slower than stint pace (yellow flags / slow zones).
+    Le Mans uses 3 sectors — S1 ≈ 44 s (pit straight + chicanes), S2 ≈ 27 s (Ford chicanes + Dunlop), S3 ≈ 26 s (Porsche + Maison Blanche).
+  </p>
+  <div class="sctrl" style="margin-bottom:8px">
+    <div class="ctrl">
+      <span class="lbl">RACE TIME</span>
+      <span id="ssLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+      <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="sdsFillTR"></div><input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="sdsMaxTR" min="0" max="24" value="24" step="0.5"></div>
+    </div>
+    <div class="ctrl">
+      <span class="lbl">APPROACH RANGE</span>
+      <span id="sTrGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
+      <input type="range" id="sTrGapSlider" min="1" max="30" value="10" step="1"
+        style="width:160px;vertical-align:middle;accent-color:#22d3ee"
+        oninput="sTrGapMax=+this.value;document.getElementById('sTrGapLbl').textContent=this.value+'s';draw_sector_traffic()">
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <span class="rtog on" id="str_B" onclick="toggleSectorRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
+      <span class="rtog on" id="str_L" onclick="toggleSectorRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
+      <span class="rtog on" id="str_M" onclick="toggleSectorRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
+      <span class="rtog on" id="str_J" onclick="toggleSectorRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
+    </div>
+  </div>
+  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_sector_traffic"></canvas></div>
+  <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
+</section>
+</section>
+
+<div class="chapter-title">
+  <h2>Weather &amp; Telemetry</h2>
+  <p class="chapter-sub">MoTeC engine data · fuel · setup trends</p>
+</div>
+
+<section id="oiltemp">
+  <p class="stag">MoTeC · engine</p>
+  <h2>Oil Temperature</h2>
+  <p class="hsub" style="margin-bottom:12px">Min/Max per lap + dashed average. Band = range within lap. SC periods shaded yellow. Laps without MoTeC data shown as gaps.</p>
+  <div class="cwrap"><canvas id="c_oil"></canvas></div>
+</section>
+
+<section id="cooltemp">
+  <p class="stag">MoTeC · engine</p>
+  <h2>Coolant Temperature</h2>
+  <p class="hsub" style="margin-bottom:12px">Min/Max per lap. Band = range within lap. SC periods shaded yellow.</p>
+  <div class="cwrap"><canvas id="c_cool"></canvas></div>
+</section>
+
+<section id="fuelchart">
+  <p class="stag">MoTeC · fuel</p>
+  <h2>Fuel Consumption</h2>
+  <p class="hsub" style="margin-bottom:12px">Litres per lap (MoTeC measured). SC laps shown in yellow — higher due to longer lap time. Dashed line = race average (0.646 L/lap). Remaining 94 laps estimated at average.</p>
+  <div class="cwrap"><canvas id="c_fuel"></canvas></div>
+</section>
+
+<section id="setupchart">
+  <p class="stag">MoTeC · bike setup</p>
+  <h2>DTC / Engine Brake / Riding Mode</h2>
+  <p class="hsub" style="margin-bottom:12px">DTC adj (traction control, left axis), Engine Brake adj (right axis), Riding Mode background (Dry 2 = darker). Race started in Dry 2.</p>
+  <div class="cwrap"><canvas id="c_setup"></canvas></div>
+</section>
+
+<div class="chapter-title">
+  <h2>Pit Stops &amp; Run Table</h2>
+  <p class="chapter-sub">Pit stop analysis · fuel / tyre data · pit-wall run table</p>
+</div>
 
 <section id="pitstops">
   <p class="stag">Pit stops · all 5 teams</p>
@@ -329,203 +578,51 @@ footer a:hover{color:var(--tx2)}
   <div class="cwrap"><canvas id="c9"></canvas></div>
 </section>
 
-<section id="poschart">
-  <p class="stag">Race · position history</p>
-  <h2>Race Position Chart</h2>
-  <p class="hsub" style="margin-bottom:12px">SST (Stock) category position per lap. #38 in white. Pit laps shown as orange ticks. SC periods shaded yellow.</p>
-  <div class="ctrl">
-    <span class="lbl">TEAMS</span>
-    <span class="rtog" id="pos_t38" onclick="togglePOS(38)"><span class="dot" style="background:#ffffff"></span>#38 HERT</span><span class="rtog" id="pos_t9" onclick="togglePOS(9)"><span class="dot" style="background:#92C020"></span>#9 Tecmas</span><span class="rtog" id="pos_t25" onclick="togglePOS(25)"><span class="dot" style="background:#F5A623"></span>#25 Étoile</span><span class="rtog" id="pos_t41" onclick="togglePOS(41)"><span class="dot" style="background:#922B21"></span>#41 Dafy</span><span class="rtog" id="pos_t49" onclick="togglePOS(49)"><span class="dot" style="background:#9B59B6"></span>#49 Revo</span><span class="rtog" id="pos_t77" onclick="togglePOS(77)"><span class="dot" style="background:#4F6CBF"></span>#77 Penz</span>
-  </div>
-  <div class="cwrap" style="height:480px"><canvas id="c_pos"></canvas></div>
-</section>
+<section id="runtable">
+  <p class="stag">Pit wall · run table</p>
+  <h2>Run Table — Weather · Tyres · Fuel</h2>
+  <p class="hsub" style="margin-bottom:12px">Manually recorded pit-wall data. 14 stints · 14 Apr 2026 · 15:00 → 03:55. Tyre pressures recorded at end of stint (selected stints only). Fuel out = litres remaining when stopped.</p>
 
-<section id="overtakes">
-  <p class="stag">Race · overtaking</p>
-  <h2>Overtakes per Lap</h2>
-  <p class="hsub" style="margin-bottom:8px">Lap-by-lap overtakes vs all 59 competitors (official EWC lap-by-lap data). Toggle series below.</p>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">    
-  </div>
-  <div class="cwrap" style="height:300px"><canvas id="c_ot"></canvas></div>
-</section>
-
-<section id="otlap">
-  <p class="stag">Race · overtaking</p>
-  <h2>Lap Time by Overtake Count</h2>
-  <p class="hsub" style="margin-bottom:8px">Clean laps (&lt;115s) sorted by clean on-track overtakes (high→low). Dots = rider colour. Dashed line = segment average. Step line = overtake count (right axis).</p>
-  <div class="ctrl">
-    <span class="lbl">RIDERS</span>
-    <span id="otlt-rtogs"></span>
-    &nbsp;
-    <span class="lbl">RACE TIME</span>
-    <span id="sLblOTLT" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillOTLT"></div><input type="range" id="dsMinOTLT" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxOTLT" min="0" max="24" value="24" step="0.5"></div>
-  </div>
-  <div class="cwrap" style="height:360px"><canvas id="c_otlt"></canvas></div>
-  <div id="otlt-stats" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px"></div>
-</section>
-
-<section id="traffic">
-  <p class="stag">Race · traffic</p>
-  <h2>Traffic Ahead per Lap</h2>
-  <p class="hsub" style="margin-bottom:8px">All 59 competitors. Dot colour = our rider (blue=Bálint, red=Loris, green=Máté, yellow=Jan). <strong style="color:#fff">White dot</strong> = overtake happened that lap. <strong>Large coloured dot</strong> = strict catch-up (pace diff > gap). <strong>Small fading dot</strong> = approaching (opacity = proximity).</p>
-  <p class="hsub" style="margin-bottom:8px;font-size:.72rem;color:#6b7280"><strong style="color:#9ca3af">How it's calculated:</strong> Each dot = one competitor within range during one of our laps. Dot colour = our rider. <strong style="color:#9ca3af">Paces</strong> = per-team stint median (each team's own rider stints), laps within 5% of stint fastest. <strong style="color:#9ca3af">Hold-up</strong> = competitor's pace slower than ours AND pace advantage > current gap. <strong style="color:#fff">White dot</strong> = gap ≤ 1.5 s then reset ≥ 5 s (position change). <strong style="color:#9ca3af">Excluded:</strong> pit laps, out-laps, SC periods (yellow bands), laps with no timing data.</p>
-  <div class="ctrl" style="margin-bottom:8px">
-    <span class="lbl">FILTER</span>
-    <span class="rtog on" id="trfilt_all" onclick="setTrafficFilter('all')">All Traffic</span>
-    <span class="rtog" id="trfilt_strict" onclick="setTrafficFilter('strict')">Hold-ups Only</span>
-    &nbsp;
-    <span class="lbl">RIDERS</span>
-    <span class="rtog on" id="tr_B" onclick="toggleTrafficRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
-    <span class="rtog on" id="tr_L" onclick="toggleTrafficRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
-    <span class="rtog on" id="tr_M" onclick="toggleTrafficRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
-    <span class="rtog on" id="tr_J" onclick="toggleTrafficRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
-  </div>
-  <div class="ctrl" style="margin-bottom:8px">
-    <span class="lbl">RACE TIME</span>
-    <span id="sLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillTR"></div><input type="range" id="dsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxTR" min="0" max="24" value="24" step="0.5"></div>
-  </div>
-  <div class="ctrl" style="margin-bottom:8px">
-    <span class="lbl">APPROACH RANGE</span>
-    <span id="trGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
-    <input type="range" id="trGapSlider" min="1" max="30" value="10" step="1"
-      style="width:160px;vertical-align:middle;accent-color:#22d3ee"
-      oninput="trGapMax=+this.value;document.getElementById('trGapLbl').textContent=this.value+'s';draw_traffic()">
-  </div>
-  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_traffic"></canvas></div>
-  <div id="rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
-
-<section id="sector_traffic">
-  <p class="stag">EWC timing · sector analysis</p>
-  <h2>Traffic Ahead — Sector Resolution</h2>
-  <p class="hsub" style="margin-bottom:8px">Each lap produces 3 dots (S1 · S2 · S3). Dot colour = our rider. Approach/hold-up/white logic identical to lap chart.</p>
-  <p class="hsub" style="margin-bottom:8px;font-size:.72rem;color:#6b7280">
-    <strong style="color:#9ca3af">How it's calculated:</strong>
-    Gap evolves through each sector: gap after S<em>k</em> = gap before S<em>k</em> − (competitor S<em>k</em> − our S<em>k</em>).
-    Sector paces = per-team stint median by sector, filtered to laps within 5% of stint fastest.
-    A cluster of 3 large dots = held up the full lap. Only S1 large = held up in the opening sector only.
-    <strong style="color:#9ca3af">Excluded:</strong> laps where sector data is unavailable, SC periods (yellow bands),
-    laps &gt;5% slower than stint pace (yellow flags / slow zones).
-    Le Mans uses 3 sectors — S1 ≈ 44 s (pit straight + chicanes), S2 ≈ 27 s (Ford chicanes + Dunlop), S3 ≈ 26 s (Porsche + Maison Blanche).
-  </p>
-  <div class="sctrl" style="margin-bottom:8px">
-    <div class="ctrl">
-      <span class="lbl">RACE TIME</span>
-      <span id="ssLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-      <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="sdsFillTR"></div><input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="sdsMaxTR" min="0" max="24" value="24" step="0.5"></div>
+  <div class="cwrap" style="margin-bottom:24px;height:auto">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Weather — Air Temp · Track Temp · Wind Speed</p>
+    <canvas id="rt_c1" height="300"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#22d3ee"></div>Air Temp (°C)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>Track Temp (°C)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#4169E1"></div>Wind Speed km/h (right axis)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated</div>
     </div>
-    <div class="ctrl">
-      <span class="lbl">APPROACH RANGE</span>
-      <span id="sTrGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
-      <input type="range" id="sTrGapSlider" min="1" max="30" value="10" step="1"
-        style="width:160px;vertical-align:middle;accent-color:#22d3ee"
-        oninput="sTrGapMax=+this.value;document.getElementById('sTrGapLbl').textContent=this.value+'s';draw_sector_traffic()">
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:6px;font-style:italic">Missing stints shown as line breaks. S25 (14:35) has no weather data recorded.</p>
+  </div>
+
+  <div class="cwrap" style="margin-bottom:24px;height:auto">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Tyre Pressures — End of Stint (bar)</p>
+    <canvas id="rt_c2" height="300"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>Front End (bar)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#a78bfa"></div>Rear End (bar)</div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-      <span class="rtog on" id="str_B" onclick="toggleSectorRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
-      <span class="rtog on" id="str_L" onclick="toggleSectorRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
-      <span class="rtog on" id="str_M" onclick="toggleSectorRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
-      <span class="rtog on" id="str_J" onclick="toggleSectorRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Only stints with recorded end pressures shown. Front Start S1 = 2.30 bar · Rear Start S1 = 1.40 bar</p>
+  </div>
+
+  <div class="cwrap" style="height:auto">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
+    <div class="ctrl" style="margin-bottom:8px">
+      <span class="lbl">RIDERS</span>
+      <span class="rtog on" id="rrtt_Balint" onclick="toggleRiderRT3('Balint')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
+      <span class="rtog on" id="rrtt_Loris" onclick="toggleRiderRT3('Loris')"><span class="dot" style="background:#D63B25"></span>Loris</span>
+      <span class="rtog on" id="rrtt_Mate" onclick="toggleRiderRT3('Mate')"><span class="dot" style="background:#217346"></span>Máté</span>
+      <span class="rtog on" id="rrtt_Jan" onclick="toggleRiderRT3('Jan')"><span class="dot" style="background:#FFC000"></span>Jan</span>
     </div>
+    <canvas id="rt_c3" height="320"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) — left axis 0–4 L</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#a5f3fc"></div>Laps per stint — right axis 0–40, circles coloured by rider</div>
+    </div>
+    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = more laps on tank.</p>
   </div>
-  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_sector_traffic"></canvas></div>
-  <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
 </section>
 
-
-<section id="oiltemp">
-  <p class="stag">MoTeC · engine</p>
-  <h2>Oil Temperature</h2>
-  <p class="hsub" style="margin-bottom:12px">Min/Max per lap + dashed average. Band = range within lap. SC periods shaded yellow. Laps without MoTeC data shown as gaps.</p>
-  <div class="cwrap"><canvas id="c_oil"></canvas></div>
-</section>
-
-<section id="cooltemp">
-  <p class="stag">MoTeC · engine</p>
-  <h2>Coolant Temperature</h2>
-  <p class="hsub" style="margin-bottom:12px">Min/Max per lap. Band = range within lap. SC periods shaded yellow.</p>
-  <div class="cwrap"><canvas id="c_cool"></canvas></div>
-</section>
-
-<section id="fuelchart">
-  <p class="stag">MoTeC · fuel</p>
-  <h2>Fuel Consumption</h2>
-  <p class="hsub" style="margin-bottom:12px">Litres per lap (MoTeC measured). SC laps shown in yellow — higher due to longer lap time. Dashed line = race average (0.646 L/lap). Remaining 94 laps estimated at average.</p>
-  <div class="cwrap"><canvas id="c_fuel"></canvas></div>
-</section>
-
-<section id="setupchart">
-  <p class="stag">MoTeC · bike setup</p>
-  <h2>DTC / Engine Brake / Riding Mode</h2>
-  <p class="hsub" style="margin-bottom:12px">DTC adj (traction control, left axis), Engine Brake adj (right axis), Riding Mode background (Dry 2 = darker). Race started in Dry 2.</p>
-  <div class="cwrap"><canvas id="c_setup"></canvas></div>
-</section>
-
-<section id="standings">
-  <p class="stag">FIM EWC 2026 · Stock Superbike (SST)</p>
-  <h2>Stock standings</h2>
-  <p class="hsub" style="margin-bottom:12px">Click headers to sort. &#9889; = faster best lap than #38 despite finishing lower.</p>
-  <div class="sctrl">
-    <span class="lbl">SORT</span>
-    <button id="srtL" class="on" onclick="sortTable('laps')">Laps</button>
-    <button id="srtB" onclick="sortTable('best')">Best lap</button>
-  </div>
-  <div class="stwrap"><table><thead><tr>
-    <th onclick="sortTable('pos')">Pos</th>
-    <th>#</th>
-    <th>Team</th>
-    <th>Bike</th>
-    <th onclick="sortTable('laps')">Laps</th>
-    <th onclick="sortTable('best')">Best lap</th>
-    <th>Gap to #38</th>
-  </tr></thead><tbody id="stbody"></tbody></table></div>
-</section>
-
-
-<section id="rider_perf">
-  <p class="stag">#38 internal · rider performance</p>
-  <h2>Rider Lap Analysis</h2>
-  <p class="hsub" style="margin-bottom:12px">
-    Lap times by stint. <strong style="color:#5B9BD5">Solid line</strong> = clean average (excludes SC, pit in/out, laps &gt;8% off fastest).
-    <strong style="color:#5B9BD5">Dotted line</strong> = fastest clean lap.
-    Bands: outer 15% = full range · middle 15% = IQR 50% · inner 15% = middle 25%.
-    Faded dots = excluded laps.
-  </p>
-  <div id="rchart_controls" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-    <span class="lbl">SHOW</span>
-    <span class="rtog on" id="rc_tog_dots"  onclick="rcToggle('dots')" >Dots</span>
-    <span class="rtog on" id="rc_tog_bands" onclick="rcToggle('bands')">Bands</span>
-    <span class="rtog on" id="rc_tog_pace"  onclick="rcToggle('pace')" >Pace line</span>
-    <span class="rtog on" id="rc_tog_fast"  onclick="rcToggle('fast')" >Best line</span>
-    <span class="lbl" style="margin-left:8px">OUTER BAND</span>
-    <span id="rcBand1Lbl" style="font-size:.75rem;color:var(--tx2);min-width:28px">80%</span>
-    <input type="range" id="rcBand1Slider" min="10" max="100" value="80" step="5"
-      style="width:80px;vertical-align:middle;accent-color:#5B9BD5"
-      oninput="rcBand1Pct=+this.value;document.getElementById('rcBand1Lbl').textContent=this.value+'%';draw_rider_chart()">
-    <span class="lbl" style="margin-left:8px">INNER BAND</span>
-    <span id="rcBand2Lbl" style="font-size:.75rem;color:var(--tx2);min-width:28px">50%</span>
-    <input type="range" id="rcBand2Slider" min="10" max="100" value="50" step="5"
-      style="width:80px;vertical-align:middle;accent-color:#5B9BD5"
-      oninput="rcBand2Pct=+this.value;document.getElementById('rcBand2Lbl').textContent=this.value+'%';draw_rider_chart()">
-    <span class="lbl" style="margin-left:8px">ORDER</span>
-    <span class="rtog on" id="rc_ord_chrono" onclick="rcSetOrder('chrono')">Chronological</span>
-    <span class="rtog"    id="rc_ord_rider"  onclick="rcSetOrder('rider')" >By rider</span>
-    <span class="rtog"    id="rc_ord_pace"   onclick="rcSetOrder('pace')"  >Fastest first</span>
-    <span class="rtog"    id="rc_ord_band"   onclick="rcSetOrder('band')"  >Smallest range</span>
-    <span class="lbl" style="margin-left:8px">RACE TIME</span>
-    <span id="rcHLbl" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="rcHFill"></div><input type="range" id="rcHMin" min="0" max="24" value="0" step="0.5"><input type="range" id="rcHMax" min="0" max="24" value="24" step="0.5"></div>
-  </div>
-  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_rider"></canvas></div>
-</section>
-
-<section id="riders">
-  <p class="stag">#38 internal · rider analysis</p>
-  <h2>Rider split</h2>
-  <p class="hsub" style="margin-bottom:16px">Stats from clean laps (&lt;115s). Pace bar = average relative to fastest team member.</p>
-  <div class="rgrid" id="rgrid"></div>
-</section>
 
 <footer>
   <p>Data: FIM EWC official timing — 24 Heures Motos Le Mans 2026 &middot; <a href="https://www.fimewc.com">fimewc.com</a></p>
@@ -2986,52 +3083,6 @@ requestAnimationFrame(()=>{
   initDualSlider('dsMinTR','dsMaxTR','dsFillTR','sLblTR',(a,b)=>{trHMin=a;trHMax=b;draw_traffic();});
 });
 </script>
-
-<section id="runtable">
-  <p class="stag">Pit wall · run table</p>
-  <h2>Run Table — Weather · Tyres · Fuel</h2>
-  <p class="hsub" style="margin-bottom:12px">Manually recorded pit-wall data. 14 stints · 14 Apr 2026 · 15:00 → 03:55. Tyre pressures recorded at end of stint (selected stints only). Fuel out = litres remaining when stopped.</p>
-
-  <div class="cwrap" style="margin-bottom:24px;height:auto">
-    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Weather — Air Temp · Track Temp · Wind Speed</p>
-    <canvas id="rt_c1" height="300"></canvas>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#22d3ee"></div>Air Temp (°C)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>Track Temp (°C)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#4169E1"></div>Wind Speed km/h (right axis)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated</div>
-    </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:6px;font-style:italic">Missing stints shown as line breaks. S25 (14:35) has no weather data recorded.</p>
-  </div>
-
-  <div class="cwrap" style="margin-bottom:24px;height:auto">
-    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Tyre Pressures — End of Stint (bar)</p>
-    <canvas id="rt_c2" height="300"></canvas>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>Front End (bar)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#a78bfa"></div>Rear End (bar)</div>
-    </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Only stints with recorded end pressures shown. Front Start S1 = 2.30 bar · Rear Start S1 = 1.40 bar</p>
-  </div>
-
-  <div class="cwrap" style="height:auto">
-    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
-    <div class="ctrl" style="margin-bottom:8px">
-      <span class="lbl">RIDERS</span>
-      <span class="rtog on" id="rrtt_Balint" onclick="toggleRiderRT3('Balint')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
-      <span class="rtog on" id="rrtt_Loris" onclick="toggleRiderRT3('Loris')"><span class="dot" style="background:#D63B25"></span>Loris</span>
-      <span class="rtog on" id="rrtt_Mate" onclick="toggleRiderRT3('Mate')"><span class="dot" style="background:#217346"></span>Máté</span>
-      <span class="rtog on" id="rrtt_Jan" onclick="toggleRiderRT3('Jan')"><span class="dot" style="background:#FFC000"></span>Jan</span>
-    </div>
-    <canvas id="rt_c3" height="320"></canvas>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) — left axis 0–4 L</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#a5f3fc"></div>Laps per stint — right axis 0–40, circles coloured by rider</div>
-    </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = more laps on tank.</p>
-  </div>
-</section>
-
 <script>
 // ── RUN TABLE CHARTS ─────────────────────────────────────────────────────────
 (function(){
