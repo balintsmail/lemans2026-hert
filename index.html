@@ -3195,104 +3195,99 @@ function draw_timelost(filtered){
   const H=220*DPR;
   c_timelost.width=W;c_timelost.height=H;
   c_timelost.style.width=(W/DPR)+'px';c_timelost.style.height='220px';
-  const P={l:48*DPR,r:24*DPR,t:20*DPR,b:36*DPR};
+  const P={l:44*DPR,r:12*DPR,t:20*DPR,b:32*DPR};
   const pw=W-P.l-P.r,ph=H-P.t-P.b;
   cx_tl.clearRect(0,0,W,H);
 
-  // Aggregate time lost per sector (S1/S2/S3) per rider
-  // Per lap+sector+rider: take MAX across all teams (can't be held by two teams at once)
-  // secLost[sIdx][riderIdx] = total seconds
-  const secLost=[[0,0,0,0],[0,0,0,0],[0,0,0,0]];
-  const _tlBest={};// key=rider_lap_sector → max tl seen
+  const sCols=['#38bdf8','#a3e635','#fb923c'];
+  const sNames=['S1','S2','S3'];
+
+  // Collect best time lost per rider×lap×sector (dedup multi-team)
+  // lapSecMap[lap][sIdx] = total across riders (max per rider)
+  const _best={};// rider_lap_sec -> max tl
   (filtered||[]).forEach(e=>{
     if(e[6]!==1)return;
     const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)]||0;
     if(tl<=0)return;
     const bk=e[5]+'_'+e[0]+'_'+(e[10]||0);
-    if(tl>(_tlBest[bk]||0))_tlBest[bk]=tl;
-  });
-  // Now sum the best-per-slot into sector buckets
-  Object.keys(_tlBest).forEach(bk=>{
-    const [ri,,si]=bk.split('_').map(Number);
-    secLost[si][ri]+=_tlBest[bk];
+    if(tl>(_best[bk]||0))_best[bk]=tl;
   });
 
-  const sNames=['S1','S2','S3'];
-  const sCols=['#38bdf8','#a3e635','#fb923c'];
-  const groupTotals=secLost.map(r=>r.reduce((a,b)=>a+b,0));
-  const maxVal=Math.max(1,...groupTotals);
-  const yMax=Math.max(5,Math.ceil(maxVal*1.2));
+  // lapSecMap[lap][sIdx] = sum of best-per-rider losses in that sector that lap
+  const lapSecMap={};
+  Object.keys(_best).forEach(bk=>{
+    const parts=bk.split('_');
+    const lap=+parts[1],si=+parts[2],tl=_best[bk];
+    if(!lapSecMap[lap])lapSecMap[lap]=[0,0,0];
+    lapSecMap[lap][si]+=tl;
+  });
 
-  const nGroups=3;
+  const laps=Object.keys(lapSecMap).map(Number).sort((a,b)=>a-b);
+  if(!laps.length){
+    cx_tl.fillStyle='#4a5568';cx_tl.font=(12*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+    cx_tl.fillText('No hold-up time lost in this window',W/2,H/2);return;
+  }
+
+  const maxVal=Math.max(1,...laps.map(l=>Math.max(...lapSecMap[l])));
+  const yMax=Math.max(2,+(maxVal*1.2).toFixed(1));
+
+  // Bar sizing: 3 sub-bars per lap group
+  const nGroups=laps.length;
   const groupW=pw/nGroups;
-  const innerPad=groupW*0.12;
-  const barW=groupW-innerPad*2;
+  const subW=Math.max(1.5*DPR,Math.min(12*DPR,(groupW-2*DPR)/3));
+  const gap=Math.max(0.5*DPR,(groupW-3*subW)/4);
 
-  // Grid lines + Y axis ticks
+  // Grid
   const nTick=4;
   cx_tl.strokeStyle='#1e2233';cx_tl.lineWidth=DPR;
   for(let i=0;i<=nTick;i++){
     const yv=yMax*i/nTick;
     const yy=P.t+ph-(ph*yv/yMax);
     cx_tl.beginPath();cx_tl.moveTo(P.l,yy);cx_tl.lineTo(W-P.r,yy);cx_tl.stroke();
-    cx_tl.fillStyle='#4a5568';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='right';
-    cx_tl.fillText(yv.toFixed(0)+'s',P.l-5*DPR,yy+3*DPR);
+    cx_tl.fillStyle='#4a5568';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='right';
+    cx_tl.fillText(yv.toFixed(1)+'s',P.l-4*DPR,yy+3*DPR);
   }
 
-  // Draw bars (stacked by rider) for each sector group
-  secLost.forEach((riderVals,gi)=>{
-    const gx=P.l+gi*groupW+innerPad;
-    const total=riderVals.reduce((a,b)=>a+b,0);
-    let stackY=P.t+ph;
-    riderVals.forEach((v,ri)=>{
-      if(v<=0)return;
-      const bhi=ph*(v/yMax);
-      stackY-=bhi;
-      cx_tl.globalAlpha=0.85;
-      cx_tl.fillStyle=TR_RIDERS_COL[ri];
-      cx_tl.fillRect(gx,stackY,barW,bhi);
-      // Rider label inside segment if tall enough
-      if(bhi>11*DPR){
-        cx_tl.globalAlpha=0.9;
-        cx_tl.fillStyle='rgba(0,0,0,0.55)';
-        cx_tl.font=`bold ${9*DPR}px Segoe UI`;
-        cx_tl.textAlign='center';
-        const rShort=['B','J','L','M'];
-        cx_tl.fillText(rShort[ri],gx+barW/2,stackY+bhi/2+3*DPR);
+  // Draw bars
+  laps.forEach((lap,gi)=>{
+    const vals=lapSecMap[lap];
+    const gx=P.l+gi*groupW;
+    // 3 sub-bars: S1, S2, S3
+    vals.forEach((v,si)=>{
+      const bx=gx+gap+(si*(subW+gap));
+      const bh=ph*(v/yMax);
+      const by=P.t+ph-bh;
+      cx_tl.globalAlpha=v>0?0.88:0;
+      if(v>0){
+        cx_tl.fillStyle=sCols[si];
+        cx_tl.fillRect(bx,by,subW,bh);
       }
       cx_tl.globalAlpha=1;
     });
-    // Total above bar
-    if(total>0){
-      cx_tl.fillStyle='#c0c8d8';cx_tl.font=`bold ${9*DPR}px Segoe UI`;cx_tl.textAlign='center';
-      const barTop=P.t+ph-ph*(total/yMax);
-      cx_tl.fillText(total.toFixed(1)+'s',gx+barW/2,barTop-4*DPR);
+    // Lap label (every N laps to avoid clutter)
+    const every=nGroups>80?10:nGroups>40?5:nGroups>20?2:1;
+    if(gi%every===0||(gi===nGroups-1)){
+      cx_tl.fillStyle='#64748b';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+      cx_tl.fillText(lap,gx+groupW/2,H-6*DPR);
     }
-    // Sector label with colored underline
-    const lx=P.l+gi*groupW+groupW/2;
-    const ly=P.t+ph+14*DPR;
-    cx_tl.fillStyle=sCols[gi];cx_tl.font=`bold ${11*DPR}px Segoe UI`;cx_tl.textAlign='center';
-    cx_tl.fillText(sNames[gi],lx,ly);
-    // small % of total
-    const pct=total?(total/(groupTotals.reduce((a,b)=>a+b,0))*100).toFixed(0):'0';
-    cx_tl.fillStyle='#4a5568';cx_tl.font=`${8*DPR}px Segoe UI`;
-    cx_tl.fillText(pct+'%',lx,ly+11*DPR);
   });
 
   // Y axis label
-  cx_tl.save();cx_tl.translate(12*DPR,P.t+ph/2);cx_tl.rotate(-Math.PI/2);
-  cx_tl.fillStyle='#4a5568';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='center';
-  cx_tl.fillText('seconds lost',0,0);cx_tl.restore();
+  cx_tl.save();cx_tl.translate(10*DPR,P.t+ph/2);cx_tl.rotate(-Math.PI/2);
+  cx_tl.fillStyle='#4a5568';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+  cx_tl.fillText('sec lost',0,0);cx_tl.restore();
 
-  // Legend (riders)
-  const rShortFull=['Bálint','Jan','Loris','Máté'];
+  // Legend (sectors)
   let lx2=P.l;
-  TR_RIDERS_COL.forEach((col,ri)=>{
+  sCols.forEach((col,si)=>{
     cx_tl.fillStyle=col;cx_tl.fillRect(lx2,P.t-13*DPR,8*DPR,8*DPR);
     cx_tl.fillStyle='#9aa3b8';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='left';
-    cx_tl.fillText(rShortFull[ri],lx2+11*DPR,P.t-6*DPR);
-    lx2+=cx_tl.measureText(rShortFull[ri]).width+22*DPR;
+    cx_tl.fillText(sNames[si],lx2+10*DPR,P.t-5*DPR);
+    lx2+=38*DPR;
   });
+  // X-axis label
+  cx_tl.fillStyle='#4a5568';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+  cx_tl.fillText('Lap',W/2,H-DPR);
 }
 
 window.addEventListener('resize',()=>{resize_rider_chart();});
