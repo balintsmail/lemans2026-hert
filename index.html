@@ -2118,7 +2118,7 @@ function draw_traffic(){
     cx_traffic.fillStyle='#ffffff';cx_traffic.fill();
   });
   // Summary annotation
-  const renderArr=layoutEvts.filter(e=>{const eh=e[1]/1000;return eh>=sTrHMin&&eh<=sTrHMax;});
+  const renderArr=filtered.filter(e=>{const eh=e[1]/1000;return eh>=trHMin&&eh<=trHMax;});
   const ts=renderArr.filter(e=>e[6]===1).length,ta=renderArr.length-ts;
   cx_traffic.fillStyle='#22d3ee';cx_traffic.font='bold 11px Segoe UI';cx_traffic.textAlign='right';
   cx_traffic.fillText('Catch-ups: '+ts+' · Approach: '+ta,W-P.r-4,P.t+13);
@@ -2859,8 +2859,7 @@ function draw_sector_traffic(){
   if(!c_sector||!cx_sector)return;
   const W=Math.round(c_sector.width/DPR);
   if(!W)return;
-  try{
-cx_sector.setTransform(DPR,0,0,DPR,0,0);
+  cx_sector.setTransform(DPR,0,0,DPR,0,0);
 
   const P={l:10,r:50,t:28,b:28};
   const pw=W-P.l-P.r;
@@ -3023,17 +3022,6 @@ cx_sector.setTransform(DPR,0,0,DPR,0,0);
   cx_sector.fillText('Race hours',P.l+pw/2,P.t+plotH+25);
 
   update_sector_rider_stats(renderArr);
-}
-}catch(err){
-  const W2=Math.round(c_sector.width/DPR)||900;
-  const H2=200;
-  if(c_sector.height!==H2*DPR){c_sector.height=H2*DPR;cx_sector.setTransform(DPR,0,0,DPR,0,0);}
-  cx_sector.fillStyle='#12141c';cx_sector.fillRect(0,0,W2,H2);
-  cx_sector.fillStyle='#ff6b6b';cx_sector.font='13px monospace';cx_sector.textAlign='left';
-  cx_sector.fillText('draw_sector_traffic ERROR: '+err.message,10,40);
-  cx_sector.fillStyle='#9aa3b8';cx_sector.font='11px monospace';
-  const stack=(err.stack||'').split('\n').slice(0,4);
-  stack.forEach((l,i)=>cx_sector.fillText(l.slice(0,90),10,65+i*18));
 }
 let secDotHits=[];
 function showSectorTT(h,clientX,clientY){
