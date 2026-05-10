@@ -2758,6 +2758,13 @@ function draw_rider_chart(){
     cxRC.fillStyle=idx%2===0?'rgba(255,255,255,0.015)':'rgba(0,0,0,0)';
     cxRC.fillRect(xS,PT,sW,ph);
 
+    // ── SC period shading ─────────────────────────────────────────────────
+    {const lapW=sW/Math.max(1,lastLap-firstLap+1);
+    scLaps.forEach(scL=>{
+      const x0=Math.max(xS,pxL(scL)-lapW/2),x1=Math.min(xE,pxL(scL)+lapW/2);
+      cxRC.fillStyle='rgba(255,210,50,0.12)';cxRC.fillRect(x0,PT,x1-x0,ph);
+    });}
+
     // Rider colour bar at top
     cxRC.fillStyle=col;
     cxRC.fillRect(xS,PT,sW,3);
@@ -2809,13 +2816,15 @@ function draw_rider_chart(){
     // ── Dots ─────────────────────────────────────────────────────────────────
     if(rcShow.dots){
       s.forEach(lap=>{
-        if(lap.t==null||pitLaps.has(lap.lap)||scLaps.has(lap.lap))return;
-        const dirty=lap.t>thr;
+        if(lap.t==null||pitLaps.has(lap.lap))return;
+        const isSC=scLaps.has(lap.lap);
+        const dirty=!isSC&&lap.t>thr;
         const xx=pxL(lap.lap);
         if(lap.t>yMax||lap.t<yMin)return;
         const yy=py(lap.t);
-        cxRC.beginPath();cxRC.arc(xx,yy,dirty?1.5:2.2,0,Math.PI*2);
-        cxRC.fillStyle=dirty?'rgba('+colRGB+',0.28)':col;cxRC.fill();
+        cxRC.beginPath();cxRC.arc(xx,yy,isSC?2:dirty?1.5:2.2,0,Math.PI*2);
+        cxRC.fillStyle=isSC?'rgba(255,210,50,0.55)':dirty?'rgba('+colRGB+',0.28)':col;
+        cxRC.fill();
       });
     }
   });
