@@ -2859,7 +2859,8 @@ function draw_sector_traffic(){
   if(!c_sector||!cx_sector)return;
   const W=Math.round(c_sector.width/DPR);
   if(!W)return;
-  cx_sector.setTransform(DPR,0,0,DPR,0,0);
+  try{
+cx_sector.setTransform(DPR,0,0,DPR,0,0);
 
   const P={l:10,r:50,t:28,b:28};
   const pw=W-P.l-P.r;
@@ -3022,6 +3023,17 @@ function draw_sector_traffic(){
   cx_sector.fillText('Race hours',P.l+pw/2,P.t+plotH+25);
 
   update_sector_rider_stats(renderArr);
+}
+}catch(err){
+  const W2=Math.round(c_sector.width/DPR)||900;
+  const H2=200;
+  if(c_sector.height!==H2*DPR){c_sector.height=H2*DPR;cx_sector.setTransform(DPR,0,0,DPR,0,0);}
+  cx_sector.fillStyle='#12141c';cx_sector.fillRect(0,0,W2,H2);
+  cx_sector.fillStyle='#ff6b6b';cx_sector.font='13px monospace';cx_sector.textAlign='left';
+  cx_sector.fillText('draw_sector_traffic ERROR: '+err.message,10,40);
+  cx_sector.fillStyle='#9aa3b8';cx_sector.font='11px monospace';
+  const stack=(err.stack||'').split('\n').slice(0,4);
+  stack.forEach((l,i)=>cx_sector.fillText(l.slice(0,90),10,65+i*18));
 }
 let secDotHits=[];
 function showSectorTT(h,clientX,clientY){
