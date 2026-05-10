@@ -490,12 +490,7 @@ footer a:hover{color:var(--tx2)}
     <input type="range" id="sdsMaxTR" min="0" max="24" value="2.5" step="0.5">
   </div>
   <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
-  <div style="margin-top:20px">
-    <p class="stag">hold-up impact · sector resolution</p>
-    <h3 style="color:#c0c8d8;font-size:.95rem;margin:0 0 4px">Time Lost Per Lap</h3>
-    <p class="hsub" style="margin-bottom:8px;font-size:.72rem">Seconds lost per lap due to hold-ups in the current race window. Bar color = rider. Hover for details.</p>
-    <div class="cwrap" style="height:220px"><canvas id="c_timelost"></canvas></div>
-  </div>
+
 </section>
 </section>
 
@@ -3196,113 +3191,7 @@ function update_sector_rider_stats(filtered){
       +'<div class="rstat-total">'+(totalLaps[ri]*3)+' total sectors</div>'
       +'</div>';
   }).join('');
-  draw_timelost(filtered);
 }
-// ── Time-Lost Bar Chart ──────────────────────────────────────────────────────
-const c_timelost=document.getElementById('c_timelost');
-const cx_tl=c_timelost?c_timelost.getContext('2d'):null;
-function draw_timelost(filtered){
-  if(!c_timelost||!cx_tl)return;
-  const wrap=c_timelost.parentElement;
-  const W=(wrap.clientWidth||900)*DPR;
-  const H=220*DPR;
-  c_timelost.width=W;c_timelost.height=H;
-  c_timelost.style.width=(W/DPR)+'px';c_timelost.style.height='220px';
-  const P={l:44*DPR,r:12*DPR,t:20*DPR,b:32*DPR};
-  const pw=W-P.l-P.r,ph=H-P.t-P.b;
-  cx_tl.clearRect(0,0,W,H);
-
-  const sCols=['#38bdf8','#a3e635','#fb923c'];
-  const sNames=['S1','S2','S3'];
-
-  // Collect best time lost per rider×lap×sector (dedup multi-team)
-  // lapSecMap[lap][sIdx] = total across riders (max per rider)
-  const _best={};// rider_lap_sec -> max tl
-  (filtered||[]).forEach(e=>{
-    if(e[6]!==1)return;
-    const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)]||0;
-    if(tl<=0)return;
-    const bk=e[5]+'_'+e[0]+'_'+(e[10]||0);
-    if(tl>(_best[bk]||0))_best[bk]=tl;
-  });
-
-  // lapSecMap[lap][sIdx] = sum of best-per-rider losses in that sector that lap
-  const lapSecMap={};
-  Object.keys(_best).forEach(bk=>{
-    const parts=bk.split('_');
-    const lap=+parts[1],si=+parts[2],tl=_best[bk];
-    if(!lapSecMap[lap])lapSecMap[lap]=[0,0,0];
-    lapSecMap[lap][si]+=tl;
-  });
-
-  const laps=Object.keys(lapSecMap).map(Number).sort((a,b)=>a-b);
-  if(!laps.length){
-    cx_tl.fillStyle='#c0c8d8';cx_tl.font=(12*DPR)+'px Segoe UI';cx_tl.textAlign='center';
-    cx_tl.fillText('No hold-up time lost in this window',W/2,H/2);return;
-  }
-
-  const maxVal=Math.max(1,...laps.map(l=>Math.max(...lapSecMap[l])));
-  const yMax=Math.max(2,+(maxVal*1.2).toFixed(1));
-
-  // Bar sizing: 3 sub-bars per lap group
-  const nGroups=laps.length;
-  const groupW=pw/nGroups;
-  const subW=Math.max(1.5*DPR,Math.min(12*DPR,(groupW-2*DPR)/3));
-  const gap=Math.max(0.5*DPR,(groupW-3*subW)/4);
-
-  // Grid
-  const nTick=4;
-  cx_tl.strokeStyle='#1e2233';cx_tl.lineWidth=DPR;
-  for(let i=0;i<=nTick;i++){
-    const yv=yMax*i/nTick;
-    const yy=P.t+ph-(ph*yv/yMax);
-    cx_tl.beginPath();cx_tl.moveTo(P.l,yy);cx_tl.lineTo(W-P.r,yy);cx_tl.stroke();
-    cx_tl.fillStyle='#c0c8d8';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='right';
-    cx_tl.fillText(yv.toFixed(1)+'s',P.l-4*DPR,yy+3*DPR);
-  }
-
-  // Draw bars
-  laps.forEach((lap,gi)=>{
-    const vals=lapSecMap[lap];
-    const gx=P.l+gi*groupW;
-    // 3 sub-bars: S1, S2, S3
-    vals.forEach((v,si)=>{
-      const bx=gx+gap+(si*(subW+gap));
-      const bh=ph*(v/yMax);
-      const by=P.t+ph-bh;
-      cx_tl.globalAlpha=v>0?0.88:0;
-      if(v>0){
-        cx_tl.fillStyle=sCols[si];
-        cx_tl.fillRect(bx,by,subW,bh);
-      }
-      cx_tl.globalAlpha=1;
-    });
-    // Lap label (every N laps to avoid clutter)
-    const every=nGroups>80?10:nGroups>40?5:nGroups>20?2:1;
-    if(gi%every===0||(gi===nGroups-1)){
-      cx_tl.fillStyle='#c0c8d8';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
-      cx_tl.fillText(lap,gx+groupW/2,H-6*DPR);
-    }
-  });
-
-  // Y axis label
-  cx_tl.save();cx_tl.translate(10*DPR,P.t+ph/2);cx_tl.rotate(-Math.PI/2);
-  cx_tl.fillStyle='#c0c8d8';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
-  cx_tl.fillText('sec lost',0,0);cx_tl.restore();
-
-  // Legend (sectors)
-  let lx2=P.l;
-  sCols.forEach((col,si)=>{
-    cx_tl.fillStyle=col;cx_tl.fillRect(lx2,P.t-13*DPR,8*DPR,8*DPR);
-    cx_tl.fillStyle='#c0c8d8';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='left';
-    cx_tl.fillText(sNames[si],lx2+10*DPR,P.t-5*DPR);
-    lx2+=38*DPR;
-  });
-  // X-axis label
-  cx_tl.fillStyle='#c0c8d8';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
-  cx_tl.fillText('Lap',W/2,H-DPR);
-}
-
 window.addEventListener('resize',()=>{resize_rider_chart();});
 function resize_sector_traffic(){
   if(!c_sector)return;
