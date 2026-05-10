@@ -933,7 +933,7 @@ function draw(){
       const x1=px(laps[0][0]),x2=px(laps[laps.length-1][0]);
       cx.strokeStyle=TC[team];cx.lineWidth=1.5;cx.globalAlpha=1;cx.setLineDash([4,3]);
       cx.beginPath();cx.moveTo(x1,yy);cx.lineTo(x2,yy);cx.stroke();
-      cx.setLineDash([]);cx.fillStyle=TC[team];cx.font='10px Segoe UI';cx.textAlign='right';
+      cx.setLineDash([]);cx.fillStyle=TC[team];cx.font='11px Segoe UI';cx.textAlign='right';
       cx.fillText('#'+team+' '+fmt(avg),x2-2,yy+9);cx.globalAlpha=1;
     });
   });
@@ -1131,14 +1131,14 @@ function draw2(){
       cx2.beginPath();cx2.arc(xx,yy,isCombined?6:4,0,Math.PI*2);
       cx2.fillStyle=dotColor;cx2.fill();
       cx2.strokeStyle='rgba(0,0,0,.4)';cx2.lineWidth=1;cx2.stroke();
-      if(isTeam&&p.rid){cx2.fillStyle=s.color;cx2.font='bold 8px Segoe UI';cx2.textAlign='center';cx2.fillText(p.rid,xx,yy+13);}
+      if(isTeam&&p.rid){cx2.fillStyle=s.color;cx2.font='bold 11px Segoe UI';cx2.textAlign='center';cx2.fillText(p.rid,xx,yy+13);}
       hitmap2.push({x:xx,y:yy,lbl:isCombined?p.lbl:s.lbl,color:dotColor,avg:p.avg,rank:i+1,n:p.n,cn:p.cn,total:s.pts.length,rid:p.rid||''});
     });
     // right-side label (teams only; #38 uses legend)
     if(isTeam){
       const last=s.pts[s.pts.length-1];
       const lx=s.pts.length===1?PAD2.l+pw2/2:xOf(s.pts.length);
-      cx2.fillStyle=s.color;cx2.font='10px Segoe UI';
+      cx2.fillStyle=s.color;cx2.font='11px Segoe UI';
       cx2.globalAlpha=1;cx2.textAlign='left';
       cx2.fillText(s.lbl,lx+8,yOf(last.avg)+3);cx2.globalAlpha=1;
     }
@@ -1417,14 +1417,14 @@ function draw2b(){
       cx6.beginPath();cx6.arc(xx,yy,isCombined?6:4,0,Math.PI*2);
       cx6.fillStyle=dotColor;cx6.fill();
       cx6.strokeStyle='rgba(0,0,0,.4)';cx6.lineWidth=1;cx6.stroke();
-      if(isTeam&&p.rid){cx6.fillStyle=s.color;cx6.font='bold 8px Segoe UI';cx6.textAlign='center';cx6.fillText(p.rid,xx,yy+13);}
+      if(isTeam&&p.rid){cx6.fillStyle=s.color;cx6.font='bold 11px Segoe UI';cx6.textAlign='center';cx6.fillText(p.rid,xx,yy+13);}
       hitmap6.push({x:xx,y:yy,lbl:isCombined?p.lbl:s.lbl,color:dotColor,avg:p.avg,rank:i+1,n:p.n,cn:p.cn,rid:p.rid||''});
     });
     // right-side label for teams
     if(isTeam){
       const last=s.pts[s.pts.length-1];
       const lx=xp(s.pts.length-1);
-      cx6.fillStyle=s.color;cx6.font='10px Segoe UI';
+      cx6.fillStyle=s.color;cx6.font='11px Segoe UI';
       cx6.globalAlpha=1;cx6.textAlign='left';
       cx6.fillText(s.lbl,lx+8,pyF(last.avg)+3);cx6.globalAlpha=1;
     }
@@ -1813,7 +1813,7 @@ function draw5(){
   const zy=pyF(0);
   cx5.save();cx5.strokeStyle='rgba(255,255,255,1)';cx5.lineWidth=2;cx5.setLineDash([8,5]);
   cx5.beginPath();cx5.moveTo(P.l,zy);cx5.lineTo(W-P.r,zy);cx5.stroke();cx5.setLineDash([]);
-  cx5.fillStyle='rgba(255,255,255,1)';cx5.font='bold 10px Segoe UI';cx5.textAlign='right';
+  cx5.fillStyle='rgba(255,255,255,1)';cx5.font='bold 11px Segoe UI';cx5.textAlign='right';
   cx5.fillText('#38',P.l-5,zy-4);cx5.restore();
   // draw teams
   seriesData.forEach(({tid,pts,col})=>{
@@ -1837,7 +1837,7 @@ function draw5(){
     const last=draw_pts[draw_pts.length-1];
     const lx=pxF(last.raceH)+6,ly=pyF(last.gap);
     if(ly>=P.t&&ly<=H-P.b){
-      cx5.globalAlpha=1;cx5.fillStyle=col;cx5.font='bold 10px Segoe UI';cx5.textAlign='left';
+      cx5.globalAlpha=1;cx5.fillStyle=col;cx5.font='bold 11px Segoe UI';cx5.textAlign='left';
       cx5.fillText(TNAMES[tid]||'#'+tid,lx,ly+4);
     }
     cx5.restore();
@@ -1914,7 +1914,7 @@ function draw_oil(){
   if(_oas)cx_oil.stroke();cx_oil.setLineDash([]);
   // avg label
   let _lastAI=837;while(_lastAI>=0&&OIL_AVG[_lastAI]==null)_lastAI--;
-  if(_lastAI>=0){cx_oil.fillStyle='rgba(251,191,36,0.95)';cx_oil.font='bold 10px Segoe UI';cx_oil.textAlign='left';cx_oil.fillText('Avg',W-P.r+4,pyF(OIL_AVG[_lastAI])+4);}
+  if(_lastAI>=0){cx_oil.fillStyle='rgba(251,191,36,0.95)';cx_oil.font='bold 11px Segoe UI';cx_oil.textAlign='left';cx_oil.fillText('Avg',W-P.r+4,pyF(OIL_AVG[_lastAI])+4);}
 }
 const c_pos=document.getElementById('c_pos');
 const cx_pos=c_pos?c_pos.getContext('2d'):null;
@@ -2122,7 +2122,7 @@ function draw_traffic(){
     const xx=pxH(h);if(xx<P.l-1||xx>W-P.r+1)continue;
     cx_traffic.strokeStyle='#1e2233';cx_traffic.lineWidth=1;cx_traffic.setLineDash([]);
     cx_traffic.beginPath();cx_traffic.moveTo(xx,P.t);cx_traffic.lineTo(xx,H-P.b);cx_traffic.stroke();
-    cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='10px Segoe UI';cx_traffic.textAlign='center';
+    cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='11px Segoe UI';cx_traffic.textAlign='center';
     const lbl=hStep>=1?Math.round(h)+'h':(Math.round(h*4)/4).toFixed(2).replace(/\.?0+$/,'')+'h';
     cx_traffic.fillText(lbl,xx,H-P.b+12);
   }
@@ -2134,7 +2134,7 @@ function draw_traffic(){
     cx_traffic.strokeStyle='#1e2233';cx_traffic.lineWidth=0.5;cx_traffic.setLineDash([]);
     cx_traffic.beginPath();cx_traffic.moveTo(P.l,P.t+rowH*i);cx_traffic.lineTo(W-P.r,P.t+rowH*i);cx_traffic.stroke();
     const nm='#'+t;
-    cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='9px Segoe UI';cx_traffic.textAlign='right';
+    cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='11px Segoe UI';cx_traffic.textAlign='right';
     cx_traffic.fillText(nm,P.l-4,yy+3.5);
   });
   // Count per team (right side)
@@ -2144,7 +2144,7 @@ function draw_traffic(){
     const cnt=cntMap[t]||0;if(!cnt)return;
     const scnt=scntMap[t]||0;
     const yy=pyRow(i);
-    cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='9px Segoe UI';cx_traffic.textAlign='left';
+    cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='11px Segoe UI';cx_traffic.textAlign='left';
     cx_traffic.fillText(cnt+(scnt>0?' '+scnt+'★':''),W-P.r+3,yy+3.5);
   });
   // State 1: approach — small colored dot, opacity by gap proximity
@@ -2177,7 +2177,7 @@ function draw_traffic(){
   const ts=renderArr.filter(e=>e[6]===1).length,ta=renderArr.length-ts;
   cx_traffic.fillStyle='#22d3ee';cx_traffic.font='bold 11px Segoe UI';cx_traffic.textAlign='right';
   cx_traffic.fillText('Catch-ups: '+ts+' · Approach: '+ta,W-P.r-4,P.t+13);
-  cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='10px Segoe UI';cx_traffic.textAlign='center';
+  cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='11px Segoe UI';cx_traffic.textAlign='center';
   cx_traffic.fillText('Race hours',P.l+pw/2,H-6);
   // Safety Car bands
   SC_HOURS.forEach(([s,e])=>{
@@ -2189,7 +2189,7 @@ function draw_traffic(){
     cx_traffic.beginPath();cx_traffic.moveTo(x1,P.t);cx_traffic.lineTo(x1,H-P.b);cx_traffic.stroke();
     cx_traffic.beginPath();cx_traffic.moveTo(x2,P.t);cx_traffic.lineTo(x2,H-P.b);cx_traffic.stroke();
     cx_traffic.setLineDash([]);
-    cx_traffic.fillStyle='rgba(250,204,21,0.5)';cx_traffic.font='8px Segoe UI';cx_traffic.textAlign='center';
+    cx_traffic.fillStyle='rgba(250,204,21,0.5)';cx_traffic.font='11px Segoe UI';cx_traffic.textAlign='center';
     cx_traffic.fillText('SC',x1+(x2-x1)/2,P.t+8);
   });
   // Pit stop lines
@@ -2416,7 +2416,7 @@ function draw_fuel(){
   const avgY=pyF(AVG_FUEL_PER_LAP);
   cx_fuel.save();cx_fuel.strokeStyle='rgba(255,255,255,0.25)';cx_fuel.lineWidth=1;cx_fuel.setLineDash([8,5]);
   cx_fuel.beginPath();cx_fuel.moveTo(P.l,avgY);cx_fuel.lineTo(W-P.r,avgY);cx_fuel.stroke();
-  cx_fuel.setLineDash([]);cx_fuel.fillStyle='rgba(255,255,255,0.4)';cx_fuel.font='10px Segoe UI';cx_fuel.textAlign='right';
+  cx_fuel.setLineDash([]);cx_fuel.fillStyle='rgba(255,255,255,0.4)';cx_fuel.font='11px Segoe UI';cx_fuel.textAlign='right';
   cx_fuel.fillText('avg '+AVG_FUEL_PER_LAP.toFixed(3)+'L',W-P.r-2,avgY-3);cx_fuel.restore();
   // dots
   for(let i=0;i<838;i++){
@@ -2500,7 +2500,7 @@ function draw_setup(){
   if(drawing)cx_setup.stroke();cx_setup.globalAlpha=1;
   // Mode legend
   cx_setup.fillStyle='rgba(167,139,250,0.4)';cx_setup.fillRect(P.l+pw-120,P.t+4,12,10);
-  cx_setup.fillStyle='#c0c8d8';cx_setup.font='10px Segoe UI';cx_setup.textAlign='left';cx_setup.fillText('Dry 1',P.l+pw-104,P.t+12);
+  cx_setup.fillStyle='#c0c8d8';cx_setup.font='11px Segoe UI';cx_setup.textAlign='left';cx_setup.fillText('Dry 1',P.l+pw-104,P.t+12);
   cx_setup.fillStyle='rgba(30,30,50,0.8)';cx_setup.fillRect(P.l+pw-50,P.t+4,12,10);
   cx_setup.strokeStyle='#555';cx_setup.lineWidth=1;cx_setup.strokeRect(P.l+pw-50,P.t+4,12,10);
   cx_setup.fillStyle='#c0c8d8';cx_setup.fillText('Dry 2',P.l+pw-34,P.t+12);
@@ -2608,9 +2608,9 @@ function draw_otlt(){
   cx_otlt.strokeStyle='#252a3a';cx_otlt.lineWidth=1;
   for(let t=Math.ceil(tMin);t<=Math.floor(tMax);t++){
     const yy=pyL(t);cx_otlt.beginPath();cx_otlt.moveTo(P.l,yy);cx_otlt.lineTo(W-P.r,yy);cx_otlt.stroke();
-    if(t%2===0){cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='right';const m=Math.floor(t/60),s=t%60;cx_otlt.fillText((m>0?m+':':'')+(s<10&&m>0?'0':'')+s,P.l-4,yy+3);}
+    if(t%2===0){cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='11px Segoe UI';cx_otlt.textAlign='right';const m=Math.floor(t/60),s=t%60;cx_otlt.fillText((m>0?m+':':'')+(s<10&&m>0?'0':'')+s,P.l-4,yy+3);}
   }
-  for(let v=0;v<=Math.ceil(otMax);v++){cx_otlt.fillStyle='rgba(34,211,238,0.65)';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';cx_otlt.fillText(v,W-P.r+5,pyR(v)+3);}
+  for(let v=0;v<=Math.ceil(otMax);v++){cx_otlt.fillStyle='rgba(34,211,238,0.65)';cx_otlt.font='11px Segoe UI';cx_otlt.textAlign='left';cx_otlt.fillText(v,W-P.r+5,pyR(v)+3);}
   items.forEach((d,i)=>{const xx=pxI(i),yy=pyL(d.t);cx_otlt.globalAlpha=0.65;cx_otlt.fillStyle=RC[d.r]||'#fff';cx_otlt.beginPath();cx_otlt.arc(xx,yy,2.5,0,Math.PI*2);cx_otlt.fill();cx_otlt.globalAlpha=1;});
   groups.forEach(g=>{
     const seg=items.slice(g.start,g.end+1);
@@ -2618,7 +2618,7 @@ function draw_otlt(){
     const yy=pyL(avg);const x1=gx1(g),x2=gx2(g);
     cx_otlt.strokeStyle='rgba(255,255,255,0.8)';cx_otlt.lineWidth=1.5;cx_otlt.setLineDash([5,3]);
     cx_otlt.beginPath();cx_otlt.moveTo(x1,yy);cx_otlt.lineTo(x2,yy);cx_otlt.stroke();cx_otlt.setLineDash([]);
-    cx_otlt.fillStyle='rgba(255,255,255,0.85)';cx_otlt.font='bold 9px Segoe UI';cx_otlt.textAlign='right';cx_otlt.fillText(avg.toFixed(3),x2-2,yy-3);
+    cx_otlt.fillStyle='rgba(255,255,255,0.85)';cx_otlt.font='bold 11px Segoe UI';cx_otlt.textAlign='right';cx_otlt.fillText(avg.toFixed(3),x2-2,yy-3);
   });
   cx_otlt.strokeStyle='rgba(34,211,238,0.85)';cx_otlt.lineWidth=2;cx_otlt.beginPath();
   items.forEach((d,i)=>{const xx=pxI(i),yy=pyR(d.ot);i===0?cx_otlt.moveTo(xx,yy):cx_otlt.lineTo(xx,yy);});cx_otlt.stroke();
@@ -2626,7 +2626,7 @@ function draw_otlt(){
   cx_otlt.save();cx_otlt.translate(12,P.t+ph/2);cx_otlt.rotate(-Math.PI/2);cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Lap time (s)',0,0);cx_otlt.restore();
   cx_otlt.save();cx_otlt.translate(W-12,P.t+ph/2);cx_otlt.rotate(Math.PI/2);cx_otlt.fillStyle='rgba(34,211,238,0.8)';cx_otlt.font='11px Segoe UI';cx_otlt.fillText('Overtakes',0,0);cx_otlt.restore();
   const riders=Object.keys(RC).filter(r=>!hiddenRidersOTLT.has(r));let lx=P.l+10;
-  riders.forEach(r=>{cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t-10,4,0,Math.PI*2);cx_otlt.fill();cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='10px Segoe UI';cx_otlt.textAlign='left';const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t-6);lx+=cx_otlt.measureText(name).width+22;});
+  riders.forEach(r=>{cx_otlt.fillStyle=RC[r];cx_otlt.beginPath();cx_otlt.arc(lx,P.t-10,4,0,Math.PI*2);cx_otlt.fill();cx_otlt.fillStyle='#c0c8d8';cx_otlt.font='11px Segoe UI';cx_otlt.textAlign='left';const name=r.split(' ')[0];cx_otlt.fillText(name,lx+7,P.t-6);lx+=cx_otlt.measureText(name).width+22;});
   renderOTLTStats(items,groups);
 }
 function resize_otlt(){if(!c_otlt)return;const wrap=c_otlt.parentElement;{const _w=(wrap.clientWidth||900)-20,_h=360;c_otlt.width=_w*DPR;c_otlt.height=_h*DPR;}draw_otlt();}
@@ -2782,7 +2782,7 @@ function draw_rider_chart(){
     const yy=py(y);if(yy<PT-2||yy>PT+ph+2)continue;
     cxRC.strokeStyle='#1a1e2e';cxRC.lineWidth=1;cxRC.setLineDash([]);
     cxRC.beginPath();cxRC.moveTo(PL,yy);cxRC.lineTo(W-PR,yy);cxRC.stroke();
-    cxRC.fillStyle='#c0c8d8';cxRC.font='9px Segoe UI';cxRC.textAlign='right';
+    cxRC.fillStyle='#c0c8d8';cxRC.font='11px Segoe UI';cxRC.textAlign='right';
     const m=Math.floor(y/60),sc=(y%60).toFixed(1);
     cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,PL-4,yy+3);
   }
@@ -2826,7 +2826,7 @@ function draw_rider_chart(){
     cxRC.fillRect(xS,PT,sW,3);
 
     // Rider name + stint number label
-    cxRC.fillStyle=col;cxRC.font='bold 8px Segoe UI';cxRC.textAlign='center';
+    cxRC.fillStyle=col;cxRC.font='bold 11px Segoe UI';cxRC.textAlign='center';
     if(sW>30) cxRC.fillText(name.split(' ')[0][0]+'·S'+stintNum,xS+sW/2,PT-4);
     else if(sW>14) cxRC.fillText('S'+stintNum,xS+sW/2,PT-4);
 
@@ -2856,7 +2856,7 @@ function draw_rider_chart(){
       cxRC.beginPath();cxRC.moveTo(xS,ay);cxRC.lineTo(xE,ay);cxRC.stroke();
       if(sW>40){
         const m=Math.floor(avgT/60),sc=(avgT%60).toFixed(2);
-        cxRC.fillStyle=rcBrightCol(col);cxRC.font='7px Segoe UI';cxRC.textAlign='center';
+        cxRC.fillStyle=rcBrightCol(col);cxRC.font='11px Segoe UI';cxRC.textAlign='center';
         cxRC.fillText(m+':'+(+sc<10?'0':'')+sc,xS+sW/2,ay-3);
       }
     }
@@ -2886,7 +2886,7 @@ function draw_rider_chart(){
   });
 
   // ── X axis label ──────────────────────────────────────────────────────────
-  cxRC.fillStyle='#c0c8d8';cxRC.font='9px Segoe UI';cxRC.textAlign='center';
+  cxRC.fillStyle='#c0c8d8';cxRC.font='11px Segoe UI';cxRC.textAlign='center';
   cxRC.fillText('Stints ('+sorted.length+' total · '+totalL+' laps)',PL+pw/2,H-6);
 }
 
@@ -2999,7 +2999,7 @@ function draw_sector_traffic(){
     const xx=pxH(hh);if(xx<P.l-1||xx>W-P.r+1)continue;
     cx_sector.strokeStyle='#1e2233';cx_sector.lineWidth=1;cx_sector.setLineDash([]);
     cx_sector.beginPath();cx_sector.moveTo(xx,P.t);cx_sector.lineTo(xx,P.t+plotH);cx_sector.stroke();
-    cx_sector.fillStyle='#c0c8d8';cx_sector.font='10px Segoe UI';cx_sector.textAlign='center';
+    cx_sector.fillStyle='#c0c8d8';cx_sector.font='11px Segoe UI';cx_sector.textAlign='center';
     const lbl=hStep>=1?Math.round(hh)+'h':(Math.round(hh*4)/4).toFixed(2).replace(/\.?0+$/,'')+'h';
     cx_sector.fillText(lbl,xx,P.t+plotH+14);
   }
@@ -3013,7 +3013,7 @@ function draw_sector_traffic(){
     cx_sector.beginPath();cx_sector.moveTo(x1,P.t);cx_sector.lineTo(x1,P.t+plotH);cx_sector.stroke();
     cx_sector.beginPath();cx_sector.moveTo(x2,P.t);cx_sector.lineTo(x2,P.t+plotH);cx_sector.stroke();
     cx_sector.setLineDash([]);
-    cx_sector.fillStyle='rgba(250,204,21,0.55)';cx_sector.font='8px Segoe UI';cx_sector.textAlign='center';
+    cx_sector.fillStyle='rgba(250,204,21,0.55)';cx_sector.font='11px Segoe UI';cx_sector.textAlign='center';
     cx_sector.fillText('SC',x1+(x2-x1)/2,P.t+9);
   });
 
@@ -3068,7 +3068,7 @@ function draw_sector_traffic(){
     });
     // Team label at first event
     const lx=pxH(visEvs[0][1]/1000);
-    cx_sector.fillStyle='#c0cce0';cx_sector.font='bold 10px Segoe UI';
+    cx_sector.fillStyle='#c0cce0';cx_sector.font='bold 11px Segoe UI';
     cx_sector.textAlign='left';
     cx_sector.fillText('#'+visEvs[0][2],lx+6,yMid-6);
   });
@@ -3076,9 +3076,9 @@ function draw_sector_traffic(){
   // ── Summary line ─────────────────────────────────────────────────────────
   const renderArr=layoutEvts.filter(e=>{const eh=e[1]/1000;return eh>=sTrHMin&&eh<=sTrHMax;});
   const ts=renderArr.filter(e=>e[6]===1).length,ta=renderArr.length-ts;
-  cx_sector.fillStyle='#22d3ee';cx_sector.font='bold 10px Segoe UI';cx_sector.textAlign='right';
+  cx_sector.fillStyle='#22d3ee';cx_sector.font='bold 11px Segoe UI';cx_sector.textAlign='right';
   cx_sector.fillText('Hold-ups: '+ts+' · Approach: '+ta+' · Rows: '+nRows,W-P.r-4,P.t-8);
-  cx_sector.fillStyle='#c0c8d8';cx_sector.font='10px Segoe UI';cx_sector.textAlign='center';
+  cx_sector.fillStyle='#c0c8d8';cx_sector.font='11px Segoe UI';cx_sector.textAlign='center';
   cx_sector.fillText('Race hours',P.l+pw/2,P.t+plotH+25);
 
   update_sector_rider_stats(renderArr);
@@ -3273,7 +3273,7 @@ function drawTimeAxis(cx,W,H,P,pw,ph){
   cx.fillStyle='rgba(255,255,255,0.025)';
   cx.fillRect(noDataX,P.t,W-P.r-noDataX,ph);
   cx.fillStyle='rgba(150,160,180,0.18)';
-  cx.font='9px Segoe UI';cx.textAlign='center';
+  cx.font='11px Segoe UI';cx.textAlign='center';
   cx.fillText('no data',noDataX+(W-P.r-noDataX)/2,P.t+ph/2);
   // hour grid lines + labels every 2h
   for(let h=0;h<=24;h+=2){
@@ -3284,9 +3284,9 @@ function drawTimeAxis(cx,W,H,P,pw,ph){
     const clockH=(15+h)%24;
     const lbl=(clockH<10?'0':'')+clockH+':00';
     cx.fillStyle=h<=LAST_H+0.5?'#c0c8d8':'#3a3f52';
-    cx.font='9px Segoe UI';cx.textAlign='center';
+    cx.font='11px Segoe UI';cx.textAlign='center';
     cx.fillText(lbl,xx,H-P.b+12);
-    if(h>0&&h<24){cx.fillStyle='#3a3f52';cx.font='8px Segoe UI';cx.fillText(h+'h',xx,H-P.b+22);}
+    if(h>0&&h<24){cx.fillStyle='#3a3f52';cx.font='11px Segoe UI';cx.fillText(h+'h',xx,H-P.b+22);}
   }
   // Stint marker lines + labels
   RACE_H.forEach((rh,i)=>{
@@ -3294,7 +3294,7 @@ function drawTimeAxis(cx,W,H,P,pw,ph){
     cx.strokeStyle='#2a2e42';cx.lineWidth=1;cx.setLineDash([3,3]);
     cx.beginPath();cx.moveTo(xx,P.t);cx.lineTo(xx,H-P.b);cx.stroke();
     cx.setLineDash([]);
-    cx.fillStyle='#c0c8d8';cx.font='8px Segoe UI';cx.textAlign='center';
+    cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';
     cx.fillText(STINTS[i],xx,H-P.b+32);
   });
 }
@@ -3320,7 +3320,7 @@ function drawRT1(){
   let ttStarted=false;cx.beginPath();
   TRACK_TEMP.forEach((v,i)=>{if(v===null){ttStarted=false;return;}const xx=pxH(RACE_H[i]),yy=pyT(v);if(!ttStarted){cx.moveTo(xx,yy);ttStarted=true;}else cx.lineTo(xx,yy);});
   cx.stroke();
-  TRACK_TEMP.forEach((v,i)=>{if(v===null)return;const _xx=pxH(RACE_H[i]),_yy=pyT(v);cx.beginPath();cx.arc(_xx,_yy,3.5,0,Math.PI*2);cx.fillStyle='#ef4444';cx.fill();cx.fillStyle='#fff';cx.font='bold 9px Segoe UI';cx.textAlign='center';cx.fillText(v.toFixed(1)+'°',_xx,_yy-7);});
+  TRACK_TEMP.forEach((v,i)=>{if(v===null)return;const _xx=pxH(RACE_H[i]),_yy=pyT(v);cx.beginPath();cx.arc(_xx,_yy,3.5,0,Math.PI*2);cx.fillStyle='#ef4444';cx.fill();cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.textAlign='center';cx.fillText(v.toFixed(1)+'°',_xx,_yy-7);});
   // Segmented line helper — null values break the line, no interpolation
   function segLine(vals,pyFn,color,lw,labelFn){
     lw=lw||2.5;
@@ -3339,7 +3339,7 @@ function drawRT1(){
       const xx=pxH(RACE_H[i]),yy=pyFn(v);
       cx.beginPath();cx.arc(xx,yy,3.5,0,Math.PI*2);
       cx.fillStyle=color;cx.fill();
-      if(labelFn){cx.fillStyle='#fff';cx.font='bold 9px Segoe UI';cx.textAlign='center';cx.fillText(labelFn(v),xx,yy-7);}
+      if(labelFn){cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.textAlign='center';cx.fillText(labelFn(v),xx,yy-7);}
     });
   }
   segLine(AIR_TEMP,pyT,'#22d3ee',2.5,v=>v+'°');
@@ -3364,7 +3364,7 @@ function drawRT2(){
     const v=pair[0],col=pair[1];
     cx.strokeStyle=col;cx.lineWidth=1;cx.setLineDash([6,4]);cx.globalAlpha=0.35;
     const yy=pyP(v);cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();
-    cx.globalAlpha=1;cx.setLineDash([]);cx.fillStyle=col;cx.font='9px Segoe UI';cx.textAlign='left';cx.globalAlpha=0.5;
+    cx.globalAlpha=1;cx.setLineDash([]);cx.fillStyle=col;cx.font='11px Segoe UI';cx.textAlign='left';cx.globalAlpha=0.5;
     cx.fillText('Start '+v,P.l+4,yy-3);cx.globalAlpha=1;
   });
   function drawP(arr,col){
@@ -3372,7 +3372,7 @@ function drawRT2(){
     cx.strokeStyle=col;cx.lineWidth=2.5;cx.setLineDash([5,4]);
     for(let j=0;j<pts.length-1;j++){cx.beginPath();cx.moveTo(pts[j].x,pts[j].y);cx.lineTo(pts[j+1].x,pts[j+1].y);cx.stroke();}
     cx.setLineDash([]);
-    pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,5,0,Math.PI*2);cx.fillStyle=col;cx.fill();cx.fillStyle='#fff';cx.font='bold 10px Segoe UI';cx.textAlign='center';cx.fillText(p.v.toFixed(2),p.x,p.y-9);});
+    pts.forEach(p=>{cx.beginPath();cx.arc(p.x,p.y,5,0,Math.PI*2);cx.fillStyle=col;cx.fill();cx.fillStyle='#fff';cx.font='bold 11px Segoe UI';cx.textAlign='center';cx.fillText(p.v.toFixed(2),p.x,p.y-9);});
   }
   drawP(F_END,'#4ade80');drawP(R_END,'#a78bfa');
   cx.save();cx.translate(11,P.t+ph/2);cx.rotate(-Math.PI/2);cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='center';cx.fillText('Pressure (bar)',0,0);cx.restore();
@@ -3393,7 +3393,7 @@ function drawRT3(){
   // Fuel grid left axis
   for(let y=0;y<=4+0.01;y+=0.5){const yy=pyF(y);cx.strokeStyle='#1e2233';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#c0c8d8';cx.font='11px Segoe UI';cx.textAlign='right';cx.fillText(y.toFixed(1)+'L',P.l-5,yy+4);}
   // Laps grid right axis
-  for(let y=0;y<=40;y+=10){const yy=pyL(y);cx.strokeStyle='#1a2235';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#a5f3fc';cx.font='10px Segoe UI';cx.textAlign='left';cx.fillText(y,W-P.r+4,yy+4);}
+  for(let y=0;y<=40;y+=10){const yy=pyL(y);cx.strokeStyle='#1a2235';cx.lineWidth=1;cx.beginPath();cx.moveTo(P.l,yy);cx.lineTo(W-P.r,yy);cx.stroke();cx.fillStyle='#a5f3fc';cx.font='11px Segoe UI';cx.textAlign='left';cx.fillText(y,W-P.r+4,yy+4);}
   drawTimeAxis(cx,W,H,P,pw,ph);
   const baseY=pyF(0);
   // Fuel bars (rider-filtered)
@@ -3413,7 +3413,7 @@ function drawRT3(){
     if(v===null||v===undefined)return;
     if(hiddenRidersRT3.has(RIDERS[i]))return;
     const xx=pxH(RACE_H[i]);
-    cx.fillStyle='#c0c8d8';cx.font='bold 9px Segoe UI';cx.textAlign='center';
+    cx.fillStyle='#c0c8d8';cx.font='bold 11px Segoe UI';cx.textAlign='center';
     cx.fillText('STINT '+(i+1),xx,H-P.b+22);
   });
   // Axis labels
