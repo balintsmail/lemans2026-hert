@@ -478,6 +478,12 @@ footer a:hover{color:var(--tx2)}
     <input type="range" id="sdsMaxTR" min="0" max="24" value="2.5" step="0.5">
   </div>
   <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
+  <div style="margin-top:20px">
+    <p class="stag">hold-up impact · sector resolution</p>
+    <h3 style="color:#c0c8d8;font-size:.95rem;margin:0 0 4px">Time Lost Per Lap</h3>
+    <p class="hsub" style="margin-bottom:8px;font-size:.72rem">Seconds lost per lap due to hold-ups in the current race window. Bar color = rider. Hover for details.</p>
+    <div class="cwrap" style="height:220px"><canvas id="c_timelost"></canvas></div>
+  </div>
 </section>
 </section>
 
@@ -3042,9 +3048,9 @@ function draw_sector_traffic(){
         const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)]||0;
         const hr=tl>=1?12:Math.max(2,2+tl*10); // 0→2, 1.0→12, >1→12
         cx_sector.beginPath();cx_sector.arc(xx,yMid,hr,0,Math.PI*2);
-        cx_sector.fillStyle=c;cx_sector.fill();
+        cx_sector.globalAlpha=0.5;cx_sector.fillStyle=c;cx_sector.fill();cx_sector.globalAlpha=1;
         // Outline for large dots
-        if(hr>5){cx_sector.strokeStyle='rgba(255,255,255,0.35)';cx_sector.lineWidth=1;cx_sector.stroke();}
+        if(hr>5){cx_sector.strokeStyle='rgba(255,255,255,0.25)';cx_sector.lineWidth=1;cx_sector.stroke();}
       } else {
         const gap=e[3]/10,alpha=Math.max(0.12,1-gap/sTrGapMax)*sAlphaMod[e[10]||0];
         cx_sector.beginPath();cx_sector.arc(xx,yMid,2,0,Math.PI*2);
@@ -3145,15 +3151,23 @@ function update_sector_rider_stats(filtered){
   DATA.forEach(d=>{if(d.t&&d.t<150){const ri=riderKey[d.r];if(ri!==undefined)totalLaps[ri]++;}});
   const holdupSets=[new Set(),new Set(),new Set(),new Set()];
   const otSets=[new Set(),new Set(),new Set(),new Set()];
+  const timeLostArr=[0,0,0,0];
   (filtered||[]).forEach(e=>{
     const ri=e[5];
-    if(e[6]===1){holdupSets[ri].add(e[0]+'_'+e[10]);}
+    if(e[6]===1){
+      holdupSets[ri].add(e[0]+'_'+e[10]);
+      const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)]||0;
+      timeLostArr[ri]+=tl;
+    }
     if(e[6]===1&&OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0))){otSets[ri].add(e[0]+'_'+e[2]);}
   });
   container.innerHTML=TR_RIDERS_COL.map((col,ri)=>{
     const holdup=holdupSets[ri].size,ot=otSets[ri].size,total=totalLaps[ri]*3;
     const hRatio=total?(holdup/total*100).toFixed(1):'0.0';
     const oRatio=totalLaps[ri]?(ot/totalLaps[ri]*100).toFixed(1):'0.0';
+    const tl=timeLostArr[ri];
+    const tlStr=tl>0?tl.toFixed(1)+'s':'—';
+    const tlCol=tl>=30?'#f87171':tl>=10?'#fb923c':tl>0?'#fbbf24':'#64748b';
     const rgb=hexToRgb(col);
     return '<div class="rstat-box" style="border-color:'+col+'44;background:rgba('+rgb+',.06)">'
       +'<div class="rstat-name" style="color:'+col+'">'+rNames[ri]+'</div>'
@@ -3161,10 +3175,97 @@ function update_sector_rider_stats(filtered){
       +'<span class="rstat-val">'+holdup+'<span class="rstat-ratio">'+hRatio+'%</span></span></div>'
       +'<div class="rstat-row"><span class="rstat-label">Overtakes</span>'
       +'<span class="rstat-val">'+ot+'<span class="rstat-ratio">'+oRatio+'%</span></span></div>'
+      +'<div class="rstat-row" style="border-top:1px dashed #1e2233;margin-top:5px;padding-top:5px">'
+      +'<span class="rstat-label">Time lost in window</span>'
+      +'<span class="rstat-val" style="color:'+tlCol+'">'+tlStr+'</span></div>'
       +'<div class="rstat-total">'+(totalLaps[ri]*3)+' total sectors</div>'
       +'</div>';
   }).join('');
+  draw_timelost(filtered);
 }
+// ── Time-Lost Bar Chart ──────────────────────────────────────────────────────
+const c_timelost=document.getElementById('c_timelost');
+const cx_tl=c_timelost?c_timelost.getContext('2d'):null;
+function draw_timelost(filtered){
+  if(!c_timelost||!cx_tl)return;
+  const wrap=c_timelost.parentElement;
+  const W=(wrap.clientWidth||900)*DPR;
+  const H=220*DPR;
+  c_timelost.width=W;c_timelost.height=H;
+  c_timelost.style.width=(W/DPR)+'px';c_timelost.style.height='220px';
+  const P={l:48*DPR,r:16*DPR,t:12*DPR,b:30*DPR};
+  const pw=W-P.l-P.r,ph=H-P.t-P.b;
+  cx_tl.clearRect(0,0,W,H);
+  // Aggregate time lost per lap
+  const lapLost={};
+  (filtered||[]).forEach(e=>{
+    if(e[6]!==1)return;
+    const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)]||0;
+    if(tl<=0)return;
+    const k=e[0];
+    if(!lapLost[k])lapLost[k]={byRider:[0,0,0,0],lap:e[0]};
+    lapLost[k].byRider[e[5]]+=tl;
+  });
+  const laps=Object.keys(lapLost).map(Number).sort((a,b)=>a-b);
+  if(!laps.length){
+    cx_tl.fillStyle='#4a5568';cx_tl.font=(12*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+    cx_tl.fillText('No hold-up time lost in this window',W/2,H/2);return;
+  }
+  const maxVal=Math.max(...laps.map(l=>lapLost[l].byRider.reduce((a,b)=>a+b,0)));
+  const yMax=Math.max(5,Math.ceil(maxVal*1.15));
+  const barW=Math.max(3*DPR,Math.min(20*DPR,pw/laps.length*0.75));
+  const xStep=pw/laps.length;
+  // Y axis
+  const nTick=4;
+  cx_tl.strokeStyle='#1e2233';cx_tl.lineWidth=1;
+  for(let i=0;i<=nTick;i++){
+    const yv=yMax*i/nTick;
+    const yy=P.t+ph-(ph*yv/yMax);
+    cx_tl.beginPath();cx_tl.moveTo(P.l,yy);cx_tl.lineTo(W-P.r,yy);cx_tl.stroke();
+    cx_tl.fillStyle='#4a5568';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='right';
+    cx_tl.fillText(yv.toFixed(0)+'s',P.l-4,yy+3*DPR);
+  }
+  // Bars
+  laps.forEach((lap,i)=>{
+    const d=lapLost[lap];
+    const total=d.byRider.reduce((a,b)=>a+b,0);
+    const cx=P.l+i*xStep+xStep/2;
+    const bh=ph*(total/yMax);
+    const bx=cx-barW/2;
+    const by=P.t+ph-bh;
+    // Stacked by rider
+    let stackY=P.t+ph;
+    d.byRider.forEach((v,ri)=>{
+      if(v<=0)return;
+      const bhi=ph*(v/yMax);
+      stackY-=bhi;
+      cx_tl.globalAlpha=0.85;
+      cx_tl.fillStyle=TR_RIDERS_COL[ri];
+      cx_tl.fillRect(bx,stackY,barW,bhi);
+      cx_tl.globalAlpha=1;
+    });
+    // Lap label (only every N to avoid clutter)
+    const every=laps.length>100?10:laps.length>50?5:laps.length>20?2:1;
+    if(i%every===0||(i===laps.length-1)){
+      cx_tl.fillStyle='#64748b';cx_tl.font=(8*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+      cx_tl.fillText(lap,cx,H-6*DPR);
+    }
+  });
+  // Y axis label
+  cx_tl.save();cx_tl.translate(12*DPR,P.t+ph/2);cx_tl.rotate(-Math.PI/2);
+  cx_tl.fillStyle='#4a5568';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='center';
+  cx_tl.fillText('seconds lost',0,0);cx_tl.restore();
+  // Legend
+  const rShort=['Bálint','Jan','Loris','Máté'];
+  let lx2=P.l;
+  TR_RIDERS_COL.forEach((col,ri)=>{
+    cx_tl.fillStyle=col;cx_tl.fillRect(lx2,P.t-10*DPR,8*DPR,8*DPR);
+    cx_tl.fillStyle='#9aa3b8';cx_tl.font=(9*DPR)+'px Segoe UI';cx_tl.textAlign='left';
+    cx_tl.fillText(rShort[ri],lx2+10*DPR,P.t-3*DPR);
+    lx2+=cx_tl.measureText(rShort[ri]).width+20*DPR;
+  });
+}
+
 window.addEventListener('resize',()=>{resize_rider_chart();});
 function resize_sector_traffic(){
   if(!c_sector)return;
