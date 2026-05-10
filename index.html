@@ -3043,24 +3043,38 @@ let secDotHits=[];
 function showSectorTT(h,clientX,clientY){
   const tt=document.getElementById('secTooltip');
   const e=h.e;
-  const gap=(e[3]/10).toFixed(1),pd=(e[4]/100).toFixed(2);
-  const ourP=(e[7]!=null?(e[7]/10).toFixed(2):'?'),theirP=(e[8]!=null?(e[8]/10).toFixed(2):'?');
-  const team='#'+e[2]+(CLEAN_TEAM_NAMES[e[2]]?' · '+CLEAN_TEAM_NAMES[e[2]]:'');
   const sNames=['S1','S2','S3'];
   const sColors=['#38bdf8','#a3e635','#fb923c'];
   const sIdx=e[10]||0;
+  const gap=(e[3]/10).toFixed(1);
+  const ourP=(e[7]!=null?(e[7]/10).toFixed(2):'?');
+  const theirP=(e[8]!=null?(e[8]/10).toFixed(2):'?');
+  // pace diff: positive = we are slower in this sector (they gain on us)
+  const pDiff=(e[7]!=null&&e[8]!=null)?(e[7]-e[8])/10:null;
+  const pDiffStr=pDiff!=null?(pDiff>=0?'+':'')+pDiff.toFixed(2)+'s':'?';
+  const pDiffCol=pDiff==null?'#9aa3b8':pDiff>0.05?'#f87171':pDiff<-0.05?'#4ade80':'#9aa3b8';
+  const gapCol=+gap>0?'#f87171':+gap<0?'#4ade80':'#9aa3b8';
+  const team='#'+e[2]+(CLEAN_TEAM_NAMES[e[2]]?' · '+CLEAN_TEAM_NAMES[e[2]]:'');
   const evH=e[1]/1000;
   const stintNum=PIT38_H.filter(p=>p<evH).length+1;
   const compRider=(e[9]>=0&&COMP_RIDER_NAMES[e[9]])?COMP_RIDER_NAMES[e[9]]:'';
+  const isOT=OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+sIdx);
+  const isHold=e[6]===1;
+  const stateLabel=isOT?'<span style="color:#fff;font-weight:700">OVERTAKE</span>':isHold?'<span style="color:#f87171">Hold-up</span>':'<span style="color:#9aa3b8">Approach</span>';
   tt.innerHTML='<div class="tt-team">'+team+'</div>'
     +(compRider?'<div class="tt-row" style="margin-bottom:4px"><span class="tt-label">Rider</span><span class="tt-val" style="color:#a3e635">'+compRider+'</span></div>':'')
     +'<div class="tt-row"><span class="tt-label">Lap</span><span class="tt-val">'+e[0]+'</span></div>'
     +'<div class="tt-row"><span class="tt-label">Stint</span><span class="tt-val">'+stintNum+'</span></div>'
     +'<div class="tt-row"><span class="tt-label">Sector</span><span class="tt-val" style="color:'+sColors[sIdx]+'">'+sNames[sIdx]+'</span></div>'
-    +'<div class="tt-row" style="margin-top:5px;border-top:1px solid #2a2e42;padding-top:5px"><span class="tt-label">Our pace</span><span class="tt-val">'+ourP+'s</span></div>'
-    +'<div class="tt-row"><span class="tt-label">Their pace</span><span class="tt-val">'+theirP+'s</span></div>'
-    +'<div class="tt-row"><span class="tt-label">Diff</span><span class="tt-val">+'+pd+'s</span></div>'
-    +'<div class="tt-row"><span class="tt-label">Gap</span><span class="tt-val">'+gap+'s</span></div>';
+    +'<div class="tt-row"><span class="tt-label">State</span><span class="tt-val">'+stateLabel+'</span></div>'
+    +'<div class="tt-row" style="margin-top:5px;border-top:1px solid #2a2e42;padding-top:5px">'
+      +'<span class="tt-label">Our '+sNames[sIdx]+' pace</span><span class="tt-val">'+ourP+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Their '+sNames[sIdx]+' pace</span><span class="tt-val">'+theirP+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Pace diff</span>'
+      +'<span class="tt-val" style="color:'+pDiffCol+'">'+pDiffStr+'</span></div>'
+    +'<div class="tt-row" style="margin-top:4px;border-top:1px dashed #1e2233;padding-top:4px">'
+      +'<span class="tt-label">Track gap</span>'
+      +'<span class="tt-val" style="color:'+gapCol+'">'+gap+'s</span></div>';
   tt.style.display='block';
   if(clientX!=null){
     const vw=window.innerWidth,vh=window.innerHeight;
