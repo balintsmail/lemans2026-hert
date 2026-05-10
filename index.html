@@ -2856,124 +2856,164 @@ function toggleSectorRider(r){
 // OT_SPEC_SEC: white dot when position change happened on that lap (reuse OT_SPEC)
 function draw_sector_traffic(){
   if(!c_sector||!cx_sector)return;
-  const W=Math.round(c_sector.width/DPR),H=Math.round(c_sector.height/DPR);
+  const W=Math.round(c_sector.width/DPR);
+  if(!W)return;
   cx_sector.setTransform(DPR,0,0,DPR,0,0);
-  if(!W||!H)return;
-  const nRows=TR_TEAMS_SORTED.length;
-  const P={l:136,r:40,t:20,b:28};
-  const pw=W-P.l-P.r,ph=H-P.t-P.b;
-  const rowH=ph/nRows;
+
+  const P={l:10,r:50,t:28,b:28};
+  const pw=W-P.l-P.r;
   const hRange=Math.max(0.5,sTrHMax-sTrHMin);
   const pxH=h=>P.l+(h-sTrHMin)/hRange*pw;
-  const pyRow=i=>P.t+rowH*(i+0.5);
-  cx_sector.fillStyle='#12141c';cx_sector.fillRect(0,0,W,H);
-  const teamIdxMap={};TR_TEAMS_SORTED.forEach((t,i)=>teamIdxMap[t]=i);
+  // Dot padding in hours (so overlap check accounts for dot visual width)
+  const DOT_PAD=Math.max(0.05, 10/pw*hRange);
+  const SEG_GAP=Math.max(DOT_PAD*3, 0.25); // gap > this => new segment
+
+  // ── Filter ──────────────────────────────────────────────────────────────
+  const otSecMap={};
+  OT_SECTOR_SPEC.forEach(k=>{const p=k.lastIndexOf('_');otSecMap[k.slice(0,p)]=+k.slice(p+1);});
   const filtered=TRAFFIC_SECTOR_EVENTS.filter(e=>{
     if(hiddenSectorRiders.has(TR_RIDERS_KEY[e[5]]))return false;
     if(e[3]/10>sTrGapMax)return false;
     const eh=e[1]/1000;if(eh<sTrHMin||eh>sTrHMax)return false;
+    // suppress post-overtake hold-up sectors (not overtake dot, and sector > OT sector)
+    if(e[6]===1&&!OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0))){
+      const otS=otSecMap[e[2]+'_'+e[0]];
+      if(otS!==undefined&&(e[10]||0)>otS)return false;
+    }
     return true;
   });
-  // Hour grid
+
+  // ── Group by team → split into segments ─────────────────────────────────
+  const byTeam={};
+  filtered.forEach(e=>{if(!byTeam[e[2]])byTeam[e[2]]=[];byTeam[e[2]].push(e);});
+  const segments=[];
+  Object.values(byTeam).forEach(evs=>{
+    evs.sort((a,b)=>a[1]-b[1]);
+    let seg=[evs[0]];
+    for(let i=1;i<evs.length;i++){
+      const gap=(evs[i][1]-evs[i-1][1])/1000; // hours
+      if(gap>SEG_GAP){flush(seg);seg=[];}
+      seg.push(evs[i]);
+    }
+    flush(seg);
+  });
+  function flush(evs){
+    const sh=evs[0][1]/1000, eh=evs[evs.length-1][1]/1000;
+    segments.push({events:evs,sh,eh,sStart:sh-DOT_PAD,sEnd:eh+DOT_PAD,row:0});
+  }
+
+  // ── Greedy interval packing ──────────────────────────────────────────────
+  segments.sort((a,b)=>a.sStart-b.sStart);
+  const rowEnds=[];
+  segments.forEach(seg=>{
+    let placed=false;
+    for(let r=0;r<rowEnds.length;r++){
+      if(seg.sStart>=rowEnds[r]){seg.row=r;rowEnds[r]=seg.sEnd;placed=true;break;}
+    }
+    if(!placed){seg.row=rowEnds.length;rowEnds.push(seg.sEnd);}
+  });
+  const nRows=Math.max(1,rowEnds.length);
+  const ROW_H=22;
+  const newH=P.t+P.b+nRows*ROW_H;
+  const plotH=nRows*ROW_H;
+
+  // Resize canvas height dynamically
+  if(c_sector.height!==Math.round(newH*DPR)){
+    c_sector.height=Math.round(newH*DPR);
+    c_sector.style.height=newH+'px';
+    cx_sector.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  // ── Background ──────────────────────────────────────────────────────────
+  cx_sector.fillStyle='#12141c';cx_sector.fillRect(0,0,W,newH);
+  for(let r=0;r<nRows;r++){
+    cx_sector.fillStyle=r%2===0?'#13151e':'#12141c';
+    cx_sector.fillRect(P.l,P.t+ROW_H*r,pw,ROW_H);
+    cx_sector.strokeStyle='#1a1d2a';cx_sector.lineWidth=0.5;cx_sector.setLineDash([]);
+    cx_sector.beginPath();cx_sector.moveTo(P.l,P.t+ROW_H*r);cx_sector.lineTo(W-P.r,P.t+ROW_H*r);cx_sector.stroke();
+  }
+
+  // ── Hour grid + labels ───────────────────────────────────────────────────
   const hStep=hRange<=1?0.25:hRange<=3?0.5:hRange<=6?1:hRange<=12?2:4;
   const hStart=Math.ceil(sTrHMin/hStep)*hStep;
-  for(let h=hStart;h<=sTrHMax+0.001;h=Math.round((h+hStep)*1000)/1000){
-    const xx=pxH(h);if(xx<P.l-1||xx>W-P.r+1)continue;
+  for(let hh=hStart;hh<=sTrHMax+0.001;hh=Math.round((hh+hStep)*1000)/1000){
+    const xx=pxH(hh);if(xx<P.l-1||xx>W-P.r+1)continue;
     cx_sector.strokeStyle='#1e2233';cx_sector.lineWidth=1;cx_sector.setLineDash([]);
-    cx_sector.beginPath();cx_sector.moveTo(xx,P.t);cx_sector.lineTo(xx,H-P.b);cx_sector.stroke();
+    cx_sector.beginPath();cx_sector.moveTo(xx,P.t);cx_sector.lineTo(xx,P.t+plotH);cx_sector.stroke();
     cx_sector.fillStyle='#9aa3b8';cx_sector.font='10px Segoe UI';cx_sector.textAlign='center';
-    const lbl=hStep>=1?Math.round(h)+'h':(Math.round(h*4)/4).toFixed(2).replace(/\.?0+$/,'')+'h';
-    cx_sector.fillText(lbl,xx,H-P.b+12);
+    const lbl=hStep>=1?Math.round(hh)+'h':(Math.round(hh*4)/4).toFixed(2).replace(/\.?0+$/,'')+'h';
+    cx_sector.fillText(lbl,xx,P.t+plotH+14);
   }
-  // Row backgrounds + labels
-  TR_TEAMS_SORTED.forEach((t,i)=>{
-    const yy=pyRow(i);
-    cx_sector.fillStyle=i%2===0?'#14161f':'#12141c';
-    cx_sector.fillRect(P.l,P.t+rowH*i,pw,rowH);
-    cx_sector.strokeStyle='#1e2233';cx_sector.lineWidth=0.5;cx_sector.setLineDash([]);
-    cx_sector.beginPath();cx_sector.moveTo(P.l,P.t+rowH*i);cx_sector.lineTo(W-P.r,P.t+rowH*i);cx_sector.stroke();
-    cx_sector.fillStyle='#7a8399';cx_sector.font='9px Segoe UI';cx_sector.textAlign='right';
-    cx_sector.fillText('#'+t,P.l-4,yy+3.5);
-  });
-  // Count per team
-  const cntMap={},scntMap={};
-  filtered.forEach(e=>{cntMap[e[2]]=(cntMap[e[2]]||0)+1;if(e[6])scntMap[e[2]]=(scntMap[e[2]]||0)+1;});
-  TR_TEAMS_SORTED.forEach((t,i)=>{
-    const cnt=cntMap[t]||0;if(!cnt)return;
-    const scnt=scntMap[t]||0;
-    const yy=pyRow(i);
-    cx_sector.fillStyle='#7a8399';cx_sector.font='9px Segoe UI';cx_sector.textAlign='left';
-    cx_sector.fillText(cnt+(scnt>0?' '+scnt+'★':''),W-P.r+3,yy+3.5);
-  });
-  // Sector colour tints (slight modifier per sector for visual grouping)
-  const sAlphaMod=[1.0,0.8,0.65];
-  // otSecMap: "bike_lap" → sector index where overtake crossed zero
-  const otSecMap={};
-  OT_SECTOR_SPEC.forEach(k=>{const p=k.lastIndexOf('_');otSecMap[k.slice(0,p)]=+k.slice(p+1);});
-  // State 1: approach dots
-  filtered.filter(e=>e[6]===0).forEach(e=>{
-    const i=teamIdxMap[e[2]];if(i===undefined)return;
-    const xx=pxH(e[1]/1000),yy=pyRow(i);
-    const gap=e[3]/10,alpha=Math.max(0,1-gap/sTrGapMax)*sAlphaMod[e[10]||0];
-    const c=TR_RIDERS_COL[e[5]];
-    const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
-    cx_sector.beginPath();cx_sector.arc(xx,yy,2,0,Math.PI*2);
-    cx_sector.fillStyle='rgba('+r+','+g+','+b+','+alpha.toFixed(3)+')';cx_sector.fill();
-  });
-  // State 2: hold-up, no position change
-  // Skip sectors that come AFTER the overtake sector within the same lap
-  // (those sectors the competitor is already ahead — hold-up no longer applies)
-  filtered.filter(e=>{
-    if(e[6]!==1)return false;
-    if(OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0)))return false; // this sector = white dot
-    const otS=otSecMap[e[2]+'_'+e[0]];
-    if(otS!==undefined&&(e[10]||0)>otS)return false; // post-overtake sector: suppress
-    return true;
-  }).forEach(e=>{
-    const i=teamIdxMap[e[2]];if(i===undefined)return;
-    const xx=pxH(e[1]/1000),yy=pyRow(i);
-    cx_sector.beginPath();cx_sector.arc(xx,yy,4,0,Math.PI*2);
-    cx_sector.fillStyle=TR_RIDERS_COL[e[5]];cx_sector.fill();
-  });
-  // State 3: hold-up + position change → white
-  filtered.filter(e=>e[6]===1&&OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0))).forEach(e=>{
-    const i=teamIdxMap[e[2]];if(i===undefined)return;
-    const xx=pxH(e[1]/1000),yy=pyRow(i);
-    cx_sector.beginPath();cx_sector.arc(xx,yy,4,0,Math.PI*2);
-    cx_sector.fillStyle='#ffffff';cx_sector.fill();
-  });
-  // Summary
-  const ts=filtered.filter(e=>e[6]===1).length,ta=filtered.length-ts;
-  cx_sector.fillStyle='#22d3ee';cx_sector.font='bold 11px Segoe UI';cx_sector.textAlign='right';
-  cx_sector.fillText('Hold-ups: '+ts+' · Approach: '+ta,W-P.r-4,P.t+13);
-  cx_sector.fillStyle='#c0c8d8';cx_sector.font='10px Segoe UI';cx_sector.textAlign='center';
-  cx_sector.fillText('Race hours',P.l+pw/2,H-6);
-  // SC bands
+
+  // ── SC bands ─────────────────────────────────────────────────────────────
   SC_HOURS.forEach(([s,e])=>{
     const x1=pxH(Math.max(s,sTrHMin)),x2=pxH(Math.min(e,sTrHMax));
     if(x2<=x1)return;
-    cx_sector.fillStyle='rgba(250,204,21,0.07)';cx_sector.fillRect(x1,P.t,x2-x1,H-P.t-P.b);
+    cx_sector.fillStyle='rgba(250,204,21,0.07)';cx_sector.fillRect(x1,P.t,x2-x1,plotH);
     cx_sector.strokeStyle='rgba(250,204,21,0.25)';cx_sector.lineWidth=1;cx_sector.setLineDash([2,4]);
-    cx_sector.beginPath();cx_sector.moveTo(x1,P.t);cx_sector.lineTo(x1,H-P.b);cx_sector.stroke();
-    cx_sector.beginPath();cx_sector.moveTo(x2,P.t);cx_sector.lineTo(x2,H-P.b);cx_sector.stroke();
+    cx_sector.beginPath();cx_sector.moveTo(x1,P.t);cx_sector.lineTo(x1,P.t+plotH);cx_sector.stroke();
+    cx_sector.beginPath();cx_sector.moveTo(x2,P.t);cx_sector.lineTo(x2,P.t+plotH);cx_sector.stroke();
     cx_sector.setLineDash([]);
-    cx_sector.fillStyle='rgba(250,204,21,0.5)';cx_sector.font='8px Segoe UI';cx_sector.textAlign='center';
-    cx_sector.fillText('SC',x1+(x2-x1)/2,P.t+8);
+    cx_sector.fillStyle='rgba(250,204,21,0.55)';cx_sector.font='8px Segoe UI';cx_sector.textAlign='center';
+    cx_sector.fillText('SC',x1+(x2-x1)/2,P.t+9);
   });
-  // Pit lines
-  PIT38_H.forEach(ph=>{
-    if(ph<sTrHMin||ph>sTrHMax)return;
-    const xx=pxH(ph);
-    cx_sector.strokeStyle='rgba(251,191,36,0.6)';cx_sector.lineWidth=1;cx_sector.setLineDash([3,3]);
-    cx_sector.beginPath();cx_sector.moveTo(xx,P.t);cx_sector.lineTo(xx,H-P.b);cx_sector.stroke();
+
+  // ── Pit lines ────────────────────────────────────────────────────────────
+  PIT38_H.forEach(ph38=>{
+    if(ph38<sTrHMin||ph38>sTrHMax)return;
+    const xx=pxH(ph38);
+    cx_sector.strokeStyle='rgba(251,191,36,0.5)';cx_sector.lineWidth=1;cx_sector.setLineDash([3,3]);
+    cx_sector.beginPath();cx_sector.moveTo(xx,P.t);cx_sector.lineTo(xx,P.t+plotH);cx_sector.stroke();
     cx_sector.setLineDash([]);
   });
-  // Build hit list for sector tooltips
+
+  // ── Draw segments ────────────────────────────────────────────────────────
+  const sAlphaMod=[1.0,0.8,0.65];
   secDotHits=[];
-  filtered.forEach(e=>{
-    const i=teamIdxMap[e[2]];if(i===undefined)return;
-    secDotHits.push({x:pxH(e[1]/1000),y:pyRow(i),e});
+  segments.forEach(seg=>{
+    const yMid=P.t+ROW_H*(seg.row+0.5);
+    const evs=seg.events;
+    // Connecting line
+    if(evs.length>1){
+      cx_sector.strokeStyle='rgba(90,100,130,0.35)';cx_sector.lineWidth=1;cx_sector.setLineDash([]);
+      cx_sector.beginPath();cx_sector.moveTo(pxH(evs[0][1]/1000),yMid);
+      for(let i=1;i<evs.length;i++)cx_sector.lineTo(pxH(evs[i][1]/1000),yMid);
+      cx_sector.stroke();
+    }
+    // Dots
+    evs.forEach(e=>{
+      const xx=pxH(e[1]/1000);
+      const isOT=OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0));
+      const isHold=e[6]===1;
+      const c=TR_RIDERS_COL[e[5]];
+      const rr=parseInt(c.slice(1,3),16),gg=parseInt(c.slice(3,5),16),bb=parseInt(c.slice(5,7),16);
+      if(isOT){
+        cx_sector.beginPath();cx_sector.arc(xx,yMid,4.5,0,Math.PI*2);
+        cx_sector.fillStyle='#ffffff';cx_sector.fill();
+      } else if(isHold){
+        cx_sector.beginPath();cx_sector.arc(xx,yMid,4,0,Math.PI*2);
+        cx_sector.fillStyle=c;cx_sector.fill();
+      } else {
+        const gap=e[3]/10,alpha=Math.max(0.12,1-gap/sTrGapMax)*sAlphaMod[e[10]||0];
+        cx_sector.beginPath();cx_sector.arc(xx,yMid,2,0,Math.PI*2);
+        cx_sector.fillStyle='rgba('+rr+','+gg+','+bb+','+alpha.toFixed(3)+')';cx_sector.fill();
+      }
+      secDotHits.push({x:xx,y:yMid,e});
+    });
+    // Team label at first event
+    const lx=pxH(evs[0][1]/1000);
+    cx_sector.fillStyle='rgba(130,140,165,0.75)';cx_sector.font='6.5px Segoe UI';
+    cx_sector.textAlign='left';
+    cx_sector.fillText('#'+evs[0][2],lx+5,yMid-5);
   });
+
+  // ── Summary line ─────────────────────────────────────────────────────────
+  const ts=filtered.filter(e=>e[6]===1).length,ta=filtered.length-ts;
+  cx_sector.fillStyle='#22d3ee';cx_sector.font='bold 10px Segoe UI';cx_sector.textAlign='right';
+  cx_sector.fillText('Hold-ups: '+ts+' · Approach: '+ta+' · Rows: '+nRows,W-P.r-4,P.t-8);
+  cx_sector.fillStyle='#c0c8d8';cx_sector.font='10px Segoe UI';cx_sector.textAlign='center';
+  cx_sector.fillText('Race hours',P.l+pw/2,P.t+plotH+25);
+
   update_sector_rider_stats(filtered);
 }
 let secDotHits=[];
@@ -3039,9 +3079,9 @@ function resize_sector_traffic(){
   if(!c_sector)return;
   const wrap=c_sector.parentElement;
   const _w=(wrap.clientWidth||900)-20;
-  const _h=Math.round(TR_TEAMS_SORTED.length*20)+50;
-  c_sector.width=_w*DPR;c_sector.height=_h*DPR;
-  c_sector.style.width=_w+'px';c_sector.style.height=_h+'px';
+  c_sector.width=_w*DPR;
+  c_sector.style.width=_w+'px';
+  // height is set dynamically inside draw_sector_traffic
   draw_sector_traffic();
 }
 if(c_sector){
