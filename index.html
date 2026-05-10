@@ -2896,6 +2896,7 @@ function resize_rider_chart(){
 const c_sector=document.getElementById('c_sector_traffic');
 const cx_sector=c_sector?c_sector.getContext('2d'):null;
 let sTrGapMax=10,sTrHMin=0,sTrHMax=2.5;
+let sTrMaxR=12,sTrMaxT=1.0; // hold-up dot size controls
 const hiddenSectorRiders=new Set();
 function toggleSectorRider(r){
   hiddenSectorRiders.has(r)?hiddenSectorRiders.delete(r):hiddenSectorRiders.add(r);
@@ -3046,7 +3047,7 @@ function draw_sector_traffic(){
         cx_sector.fillStyle='#ffffff';cx_sector.fill();
       } else if(isHold){
         const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)]||0;
-        const hr=tl>=1?12:Math.max(2,2+tl*10); // 0→2, 1.0→12, >1→12
+        const hr=tl>=sTrMaxT?sTrMaxR:Math.max(2,2+(tl/sTrMaxT)*(sTrMaxR-2)); // scales 0→2px, threshold→maxR
         cx_sector.beginPath();cx_sector.arc(xx,yMid,hr,0,Math.PI*2);
         cx_sector.globalAlpha=0.5;cx_sector.fillStyle=c;cx_sector.fill();cx_sector.globalAlpha=1;
         // Outline for large dots
