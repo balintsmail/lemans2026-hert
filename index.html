@@ -2118,7 +2118,7 @@ function draw_traffic(){
     cx_traffic.fillStyle='#ffffff';cx_traffic.fill();
   });
   // Summary annotation
-  const renderArr=[...renderSet];
+  const renderArr=layoutEvts.filter(e=>{const eh=e[1]/1000;return eh>=sTrHMin&&eh<=sTrHMax;});
   const ts=renderArr.filter(e=>e[6]===1).length,ta=renderArr.length-ts;
   cx_traffic.fillStyle='#22d3ee';cx_traffic.font='bold 11px Segoe UI';cx_traffic.textAlign='right';
   cx_traffic.fillText('Catch-ups: '+ts+' · Approach: '+ta,W-P.r-4,P.t+13);
@@ -2885,16 +2885,15 @@ function draw_sector_traffic(){
     return true;
   });
 
-  // ── Render filter: adds time window on top ────────────────────────────────
-  const renderSet=new Set();
-  layoutEvts.forEach(e=>{
-    const eh=e[1]/1000;if(eh>=sTrHMin&&eh<=sTrHMax)renderSet.add(e);
-  });
 
   // ── Group layout events by team → split into segments ────────────────────
+  const segments=[];
+  const flush=evs=>{
+    const sh=evs[0][1]/1000, eh=evs[evs.length-1][1]/1000;
+    segments.push({events:evs,sh,eh,sStart:sh-LAYOUT_PAD,sEnd:eh+LAYOUT_PAD,row:0});
+  };
   const byTeam={};
   layoutEvts.forEach(e=>{if(!byTeam[e[2]])byTeam[e[2]]=[];byTeam[e[2]].push(e);});
-  const segments=[];
   Object.values(byTeam).forEach(evs=>{
     evs.sort((a,b)=>a[1]-b[1]);
     let seg=[evs[0]];
@@ -2905,10 +2904,6 @@ function draw_sector_traffic(){
     }
     flush(seg);
   });
-  function flush(evs){
-    const sh=evs[0][1]/1000, eh=evs[evs.length-1][1]/1000;
-    segments.push({events:evs,sh,eh,sStart:sh-LAYOUT_PAD,sEnd:eh+LAYOUT_PAD,row:0});
-  }
 
   // ── Greedy interval packing (on full dataset → stable row count) ──────────
   segments.sort((a,b)=>a.sStart-b.sStart);
@@ -2982,7 +2977,7 @@ function draw_sector_traffic(){
     const yMid=P.t+ROW_H*(seg.row+0.5);
     const evs=seg.events;
     // Only render events within the current time window
-    const visEvs=evs.filter(e=>renderSet.has(e));
+    const visEvs=evs.filter(e=>{const eh=e[1]/1000;return eh>=sTrHMin&&eh<=sTrHMax;});
     if(!visEvs.length)return;
     // Connecting line (only visible events)
     if(visEvs.length>1){
