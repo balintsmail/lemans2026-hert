@@ -2118,7 +2118,8 @@ function draw_traffic(){
     cx_traffic.fillStyle='#ffffff';cx_traffic.fill();
   });
   // Summary annotation
-  const ts=filtered.filter(e=>e[6]===1).length,ta=filtered.length-ts;
+  const renderArr=[...renderSet];
+  const ts=renderArr.filter(e=>e[6]===1).length,ta=renderArr.length-ts;
   cx_traffic.fillStyle='#22d3ee';cx_traffic.font='bold 11px Segoe UI';cx_traffic.textAlign='right';
   cx_traffic.fillText('Catch-ups: '+ts+' · Approach: '+ta,W-P.r-4,P.t+13);
   cx_traffic.fillStyle='#c0c8d8';cx_traffic.font='10px Segoe UI';cx_traffic.textAlign='center';
@@ -2864,18 +2865,19 @@ function draw_sector_traffic(){
   const pw=W-P.l-P.r;
   const hRange=Math.max(0.5,sTrHMax-sTrHMin);
   const pxH=h=>P.l+(h-sTrHMin)/hRange*pw;
-  // Dot padding in hours (so overlap check accounts for dot visual width)
-  const DOT_PAD=Math.max(0.05, 10/pw*hRange);
-  const SEG_GAP=Math.max(DOT_PAD*3, 0.25); // gap > this => new segment
 
-  // ── Filter ──────────────────────────────────────────────────────────────
+  // Layout constants always computed on the FULL 24-hour range so that
+  // zooming / panning never changes row count or chart height.
+  const LAYOUT_PAD=0.10;  // hours padding per segment end (≈6 min)
+  const SEG_GAP=0.30;     // hours gap to split a segment (≈18 min)
+
   const otSecMap={};
   OT_SECTOR_SPEC.forEach(k=>{const p=k.lastIndexOf('_');otSecMap[k.slice(0,p)]=+k.slice(p+1);});
-  const filtered=TRAFFIC_SECTOR_EVENTS.filter(e=>{
+
+  // ── Layout filter: approach + rider toggles only, NO time window ─────────
+  const layoutEvts=TRAFFIC_SECTOR_EVENTS.filter(e=>{
     if(hiddenSectorRiders.has(TR_RIDERS_KEY[e[5]]))return false;
     if(e[3]/10>sTrGapMax)return false;
-    const eh=e[1]/1000;if(eh<sTrHMin||eh>sTrHMax)return false;
-    // suppress post-overtake hold-up sectors (not overtake dot, and sector > OT sector)
     if(e[6]===1&&!OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0))){
       const otS=otSecMap[e[2]+'_'+e[0]];
       if(otS!==undefined&&(e[10]||0)>otS)return false;
@@ -2883,15 +2885,21 @@ function draw_sector_traffic(){
     return true;
   });
 
-  // ── Group by team → split into segments ─────────────────────────────────
+  // ── Render filter: adds time window on top ────────────────────────────────
+  const renderSet=new Set();
+  layoutEvts.forEach(e=>{
+    const eh=e[1]/1000;if(eh>=sTrHMin&&eh<=sTrHMax)renderSet.add(e);
+  });
+
+  // ── Group layout events by team → split into segments ────────────────────
   const byTeam={};
-  filtered.forEach(e=>{if(!byTeam[e[2]])byTeam[e[2]]=[];byTeam[e[2]].push(e);});
+  layoutEvts.forEach(e=>{if(!byTeam[e[2]])byTeam[e[2]]=[];byTeam[e[2]].push(e);});
   const segments=[];
   Object.values(byTeam).forEach(evs=>{
     evs.sort((a,b)=>a[1]-b[1]);
     let seg=[evs[0]];
     for(let i=1;i<evs.length;i++){
-      const gap=(evs[i][1]-evs[i-1][1])/1000; // hours
+      const gap=(evs[i][1]-evs[i-1][1])/1000;
       if(gap>SEG_GAP){flush(seg);seg=[];}
       seg.push(evs[i]);
     }
@@ -2899,10 +2907,10 @@ function draw_sector_traffic(){
   });
   function flush(evs){
     const sh=evs[0][1]/1000, eh=evs[evs.length-1][1]/1000;
-    segments.push({events:evs,sh,eh,sStart:sh-DOT_PAD,sEnd:eh+DOT_PAD,row:0});
+    segments.push({events:evs,sh,eh,sStart:sh-LAYOUT_PAD,sEnd:eh+LAYOUT_PAD,row:0});
   }
 
-  // ── Greedy interval packing ──────────────────────────────────────────────
+  // ── Greedy interval packing (on full dataset → stable row count) ──────────
   segments.sort((a,b)=>a.sStart-b.sStart);
   const rowEnds=[];
   segments.forEach(seg=>{
@@ -2917,7 +2925,7 @@ function draw_sector_traffic(){
   const newH=P.t+P.b+nRows*ROW_H;
   const plotH=nRows*ROW_H;
 
-  // Resize canvas height dynamically
+  // Resize only when layout changes (approach filter / rider toggles), not on pan/zoom
   if(c_sector.height!==Math.round(newH*DPR)){
     c_sector.height=Math.round(newH*DPR);
     c_sector.style.height=newH+'px';
@@ -2973,15 +2981,18 @@ function draw_sector_traffic(){
   segments.forEach(seg=>{
     const yMid=P.t+ROW_H*(seg.row+0.5);
     const evs=seg.events;
-    // Connecting line
-    if(evs.length>1){
+    // Only render events within the current time window
+    const visEvs=evs.filter(e=>renderSet.has(e));
+    if(!visEvs.length)return;
+    // Connecting line (only visible events)
+    if(visEvs.length>1){
       cx_sector.strokeStyle='rgba(90,100,130,0.35)';cx_sector.lineWidth=1;cx_sector.setLineDash([]);
-      cx_sector.beginPath();cx_sector.moveTo(pxH(evs[0][1]/1000),yMid);
-      for(let i=1;i<evs.length;i++)cx_sector.lineTo(pxH(evs[i][1]/1000),yMid);
+      cx_sector.beginPath();cx_sector.moveTo(pxH(visEvs[0][1]/1000),yMid);
+      for(let i=1;i<visEvs.length;i++)cx_sector.lineTo(pxH(visEvs[i][1]/1000),yMid);
       cx_sector.stroke();
     }
-    // Dots
-    evs.forEach(e=>{
+    // Dots (visible only)
+    visEvs.forEach(e=>{
       const xx=pxH(e[1]/1000);
       const isOT=OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+(e[10]||0));
       const isHold=e[6]===1;
@@ -3001,10 +3012,10 @@ function draw_sector_traffic(){
       secDotHits.push({x:xx,y:yMid,e});
     });
     // Team label at first event
-    const lx=pxH(evs[0][1]/1000);
-    cx_sector.fillStyle='rgba(130,140,165,0.75)';cx_sector.font='6.5px Segoe UI';
+    const lx=pxH(visEvs[0][1]/1000);
+    cx_sector.fillStyle='#c0cce0';cx_sector.font='6.5px Segoe UI';
     cx_sector.textAlign='left';
-    cx_sector.fillText('#'+evs[0][2],lx+5,yMid-5);
+    cx_sector.fillText('#'+visEvs[0][2],lx+5,yMid-5);
   });
 
   // ── Summary line ─────────────────────────────────────────────────────────
@@ -3014,7 +3025,7 @@ function draw_sector_traffic(){
   cx_sector.fillStyle='#c0c8d8';cx_sector.font='10px Segoe UI';cx_sector.textAlign='center';
   cx_sector.fillText('Race hours',P.l+pw/2,P.t+plotH+25);
 
-  update_sector_rider_stats(filtered);
+  update_sector_rider_stats(renderArr);
 }
 let secDotHits=[];
 function showSectorTT(h,clientX,clientY){
