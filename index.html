@@ -3077,13 +3077,19 @@ function showSectorTT(h,clientX,clientY){
   const sColors=['#38bdf8','#a3e635','#fb923c'];
   const sIdx=e[10]||0;
   const gap=(e[3]/10).toFixed(1);
-  // Lap pace from TRAFFIC_EVENTS lookup
+  // Sector pace from TRAFFIC_SECTOR_EVENTS e[7]/e[8]
+  const ourSec=(e[7]/10).toFixed(2);
+  const theirSec=(e[8]/10).toFixed(2);
+  const secDiff=(e[8]-e[7])/10;
+  const secDiffStr=(secDiff>=0?'+':'')+secDiff.toFixed(2)+'s';
+  const secDiffCol=secDiff>0.05?'#4ade80':secDiff<-0.05?'#f87171':'#9aa3b8';
+  // Lap pace from TRAFFIC_EVENTS via TRAFFIC_LAP_PACE
   const _lp=TRAFFIC_LAP_PACE[e[0]+'_'+e[2]]||{};
-  const ourP=_lp.our!=null?(_lp.our/10).toFixed(2):'?';
-  const theirP=_lp.their!=null?(_lp.their/10).toFixed(2):'?';
-  const pDiff=(_lp.our!=null&&_lp.their!=null)?(_lp.our-_lp.their)/10:null;
-  const pDiffStr=pDiff!=null?(pDiff>=0?'+':'')+pDiff.toFixed(2)+'s':'?';
-  const pDiffCol=pDiff==null?'#9aa3b8':pDiff>0.05?'#f87171':pDiff<-0.05?'#4ade80':'#9aa3b8';
+  const ourLap=_lp.our!=null?(_lp.our/10).toFixed(2):'?';
+  const theirLap=_lp.their!=null?(_lp.their/10).toFixed(2):'?';
+  const lapDiff=(_lp.our!=null&&_lp.their!=null)?(_lp.our-_lp.their)/10:null;
+  const lapDiffStr=lapDiff!=null?(lapDiff>=0?'+':'')+lapDiff.toFixed(2)+'s':'?';
+  const lapDiffCol=lapDiff==null?'#9aa3b8':lapDiff>0.05?'#f87171':lapDiff<-0.05?'#4ade80':'#9aa3b8';
   const gapCol=+gap>0?'#f87171':+gap<0?'#4ade80':'#9aa3b8';
   const team='#'+e[2]+(CLEAN_TEAM_NAMES[e[2]]?' · '+CLEAN_TEAM_NAMES[e[2]]:'');
   const evH=e[1]/1000;
@@ -3092,37 +3098,45 @@ function showSectorTT(h,clientX,clientY){
   const isOT=OT_SECTOR_SPEC.has(e[2]+'_'+e[0]+'_'+sIdx);
   const isHold=e[6]===1;
   const stateLabel=isOT?'<span style="color:#fff;font-weight:700">OVERTAKE</span>':isHold?'<span style="color:#f87171">Hold-up</span>':'<span style="color:#9aa3b8">Approach</span>';
+  const divider='<div style="border-top:1px solid #2a2e42;margin:5px 0 4px"></div>';
+  const dashDivider='<div style="border-top:1px dashed #1e2233;margin:4px 0 3px"></div>';
+  const sHdr=(label)=>'<div style="font-size:.68rem;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">'+label+'</div>';
   tt.innerHTML='<div class="tt-team">'+team+'</div>'
     +(compRider?'<div class="tt-row" style="margin-bottom:4px"><span class="tt-label">Rider</span><span class="tt-val" style="color:#a3e635">'+compRider+'</span></div>':'')
     +'<div class="tt-row"><span class="tt-label">Lap</span><span class="tt-val">'+e[0]+'</span></div>'
     +'<div class="tt-row"><span class="tt-label">Stint</span><span class="tt-val">'+stintNum+'</span></div>'
     +'<div class="tt-row"><span class="tt-label">Sector</span><span class="tt-val" style="color:'+sColors[sIdx]+'">'+sNames[sIdx]+'</span></div>'
     +'<div class="tt-row"><span class="tt-label">State</span><span class="tt-val">'+stateLabel+'</span></div>'
-    +'<div class="tt-row" style="margin-top:5px;border-top:1px solid #2a2e42;padding-top:5px">'
-      +'<span class="tt-label">Our lap pace</span><span class="tt-val">'+ourP+'s</span></div>'
-    +'<div class="tt-row"><span class="tt-label">Their '+sNames[sIdx]+' pace</span><span class="tt-val">'+theirP+'s</span></div>'
-    +'<div class="tt-row"><span class="tt-label">Pace diff</span>'
-      +'<span class="tt-val" style="color:'+pDiffCol+'">'+pDiffStr+'</span></div>'
-    +'<div class="tt-row" style="margin-top:4px;border-top:1px dashed #1e2233;padding-top:4px">'
-      +'<span class="tt-label">Track gap</span>'
-      +'<span class="tt-val" style="color:'+gapCol+'">'+gap+'s</span></div>'
-      +(isHold?(()=>{
-        const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)];
-        if(tl==null)return '';
-        const tlCol=tl>=1?'#f87171':tl>=0.5?'#fb923c':'#fbbf24';
-        return '<div class="tt-row" style="margin-top:5px;border-top:1px solid #2a2e42;padding-top:5px">'
-          +'<span class="tt-label" style="font-weight:700;color:#e2e8f4">Time lost</span>'
-          +'<span class="tt-val" style="color:'+tlCol+';font-weight:700">'+tl.toFixed(2)+'s</span></div>';
-      })():'')
-      ;
+    +divider
+    +sHdr(sNames[sIdx]+' Pace')
+    +'<div class="tt-row"><span class="tt-label">Our '+sNames[sIdx]+'</span><span class="tt-val">'+ourSec+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Their '+sNames[sIdx]+'</span><span class="tt-val">'+theirSec+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Sec diff</span><span class="tt-val" style="color:'+secDiffCol+'">'+secDiffStr+'</span></div>'
+    +dashDivider
+    +sHdr('Lap Pace')
+    +'<div class="tt-row"><span class="tt-label">Our lap</span><span class="tt-val">'+ourLap+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Their lap</span><span class="tt-val">'+theirLap+'s</span></div>'
+    +'<div class="tt-row"><span class="tt-label">Lap diff</span><span class="tt-val" style="color:'+lapDiffCol+'">'+lapDiffStr+'</span></div>'
+    +dashDivider
+    +'<div class="tt-row"><span class="tt-label">Track gap</span><span class="tt-val" style="color:'+gapCol+'">'+gap+'s</span></div>'
+    +(isHold?(()=>{
+      const tl=SECTOR_TIME_LOST[e[5]+'_'+e[2]+'_'+e[0]+'_'+(e[10]||0)];
+      if(tl==null)return '';
+      const tlCol=tl>=1?'#f87171':tl>=0.5?'#fb923c':'#fbbf24';
+      return divider
+        +'<div class="tt-row"><span class="tt-label" style="font-weight:700;color:#e2e8f4">Time lost</span>'
+        +'<span class="tt-val" style="color:'+tlCol+';font-weight:700">'+tl.toFixed(2)+'s</span></div>';
+    })():'')
+    ;
   tt.style.display='block';
   if(clientX!=null){
     const vw=window.innerWidth,vh=window.innerHeight;
     let lx=clientX+14,ty=clientY-10;
-    if(lx+190>vw)lx=clientX-190;if(ty+200>vh)ty=clientY-200;
+    if(lx+210>vw)lx=clientX-210;if(ty+280>vh)ty=clientY-280;
     tt.style.left=Math.max(4,lx)+'px';tt.style.top=Math.max(4,ty)+'px';
   }
 }
+
 function update_sector_rider_stats(filtered){
   const container=document.getElementById('sector_rider_stats');if(!container)return;
   const rNames=['Bálint','Jan','Loris','Máté'];
