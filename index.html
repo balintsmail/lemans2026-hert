@@ -459,12 +459,12 @@ footer a:hover{color:var(--tx2)}
     <div class="ctrl">
       <span class="lbl">MAX DOT SIZE</span>
       <span id="sTrMaxRLbl" style="font-size:.75rem;color:var(--tx2);min-width:32px;display:inline-block">12px</span>
-      <input type="range" id="sTrMaxRSlider" min="6" max="48" value="12" step="1"
+      <input type="range" id="sTrMaxRSlider" min="6" max="48" value="32" step="1"
         style="width:120px;vertical-align:middle;accent-color:#f87171"
         oninput="sTrMaxR=+this.value;document.getElementById('sTrMaxRLbl').textContent=this.value+'px';draw_sector_traffic()">
       <span class="lbl" style="margin-left:12px">AT ≥</span>
       <span id="sTrMaxTLbl" style="font-size:.75rem;color:var(--tx2);min-width:34px;display:inline-block">1.0s</span>
-      <input type="range" id="sTrMaxTSlider" min="0.2" max="6" value="1" step="0.1"
+      <input type="range" id="sTrMaxTSlider" min="0.2" max="6" value="5" step="0.1"
         style="width:120px;vertical-align:middle;accent-color:#f87171"
         oninput="sTrMaxT=+this.value;document.getElementById('sTrMaxTLbl').textContent=(+this.value).toFixed(1)+'s';draw_sector_traffic()">
     </div>
@@ -2903,7 +2903,7 @@ function resize_rider_chart(){
 const c_sector=document.getElementById('c_sector_traffic');
 const cx_sector=c_sector?c_sector.getContext('2d'):null;
 let sTrGapMax=10,sTrHMin=0,sTrHMax=2.5;
-let sTrMaxR=12,sTrMaxT=1.0; // hold-up dot size controls
+let sTrMaxR=32,sTrMaxT=5.0; // hold-up dot size controls
 const hiddenSectorRiders=new Set();
 function toggleSectorRider(r){
   hiddenSectorRiders.has(r)?hiddenSectorRiders.delete(r):hiddenSectorRiders.add(r);
