@@ -755,7 +755,7 @@ const SECTOR_TIME_LOST={};
     evs.sort((a,b)=>a[1]-b[1]||(a[10]||0)-(b[10]||0));
     evs.forEach((e,i)=>{
       if(e[6]!==1)return;
-      const secPaceDiff=(e[7]-e[8])/10; // positive = we're slower in this sector
+      const secPaceDiff=(e[8]-e[7])/10; // positive = their pace slower = we're held back
       const prevE=i>0?evs[i-1]:null;
       // gap reduction: positive = we got closer (subtract from time lost)
       const gapReduction=prevE?(prevE[3]-e[3])/10:0;
