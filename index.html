@@ -102,6 +102,16 @@ footer a:hover{color:var(--tx2)}
 .chapter-title{padding:52px 40px 24px;border-top:2px solid #1e2233;margin-top:8px}
 .chapter-title h2{font-size:2rem;font-weight:800;letter-spacing:-.5px;color:#e2e8f4;margin:0 0 4px}
 .chapter-sub{font-size:.82rem;color:#808999;margin:0;font-weight:400}
+
+/* ── Sector-traffic full-width scrubber ────────── */
+.sector-scrubber{position:relative;height:36px;margin:10px 0 6px;display:flex;align-items:center}
+.sector-scrubber .ds-track{position:absolute;left:0;right:0;height:10px;background:#161825;border-radius:5px;border:1px solid #1e2233}
+.sector-scrubber .ds-fill{position:absolute;height:10px;border-radius:4px;border:1px solid rgba(34,211,238,.6);pointer-events:none;user-select:none;-webkit-user-select:none;cursor:grab;
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0,rgba(255,255,255,.07) 2px,transparent 2px,transparent 8px),linear-gradient(90deg,rgba(34,211,238,.15),rgba(34,211,238,.35),rgba(34,211,238,.15))}
+.sector-scrubber .ds-fill.grabbing{cursor:grabbing}
+.sector-scrubber input[type=range]{position:absolute;width:100%;height:10px;background:none;-webkit-appearance:none;appearance:none;pointer-events:none;margin:0}
+.sector-scrubber input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:28px;border-radius:4px;background:#22d3ee;cursor:ew-resize;pointer-events:all;border:2px solid #0c111d;box-shadow:0 0 0 2px rgba(34,211,238,.3)}
+.sector-scrubber input[type=range]::-moz-range-thumb{width:14px;height:28px;border-radius:4px;background:#22d3ee;cursor:ew-resize;pointer-events:all;border:2px solid #0c111d;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -442,10 +452,9 @@ footer a:hover{color:var(--tx2)}
     Le Mans uses 3 sectors — S1 ≈ 44 s (pit straight + chicanes), S2 ≈ 27 s (Ford chicanes + Dunlop), S3 ≈ 26 s (Porsche + Maison Blanche).
   </p>
   <div class="sctrl" style="margin-bottom:8px">
-    <div class="ctrl">
-      <span class="lbl">RACE TIME</span>
-      <span id="ssLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-      <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="sdsFillTR"></div><input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="sdsMaxTR" min="0" max="24" value="24" step="0.5"></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="lbl">RACE WINDOW</span>
+      <span id="ssLblTR" style="font-size:.75rem;color:#22d3ee;font-weight:600;min-width:76px">0h–2.5h</span>
     </div>
     <div class="ctrl">
       <span class="lbl">APPROACH RANGE</span>
@@ -462,6 +471,12 @@ footer a:hover{color:var(--tx2)}
     </div>
   </div>
   <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_sector_traffic"></canvas></div>
+  <div class="sector-scrubber">
+    <div class="ds-track"></div>
+    <div class="ds-fill" id="sdsFillTR"></div>
+    <input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5">
+    <input type="range" id="sdsMaxTR" min="0" max="24" value="2.5" step="0.5">
+  </div>
   <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
 </section>
 </section>
@@ -1680,6 +1695,7 @@ function initDualSlider(idMin,idMax,idFill,idLbl,onChange){
   },{passive:false});
   window.addEventListener('touchend',()=>{panDrag=false;});
   upd(null);
+  upd(null);
 }
 
 const cv5=document.getElementById('c5'),cx5=cv5?cv5.getContext('2d'):null;
@@ -2847,7 +2863,7 @@ function resize_rider_chart(){
 // ── SECTOR TRAFFIC CHART ─────────────────────────────────────────────────────
 const c_sector=document.getElementById('c_sector_traffic');
 const cx_sector=c_sector?c_sector.getContext('2d'):null;
-let sTrGapMax=10,sTrHMin=0,sTrHMax=24;
+let sTrGapMax=10,sTrHMin=0,sTrHMax=2.5;
 const hiddenSectorRiders=new Set();
 function toggleSectorRider(r){
   hiddenSectorRiders.has(r)?hiddenSectorRiders.delete(r):hiddenSectorRiders.add(r);
@@ -3008,9 +3024,9 @@ function draw_sector_traffic(){
     });
     // Team label at first event
     const lx=pxH(visEvs[0][1]/1000);
-    cx_sector.fillStyle='#c0cce0';cx_sector.font='6.5px Segoe UI';
+    cx_sector.fillStyle='#c0cce0';cx_sector.font='bold 10px Segoe UI';
     cx_sector.textAlign='left';
-    cx_sector.fillText('#'+visEvs[0][2],lx+5,yMid-5);
+    cx_sector.fillText('#'+visEvs[0][2],lx+6,yMid-6);
   });
 
   // ── Summary line ─────────────────────────────────────────────────────────
