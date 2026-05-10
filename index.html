@@ -166,11 +166,10 @@ footer a:hover{color:var(--tx2)}
 <section id="standings">
   <p class="stag">FIM EWC 2026 · Stock Superbike (SST)</p>
   <h2>Stock standings</h2>
-  <p class="hsub" style="margin-bottom:12px">Click headers to sort. &#9889; = faster best lap than #38 despite finishing lower.</p>
+  <p class="hsub" style="margin-bottom:12px">Click headers to sort.</p>
   <div class="sctrl">
     <span class="lbl">SORT</span>
     <button id="srtL" class="on" onclick="sortTable('laps')">Laps</button>
-    <button id="srtB" onclick="sortTable('best')">Best lap</button>
   </div>
   <div class="stwrap"><table><thead><tr>
     <th onclick="sortTable('pos')">Pos</th>
@@ -178,7 +177,6 @@ footer a:hover{color:var(--tx2)}
     <th>Team</th>
     <th>Bike</th>
     <th onclick="sortTable('laps')">Laps</th>
-    <th onclick="sortTable('best')">Best lap</th>
     <th>Gap to #38</th>
   </tr></thead><tbody id="stbody"></tbody></table></div>
 </section>
@@ -760,7 +758,6 @@ function renderStandings(){
   });
   const maxL=Math.max(...STOCK.map(t=>t.laps));
   document.getElementById('stbody').innerHTML=sorted.map(t=>{
-    const faster=t.bestS<s38.bestS&&!t.self;
     const gap=t.laps-s38.laps;
     const gapStr=t.self?'—':(gap>0?'+'+gap:gap)+'L';
     const bw=Math.round((t.laps/maxL)*110);
@@ -770,7 +767,6 @@ function renderStandings(){
 <td>${t.team}${t.self?'<span class="wtag">Winner</span>':''}</td>
 <td><span class="mbadge">${t.mfr}</span></td>
 <td><div class="lbw"><span style="min-width:34px;font-weight:${t.self?700:400};color:${t.self?'var(--green)':'inherit'}">${t.laps}</span><div class="lbar" style="width:${bw}px;background:${t.self?'var(--green)':'var(--tx3)'}"></div></div></td>
-<td class="blt">${fmtS(t.bestS)}${faster?'<span class="fmark" title="faster best lap than #38">&#9889;</span>':''}</td>
 <td class="gcol" style="color:${gap<0?'var(--tx3)':gap>0?'var(--green)':'var(--tx2)'}">${gapStr}</td>
 </tr>`;
   }).join('');
