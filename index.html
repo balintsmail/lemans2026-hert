@@ -195,6 +195,8 @@ footer a:hover{color:var(--tx2)}
   <div class="sctrl">
     <span class="lbl">SORT</span>
     <button id="srtL" class="on" onclick="sortTable('laps')">Laps</button>
+    <button id="srtB" onclick="sortTable('best')">Best lap</button>
+    <button id="srtP" onclick="sortTable('pts')">Points</button>
   </div>
   <div class="stwrap"><table><thead><tr>
     <th onclick="sortTable('pos')">Pos</th>
@@ -203,6 +205,11 @@ footer a:hover{color:var(--tx2)}
     <th>Bike</th>
     <th onclick="sortTable('laps')">Laps</th>
     <th>Gap to #38</th>
+    <th onclick="sortTable('pts')" title="World Cup points">Pts</th>
+    <th title="Pit stops">Pits</th>
+    <th title="Avg clean pit stop time">ACG avg</th>
+    <th onclick="sortTable('best')">Best lap</th>
+    <th>Riders</th>
   </tr></thead><tbody id="stbody"></tbody></table></div>
 </section>
 
@@ -792,17 +799,18 @@ const SECTOR_TIME_LOST={};
 })();
 const PIT38_H=[0.933, 1.892, 2.912, 3.876, 4.831, 5.976, 6.996, 7.955, 8.923, 9.952, 10.943, 11.905, 12.873, 13.836, 14.832, 15.767, 16.741, 17.711, 18.674, 19.412, 19.849, 20.814, 21.783, 22.706, 23.574];
 const STOCK = [
-  {pos:1,bike:38,team:'Champion-HERT by MRP',mfr:'BMW',laps:838,bestS:98.062,self:true},
-  {pos:2,bike:44,team:'Honda No Limits',mfr:'Honda',laps:827,bestS:98.262},
-  {pos:3,bike:27,team:'TRT27 AZ moto',mfr:'Honda',laps:822,bestS:98.275},
-  {pos:4,bike:41,team:'Dafy-Kaedear-RAC41',mfr:'Honda',laps:819,bestS:97.923},
-  {pos:5,bike:49,team:'Revo-M2',mfr:'Aprilia',laps:812,bestS:97.796},
-  {pos:6,bike:18,team:'Team 18 Pompiers',mfr:'Yamaha',laps:810,bestS:97.808},
-  {pos:7,bike:72,team:'JT Le Mans Sud Suzuki',mfr:'Suzuki',laps:805,bestS:99.256},
-  {pos:8,bike:77,team:'Wójcik Racing #77',mfr:'Honda',laps:798,bestS:97.376},
-  {pos:9,bike:65,team:'Motobox Kremer Racing',mfr:'Yamaha',laps:791,bestS:98.690},
-  {pos:10,bike:25,team:'Team Étoile',mfr:'BMW',laps:781,bestS:97.094},
-  {pos:11,bike:9,team:'Tecmas Minerva Oil',mfr:'BMW',laps:773,bestS:97.657}
+  {pos:1,bike:38,team:'Champion-HERT by MRP',mfr:'BMW',laps:838,bestS:98.062,self:true,pts:62,
+    riders:['KOVÁCS Bálint','BÜHN Jan','CRESSON Loris','SZÁMADÓ Máté']},
+  {pos:2,bike:44,team:'Honda No Limits',mfr:'Honda',laps:827,bestS:98.262,pts:47},
+  {pos:3,bike:27,team:'TRT27 AZ moto',mfr:'Honda',laps:822,bestS:98.275,pts:39},
+  {pos:4,bike:41,team:'Dafy-Kaedear-RAC41',mfr:'Honda',laps:819,bestS:97.923,pts:39},
+  {pos:5,bike:49,team:'Revo-M2',mfr:'Aprilia',laps:812,bestS:97.796,pts:25},
+  {pos:6,bike:18,team:'Team 18 Pompiers',mfr:'Yamaha',laps:810,bestS:97.808,pts:19},
+  {pos:7,bike:72,team:'JT Le Mans Sud Suzuki',mfr:'Suzuki',laps:805,bestS:99.256,pts:21},
+  {pos:8,bike:77,team:'Wójcik Racing #77',mfr:'Honda',laps:798,bestS:97.376,pts:20},
+  {pos:9,bike:65,team:'Motobox Kremer Racing',mfr:'Yamaha',laps:791,bestS:98.690,pts:null},
+  {pos:10,bike:25,team:'Team Étoile',mfr:'BMW',laps:781,bestS:97.094,pts:13},
+  {pos:11,bike:9,team:'Tecmas Minerva Oil',mfr:'BMW',laps:773,bestS:97.657,pts:28}
 ];
 
 // ── UTILS ────────────────────────────────────────────────────────────────────
@@ -812,31 +820,100 @@ function fmtS(s){const m=Math.floor(s/60),sc=(s%60).toFixed(3).padStart(6,'0');r
 // ── STANDINGS ────────────────────────────────────────────────────────────────
 let sortKey='laps',sortAsc=false;
 function sortTable(k){
-  if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=k==='best';}
-  document.getElementById('srtL').classList.toggle('on',k!=='best');
-  document.getElementById('srtB').classList.toggle('on',k==='best');
+  if(sortKey===k)sortAsc=!sortAsc;else{sortKey=k;sortAsc=(k==='best');}
+  document.getElementById('srtL').classList.toggle('on',k==='laps');
+  const sb=document.getElementById('srtB');if(sb)sb.classList.toggle('on',k==='best');
+  const sp=document.getElementById('srtP');if(sp)sp.classList.toggle('on',k==='pts');
   renderStandings();
 }
 function renderStandings(){
   const s38=STOCK.find(t=>t.self);
   const sorted=[...STOCK].sort((a,b)=>{
-    const va=sortKey==='best'?a.bestS:sortKey==='pos'?a.pos:a.laps;
-    const vb=sortKey==='best'?b.bestS:sortKey==='pos'?b.pos:b.laps;
+    const va=sortKey==='best'?a.bestS:sortKey==='pts'?(a.pts||0):sortKey==='pos'?a.pos:a.laps;
+    const vb=sortKey==='best'?b.bestS:sortKey==='pts'?(b.pts||0):sortKey==='pos'?b.pos:b.laps;
     return sortAsc?va-vb:vb-va;
   });
   const maxL=Math.max(...STOCK.map(t=>t.laps));
+
+  // Pit stop stats from PITSTOPS
+  const pitInfo={};
+  Object.entries(PITSTOPS).forEach(([team,stops])=>{
+    const clean=stops.filter(s=>s<95&&s>=60);
+    pitInfo[team]={count:stops.length,acg:clean.length?(clean.reduce((a,b)=>a+b)/clean.length):null};
+  });
+
+  // Per-rider stats from DATA for #38
+  const riderBest={},riderAvg={},riderStintBest={};
+  ['KOVÁCS Bálint','BÜHN Jan','CRESSON Loris','SZÁMADÓ Máté'].forEach(r=>{
+    const clean=DATA.filter(d=>d.r===r&&d.t!=null&&d.t<115).map(d=>d.t);
+    riderBest[r]=clean.length?Math.min(...clean):null;
+    riderAvg[r]=clean.length?clean.reduce((a,b)=>a+b)/clean.length:null;
+  });
+  // Best stint average per rider
+  let cs=[],cr=null;
+  DATA.forEach(d=>{
+    if(d.t==null){
+      if(cs.length>0&&cr){
+        const cl=cs.filter(t=>t<115);
+        if(cl.length>=3){const av=cl.reduce((a,b)=>a+b)/cl.length;if(!riderStintBest[cr]||av<riderStintBest[cr])riderStintBest[cr]=av;}
+      }
+      cs=[];cr=null;
+    }else{cr=d.r;cs.push(d.t);}
+  });
+  if(cs.length>0&&cr){const cl=cs.filter(t=>t<115);if(cl.length>=3){const av=cl.reduce((a,b)=>a+b)/cl.length;if(!riderStintBest[cr]||av<riderStintBest[cr])riderStintBest[cr]=av;}}
+
+  const RC38={'KOVÁCS Bálint':'#5B9BD5','BÜHN Jan':'#FFC000','CRESSON Loris':'#D63B25','SZÁMADÓ Máté':'#217346'};
+  const rShort={'KOVÁCS Bálint':'Bálint','BÜHN Jan':'Jan','CRESSON Loris':'Loris','SZÁMADÓ Máté':'Máté'};
+
   document.getElementById('stbody').innerHTML=sorted.map(t=>{
     const gap=t.laps-s38.laps;
     const gapStr=t.self?'—':(gap>0?'+'+gap:gap)+'L';
     const bw=Math.round((t.laps/maxL)*110);
-    return`<tr class="${t.self?'self':''}">
+    const pi=pitInfo[String(t.bike)]||{};
+    const pitsStr=pi.count!=null?pi.count:'—';
+    const acgStr=pi.acg!=null?pi.acg.toFixed(1)+'s':'—';
+    const bestStr=fmtS(t.bestS);
+    const ptsStr=t.pts!=null?('<strong style="color:#22d3ee">'+t.pts+'</strong>'):'—';
+    // Riders column
+    let ridersHtml='—';
+    if(t.self&&t.riders){
+      ridersHtml=t.riders.map(r=>`<span style="color:${RC38[r]||'#c0c8d8'};white-space:nowrap;font-size:.72rem">${rShort[r]||r}</span>`).join(' · ');
+    }
+    const mainRow=`<tr class="${t.self?'self':''}">
 <td><span class="pb ${t.pos===1?'pb1':''}">${t.pos}</span></td>
 <td><span class="bn">#${t.bike}</span></td>
 <td>${t.team}${t.self?'<span class="wtag">Winner</span>':''}</td>
 <td><span class="mbadge">${t.mfr}</span></td>
 <td><div class="lbw"><span style="min-width:34px;font-weight:${t.self?700:400};color:${t.self?'var(--green)':'inherit'}">${t.laps}</span><div class="lbar" style="width:${bw}px;background:${t.self?'var(--green)':'var(--tx3)'}"></div></div></td>
 <td class="gcol" style="color:${gap<0?'var(--tx3)':gap>0?'var(--green)':'var(--tx2)'}">${gapStr}</td>
+<td style="text-align:center">${ptsStr}</td>
+<td style="text-align:center;color:var(--tx2)">${pitsStr}</td>
+<td style="text-align:center;color:var(--tx2)">${acgStr}</td>
+<td style="font-size:.79rem;color:var(--tx2)">${bestStr}</td>
+<td>${ridersHtml}</td>
 </tr>`;
+    // For #38: add rider detail sub-row
+    if(!t.self)return mainRow;
+    const riderRows=t.riders.map(r=>{
+      const col=RC38[r]||'#c0c8d8';
+      const best=riderBest[r]!=null?fmtS(riderBest[r]):'—';
+      const avg=riderAvg[r]!=null?fmtS(riderAvg[r]):'—';
+      const stb=riderStintBest[r]!=null?fmtS(riderStintBest[r]):'—';
+      return`<td colspan="3" style="padding:4px 8px;border-right:1px solid #1e2233"><span style="color:${col};font-weight:700;font-size:.79rem">${rShort[r]}</span></td>`
+        +`<td style="font-size:.79rem;padding:4px 8px;color:#c0c8d8">${best}</td>`
+        +`<td style="font-size:.79rem;padding:4px 8px;color:#c0c8d8">${avg}</td>`
+        +`<td colspan="6" style="font-size:.79rem;padding:4px 8px;color:#22d3ee">Best stint: ${stb}</td>`;
+    }).map(r=>`<tr style="background:rgba(91,155,213,.06)">${r}</tr>`).join('');
+    const subRow=`<tr style="background:rgba(91,155,213,.04)"><td colspan="11" style="padding:0">
+<table style="width:100%;border-collapse:collapse">
+<thead><tr style="background:rgba(0,0,0,.2)">
+<td colspan="3" style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Rider</td>
+<td style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Best lap</td>
+<td style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Clean avg</td>
+<td colspan="6" style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Best stint avg</td>
+</tr></thead><tbody>${riderRows}</tbody></table>
+</td></tr>`;
+    return mainRow+subRow;
   }).join('');
 }
 
