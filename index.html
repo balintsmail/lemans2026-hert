@@ -541,7 +541,7 @@ footer a:hover{color:var(--tx2)}
 
 <section id="pitstops3">
   <p class="stag">Pit stops · fuel only (&lt;1:35)</p>
-  <h2>Fuel-Only Pit Stops</h2>
+  <h2>Fuel-Only Pit Stops (fastest first)</h2>
   <p class="hsub" style="margin-bottom:12px">Stops under 1:35 — fuel only, no wheel change. Toggle avg line per team.</p>
   <div class="ctrl">
     <span class="lbl">TEAMS</span>
@@ -552,15 +552,15 @@ footer a:hover{color:var(--tx2)}
     <button id="bAvg8" class="on" onclick="toggleAvg8()">Show avg</button>
     &nbsp;
     <span class="lbl">ORDER</span>
-    <button id="bSort8chrono" class="on" onclick="setSort8('chrono')">Race order</button>
-    <button id="bSort8asc" onclick="setSort8('asc')">Fastest first</button>
+    <button id="bSort8chrono" onclick="setSort8('chrono')">Race order</button>
+    <button id="bSort8asc" class="on" onclick="setSort8('asc')">Fastest first</button>
   </div>
   <div class="cwrap"><canvas id="c8"></canvas></div>
 </section>
 
 <section id="pitstops4">
   <p class="stag">Pit stops · wheel change (&#8805;1:35)</p>
-  <h2>Wheel-Change Pit Stops</h2>
+  <h2>Wheel-Change Pit Stops (fastest first)</h2>
   <p class="hsub" style="margin-bottom:12px">Stops at or above 1:35 — includes tyre change. Toggle avg line per team.</p>
   <div class="ctrl">
     <span class="lbl">TEAMS</span>
@@ -571,8 +571,8 @@ footer a:hover{color:var(--tx2)}
     <button id="bAvg9" class="on" onclick="toggleAvg9()">Show avg</button>
     &nbsp;
     <span class="lbl">ORDER</span>
-    <button id="bSort9chrono" class="on" onclick="setSort9('chrono')">Race order</button>
-    <button id="bSort9asc" onclick="setSort9('asc')">Fastest first</button>
+    <button id="bSort9chrono" onclick="setSort9('chrono')">Race order</button>
+    <button id="bSort9asc" class="on" onclick="setSort9('asc')">Fastest first</button>
   </div>
   <div class="cwrap"><canvas id="c9"></canvas></div>
 </section>
@@ -921,7 +921,7 @@ const cv=document.getElementById('c');
 const cx=cv.getContext('2d');
 let PAD,W,H,hitmap=[];
 const DPR=window.devicePixelRatio||1;
-let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49,77]),hiddenTeams2=new Set(),hiddenTeams2b=new Set(),hiddenTeams3=new Set(),hiddenTeams4=new Set(),hiddenTeams7=new Set(),hiddenTeams8=new Set(),hiddenTeams9=new Set(),showConn3=true,lapMin2=1,lapMax2=838,lapMin2b=1,lapMax2b=559,lapMin3=1,lapMax3=838,gapMode='raw',hiddenTeams5=new Set(),showAvg4=true,showAvg7=true,showAvg8=true,showAvg9=true,sortMode8='chrono',sortMode9='chrono';
+let filter='all',showAvg=false,showDots=true,showStintAvg=true,hidden=new Set(),hiddenTeams=new Set([9,25,41,49,77]),hiddenTeams2=new Set(),hiddenTeams2b=new Set(),hiddenTeams3=new Set(),hiddenTeams4=new Set(),hiddenTeams7=new Set(),hiddenTeams8=new Set(),hiddenTeams9=new Set(),showConn3=true,lapMin2=1,lapMax2=838,lapMin2b=1,lapMax2b=559,lapMin3=1,lapMax3=838,gapMode='raw',hiddenTeams5=new Set(),showAvg4=true,showAvg7=true,showAvg8=true,showAvg9=true,sortMode8='asc',sortMode9='asc';
 let filterSC=true,hiddenPOS=new Set(),lapMinOTLT=1,lapMaxOTLT=838,hiddenRidersOTLT=new Set();
 
 function drawSCBands(ctx,pxF,Pt,ph,H,Pb){
@@ -3508,4 +3508,4 @@ window.addEventListener('resize',resizeRT);
 <div id="secTooltip"></div>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
