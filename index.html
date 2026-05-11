@@ -191,13 +191,6 @@ footer a:hover{color:var(--tx2)}
 <section id="standings">
   <p class="stag">FIM EWC 2026 · Stock Superbike (SST)</p>
   <h2>Stock standings</h2>
-  <p class="hsub" style="margin-bottom:12px">Click headers to sort.</p>
-  <div class="sctrl">
-    <span class="lbl">SORT</span>
-    <button id="srtL" class="on" onclick="sortTable('laps')">Laps</button>
-    <button id="srtB" onclick="sortTable('best')">Best lap</button>
-    <button id="srtP" onclick="sortTable('pts')">Points</button>
-  </div>
   <div class="stwrap"><table><thead><tr>
     <th onclick="sortTable('pos')">Pos</th>
     <th>#</th>
@@ -209,7 +202,6 @@ footer a:hover{color:var(--tx2)}
     <th title="Pit stops">Pits</th>
     <th title="Avg clean pit stop time">ACG avg</th>
     <th onclick="sortTable('best')">Best lap</th>
-    <th>Riders</th>
   </tr></thead><tbody id="stbody"></tbody></table></div>
 </section>
 
@@ -874,11 +866,6 @@ function renderStandings(){
     const acgStr=pi.acg!=null?pi.acg.toFixed(1)+'s':'—';
     const bestStr=fmtS(t.bestS);
     const ptsStr=t.pts!=null?('<strong style="color:#22d3ee">'+t.pts+'</strong>'):'—';
-    // Riders column
-    let ridersHtml='—';
-    if(t.self&&t.riders){
-      ridersHtml=t.riders.map(r=>`<span style="color:${RC38[r]||'#c0c8d8'};white-space:nowrap;font-size:.72rem">${rShort[r]||r}</span>`).join(' · ');
-    }
     const mainRow=`<tr class="${t.self?'self':''}">
 <td><span class="pb ${t.pos===1?'pb1':''}">${t.pos}</span></td>
 <td><span class="bn">#${t.bike}</span></td>
@@ -890,30 +877,8 @@ function renderStandings(){
 <td style="text-align:center;color:var(--tx2)">${pitsStr}</td>
 <td style="text-align:center;color:var(--tx2)">${acgStr}</td>
 <td style="font-size:.79rem;color:var(--tx2)">${bestStr}</td>
-<td>${ridersHtml}</td>
 </tr>`;
-    // For #38: add rider detail sub-row
-    if(!t.self)return mainRow;
-    const riderRows=t.riders.map(r=>{
-      const col=RC38[r]||'#c0c8d8';
-      const best=riderBest[r]!=null?fmtS(riderBest[r]):'—';
-      const avg=riderAvg[r]!=null?fmtS(riderAvg[r]):'—';
-      const stb=riderStintBest[r]!=null?fmtS(riderStintBest[r]):'—';
-      return`<td colspan="3" style="padding:4px 8px;border-right:1px solid #1e2233"><span style="color:${col};font-weight:700;font-size:.79rem">${rShort[r]}</span></td>`
-        +`<td style="font-size:.79rem;padding:4px 8px;color:#c0c8d8">${best}</td>`
-        +`<td style="font-size:.79rem;padding:4px 8px;color:#c0c8d8">${avg}</td>`
-        +`<td colspan="6" style="font-size:.79rem;padding:4px 8px;color:#22d3ee">Best stint: ${stb}</td>`;
-    }).map(r=>`<tr style="background:rgba(91,155,213,.06)">${r}</tr>`).join('');
-    const subRow=`<tr style="background:rgba(91,155,213,.04)"><td colspan="11" style="padding:0">
-<table style="width:100%;border-collapse:collapse">
-<thead><tr style="background:rgba(0,0,0,.2)">
-<td colspan="3" style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Rider</td>
-<td style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Best lap</td>
-<td style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Clean avg</td>
-<td colspan="6" style="padding:3px 8px;font-size:.68rem;color:#64748b;text-transform:uppercase">Best stint avg</td>
-</tr></thead><tbody>${riderRows}</tbody></table>
-</td></tr>`;
-    return mainRow+subRow;
+    return mainRow;
   }).join('');
 }
 
@@ -3536,3 +3501,4 @@ window.addEventListener('resize',resizeRT);
 <div id="secTooltip"></div>
 </body>
 </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
