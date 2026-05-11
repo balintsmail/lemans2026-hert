@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>if(location.search.includes("archive"))document.documentElement.classList.add("archive-mode");</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>#38 Champion-HERT · Le Mans 24H Motos 2026</title>
@@ -88,6 +89,20 @@ tr.self td:first-child{border-left:2px solid var(--green);padding-left:10px}
 .pblabel{font-size:.62rem;color:var(--tx3);margin-bottom:5px;display:flex;justify-content:space-between}
 .pbbg{background:var(--bg3);border-radius:2px;height:5px}
 .pbfill{height:5px;border-radius:2px}
+
+/* Archive mode */
+html.archive-mode .chapter-title,
+html.archive-mode nav,
+html.archive-mode footer { display:none }
+html.archive-mode section { display:none }
+html.archive-mode #archive-wrap { display:block !important }
+html.archive-mode #archive-wrap section { display:block }
+.archive-back { display:none; padding:16px 40px; border-bottom:1px solid #1e2233; background:#12141c }
+html.archive-mode .archive-back { display:block }
+/* Rider boxes full width */
+#otlt-stats { display:grid !important; grid-template-columns:repeat(4,1fr); gap:12px }
+#sector_rider_stats { display:grid !important; grid-template-columns:repeat(4,1fr); gap:12px }
+
 footer{text-align:center;padding:24px;font-size:.7rem;color:var(--tx3);border-top:1px solid var(--bd);margin-top:40px}
 footer a:hover{color:var(--tx2)}
 .dslider{position:relative;width:200px;height:18px;display:inline-flex;align-items:center;vertical-align:middle;margin:0 4px}
@@ -222,11 +237,11 @@ footer a:hover{color:var(--tx2)}
   <div class="cwrap"><canvas id="c5"></canvas></div>
 </section>
 
+<div id="archive-wrap" style="display:none">
 <div class="chapter-title">
   <h2>Lap Times</h2>
   <p class="chapter-sub">Stint averages · lap-by-lap pace · performance bands</p>
 </div>
-
 <section id="laptimes">
   <p class="stag">Chronological · all 838 laps</p>
   <h2>Lap times</h2>
@@ -258,34 +273,7 @@ footer a:hover{color:var(--tx2)}
     <div class="li"><span style="display:inline-block;width:20px;height:1px;border-top:1.5px dashed rgba(200,200,200,.4);margin-right:2px;vertical-align:middle"></span>Comparison avg</div>
   </div>
 </section>
-
-<section id="stintavg">
-  <p class="stag">Comparison · all 838 laps</p>
-  <h2>Stint Average vs Other Teams</h2>
-  <p class="hsub" style="margin-bottom:12px">Stint averages by lap position. #38 in white, comparison teams in colour. No individual laps shown.</p>
-  <div class="ctrl">
-    <span class="lbl">COMPARE</span>
-    <span id="ttogs3"></span>
-    &nbsp;
-    <span class="lbl">OVERLAY</span>
-    <button id="bConn3" class="on" onclick="toggleConn3()">Connectors</button>
-    &nbsp;
-    <span class="lbl">RACE TIME</span>
-    <span id="sLbl3" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill3"></div><input type="range" id="dsMin3" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMax3" min="0" max="24" value="24" step="0.5"></div>
-  </div>
-  <div class="cwrap"><canvas id="c3"></canvas></div>
-  <div class="lgnd">
-    <div class="li"><span style="display:inline-block;width:20px;height:2px;background:#fff;margin-right:4px;vertical-align:middle"></span>#38 HERT stint avg</div>
-    <div class="li"><span style="display:inline-block;width:20px;height:2px;background:rgba(200,200,200,.5);margin-right:4px;vertical-align:middle"></span>Comparison stint avg</div>
-  </div>
-</section>
-
-<div class="chapter-title">
-  <h2>Stints</h2>
-  <p class="chapter-sub">Stint summary tables · early-race breakdown</p>
-</div>
-
+<div class="chapter-title"><h2>Stints</h2><p class="chapter-sub">Stint summary tables · early-race breakdown</p></div>
 <section id="stints">
   <p class="stag">Performance · ranked by pace</p>
   <h2>Stint ranking</h2>
@@ -306,27 +294,43 @@ footer a:hover{color:var(--tx2)}
   <div class="cwrap" style="height:560px"><canvas id="c2"></canvas></div>
   <div class="lgnd" id="lgnd2"></div>
 </section>
-
-<section id="stints2">
-  <p class="stag">Performance · ranked by pace · first 16h</p>
-  <h2>Stint ranking (0h – 16h)</h2>
-  <p class="hsub" style="margin-bottom:12px">Same as above — defaulting to 0–16h. Each point = one stint, ordered fastest→slowest.</p>
-  <div class="ctrl">
+<div class="chapter-title">
+  <h2>Traffic &amp; Overtakes</h2>
+  <p class="chapter-sub">Overtakes · lap-resolution &amp; sector-resolution traffic</p>
+</div>
+<section id="traffic">
+  <p class="stag">Race · traffic</p>
+  <h2>Traffic Ahead per Lap</h2>
+  <p class="hsub" style="margin-bottom:8px">All 59 competitors. Dot colour = our rider (blue=Bálint, red=Loris, green=Máté, yellow=Jan). <strong style="color:#fff">White dot</strong> = overtake happened that lap. <strong>Large coloured dot</strong> = strict catch-up (pace diff > gap). <strong>Small fading dot</strong> = approaching (opacity = proximity).</p>
+  <p class="hsub" style="margin-bottom:8px;font-size:.72rem;color:#808999"><strong style="color:#9ca3af">How it's calculated:</strong> Each dot = one competitor within range during one of our laps. Dot colour = our rider. <strong style="color:#9ca3af">Paces</strong> = per-team stint median (each team's own rider stints), laps within 5% of stint fastest. <strong style="color:#9ca3af">Hold-up</strong> = competitor's pace slower than ours AND pace advantage > current gap. <strong style="color:#fff">White dot</strong> = gap ≤ 1.5 s then reset ≥ 5 s (position change). <strong style="color:#9ca3af">Excluded:</strong> pit laps, out-laps, SC periods (yellow bands), laps with no timing data.</p>
+  <div class="ctrl" style="margin-bottom:8px">
+    <span class="lbl">FILTER</span>
+    <span class="rtog on" id="trfilt_all" onclick="setTrafficFilter('all')">All Traffic</span>
+    <span class="rtog" id="trfilt_strict" onclick="setTrafficFilter('strict')">Hold-ups Only</span>
+    &nbsp;
     <span class="lbl">RIDERS</span>
-    <span id="rtogs2b"></span>
-    &nbsp;
-    <span class="lbl">COMPARE</span>
-    <span id="ttogs2b"></span>
-    &nbsp;
-    <button id="bSCFilt2b" class="on" onclick="toggleSCFilt()">Excl. SC laps</button>
-    &nbsp;
-    <span class="lbl">RACE TIME</span>
-    <span id="sLbl2b" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–16h</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill2b"></div><input type="range" id="dsMin2b" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMax2b" min="0" max="24" value="16" step="0.5"></div>
+    <span class="rtog on" id="tr_B" onclick="toggleTrafficRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
+    <span class="rtog on" id="tr_L" onclick="toggleTrafficRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
+    <span class="rtog on" id="tr_M" onclick="toggleTrafficRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
+    <span class="rtog on" id="tr_J" onclick="toggleTrafficRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
   </div>
-  <div class="cwrap" style="height:560px"><canvas id="c6"></canvas></div>
-  <div class="lgnd" id="lgnd2b"></div>
+  <div class="ctrl" style="margin-bottom:8px">
+    <span class="lbl">RACE TIME</span>
+    <span id="sLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillTR"></div><input type="range" id="dsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxTR" min="0" max="24" value="24" step="0.5"></div>
+  </div>
+  <div class="ctrl" style="margin-bottom:8px">
+    <span class="lbl">APPROACH RANGE</span>
+    <span id="trGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
+    <input type="range" id="trGapSlider" min="1" max="30" value="10" step="1"
+      style="width:160px;vertical-align:middle;accent-color:#22d3ee"
+      oninput="trGapMax=+this.value;document.getElementById('trGapLbl').textContent=this.value+'s';draw_traffic()">
+  </div>
+  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_traffic"></canvas></div>
+  <div id="rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
+
 </section>
+</div>
 
 <div class="chapter-title">
   <h2>Rider Performance</h2>
@@ -369,19 +373,61 @@ footer a:hover{color:var(--tx2)}
   </div>
   <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_rider"></canvas></div>
 </section>
-
 <section id="riders">
   <p class="stag">#38 internal · rider analysis</p>
   <h2>Rider split</h2>
   <p class="hsub" style="margin-bottom:16px">Stats from clean laps (&lt;115s). Pace bar = average relative to fastest team member.</p>
   <div class="rgrid" id="rgrid"></div>
 </section>
-
+<section id="stintavg">
+  <p class="stag">Comparison · all 838 laps</p>
+  <h2>Stint Average vs Other Teams</h2>
+  <p class="hsub" style="margin-bottom:12px">Stint averages by lap position. #38 in white, comparison teams in colour. No individual laps shown.</p>
+  <div class="ctrl">
+    <span class="lbl">COMPARE</span>
+    <span id="ttogs3"></span>
+    &nbsp;
+    <span class="lbl">OVERLAY</span>
+    <button id="bConn3" class="on" onclick="toggleConn3()">Connectors</button>
+    &nbsp;
+    <span class="lbl">RACE TIME</span>
+    <span id="sLbl3" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill3"></div><input type="range" id="dsMin3" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMax3" min="0" max="24" value="24" step="0.5"></div>
+  </div>
+  <div class="cwrap"><canvas id="c3"></canvas></div>
+  <div class="lgnd">
+    <div class="li"><span style="display:inline-block;width:20px;height:2px;background:#fff;margin-right:4px;vertical-align:middle"></span>#38 HERT stint avg</div>
+    <div class="li"><span style="display:inline-block;width:20px;height:2px;background:rgba(200,200,200,.5);margin-right:4px;vertical-align:middle"></span>Comparison stint avg</div>
+  </div>
+</section>
+<div class="chapter-title">
+  <h2>Stints</h2>
+  <p class="chapter-sub">Stint summary tables · early-race breakdown</p>
+</div>
+<section id="stints2">
+  <p class="stag">Performance · ranked by pace · first 16h</p>
+  <h2>Stint ranking (0h – 16h)</h2>
+  <p class="hsub" style="margin-bottom:12px">Same as above — defaulting to 0–16h. Each point = one stint, ordered fastest→slowest.</p>
+  <div class="ctrl">
+    <span class="lbl">RIDERS</span>
+    <span id="rtogs2b"></span>
+    &nbsp;
+    <span class="lbl">COMPARE</span>
+    <span id="ttogs2b"></span>
+    &nbsp;
+    <button id="bSCFilt2b" class="on" onclick="toggleSCFilt()">Excl. SC laps</button>
+    &nbsp;
+    <span class="lbl">RACE TIME</span>
+    <span id="sLbl2b" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–16h</span>
+    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFill2b"></div><input type="range" id="dsMin2b" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMax2b" min="0" max="24" value="16" step="0.5"></div>
+  </div>
+  <div class="cwrap" style="height:560px"><canvas id="c6"></canvas></div>
+  <div class="lgnd" id="lgnd2b"></div>
+</section>
 <div class="chapter-title">
   <h2>Traffic &amp; Overtakes</h2>
   <p class="chapter-sub">Overtakes · lap-resolution &amp; sector-resolution traffic</p>
 </div>
-
 <section id="overtakes">
   <p class="stag">Race · overtaking</p>
   <h2>Overtakes per Lap</h2>
@@ -390,7 +436,6 @@ footer a:hover{color:var(--tx2)}
   </div>
   <div class="cwrap" style="height:300px"><canvas id="c_ot"></canvas></div>
 </section>
-
 <section id="otlap">
   <p class="stag">Race · overtaking</p>
   <h2>Lap Time by Overtake Count</h2>
@@ -406,38 +451,6 @@ footer a:hover{color:var(--tx2)}
   <div class="cwrap" style="height:360px"><canvas id="c_otlt"></canvas></div>
   <div id="otlt-stats" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px"></div>
 </section>
-
-<section id="traffic">
-  <p class="stag">Race · traffic</p>
-  <h2>Traffic Ahead per Lap</h2>
-  <p class="hsub" style="margin-bottom:8px">All 59 competitors. Dot colour = our rider (blue=Bálint, red=Loris, green=Máté, yellow=Jan). <strong style="color:#fff">White dot</strong> = overtake happened that lap. <strong>Large coloured dot</strong> = strict catch-up (pace diff > gap). <strong>Small fading dot</strong> = approaching (opacity = proximity).</p>
-  <p class="hsub" style="margin-bottom:8px;font-size:.72rem;color:#808999"><strong style="color:#9ca3af">How it's calculated:</strong> Each dot = one competitor within range during one of our laps. Dot colour = our rider. <strong style="color:#9ca3af">Paces</strong> = per-team stint median (each team's own rider stints), laps within 5% of stint fastest. <strong style="color:#9ca3af">Hold-up</strong> = competitor's pace slower than ours AND pace advantage > current gap. <strong style="color:#fff">White dot</strong> = gap ≤ 1.5 s then reset ≥ 5 s (position change). <strong style="color:#9ca3af">Excluded:</strong> pit laps, out-laps, SC periods (yellow bands), laps with no timing data.</p>
-  <div class="ctrl" style="margin-bottom:8px">
-    <span class="lbl">FILTER</span>
-    <span class="rtog on" id="trfilt_all" onclick="setTrafficFilter('all')">All Traffic</span>
-    <span class="rtog" id="trfilt_strict" onclick="setTrafficFilter('strict')">Hold-ups Only</span>
-    &nbsp;
-    <span class="lbl">RIDERS</span>
-    <span class="rtog on" id="tr_B" onclick="toggleTrafficRider('B')"><span class="dot" style="background:#5B9BD5"></span>Bálint</span>
-    <span class="rtog on" id="tr_L" onclick="toggleTrafficRider('L')"><span class="dot" style="background:#D63B25"></span>Loris</span>
-    <span class="rtog on" id="tr_M" onclick="toggleTrafficRider('M')"><span class="dot" style="background:#217346"></span>Máté</span>
-    <span class="rtog on" id="tr_J" onclick="toggleTrafficRider('J')"><span class="dot" style="background:#FFC000"></span>Jan</span>
-  </div>
-  <div class="ctrl" style="margin-bottom:8px">
-    <span class="lbl">RACE TIME</span>
-    <span id="sLblTR" style="font-size:.68rem;color:var(--tx2);min-width:76px">0h–24h</span>
-    <div class="dslider"><div class="ds-track"></div><div class="ds-fill" id="dsFillTR"></div><input type="range" id="dsMinTR" min="0" max="24" value="0" step="0.5"><input type="range" id="dsMaxTR" min="0" max="24" value="24" step="0.5"></div>
-  </div>
-  <div class="ctrl" style="margin-bottom:8px">
-    <span class="lbl">APPROACH RANGE</span>
-    <span id="trGapLbl" style="font-size:.75rem;color:var(--tx2);min-width:38px;display:inline-block">10s</span>
-    <input type="range" id="trGapSlider" min="1" max="30" value="10" step="1"
-      style="width:160px;vertical-align:middle;accent-color:#22d3ee"
-      oninput="trGapMax=+this.value;document.getElementById('trGapLbl').textContent=this.value+'s';draw_traffic()">
-  </div>
-  <div class="cwrap" style="height:auto;overflow:visible"><canvas id="c_traffic"></canvas></div>
-  <div id="rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
-
 <section id="sector_traffic">
   <p class="stag">EWC timing · sector analysis</p>
   <h2>Traffic Ahead — Sector Resolution</h2>
@@ -486,19 +499,17 @@ footer a:hover{color:var(--tx2)}
   <div class="sector-scrubber">
     <div class="ds-track"></div>
     <div class="ds-fill" id="sdsFillTR"></div>
-    <input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.5">
-    <input type="range" id="sdsMaxTR" min="0" max="24" value="2.5" step="0.5">
+    <input type="range" id="sdsMinTR" min="0" max="24" value="0" step="0.01">
+    <input type="range" id="sdsMaxTR" min="0" max="24" value="2.5" step="0.01">
   </div>
   <div id="sector_rider_stats" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:16px"></div>
 
-</section>
 </section>
 
 <div class="chapter-title">
   <h2>Pit Stops &amp; Fuel</h2>
   <p class="chapter-sub">Pit stop analysis · fuel consumption · tyre data · run table</p>
 </div>
-
 <section id="pitstops">
   <p class="stag">Pit stops · all 5 teams</p>
   <h2>Pit Stop Times</h2>
@@ -566,7 +577,6 @@ footer a:hover{color:var(--tx2)}
   </div>
   <div class="cwrap"><canvas id="c9"></canvas></div>
 </section>
-
 <section id="fuelchart">
   <p class="stag">MoTeC · fuel</p>
   <h2>Fuel Consumption</h2>
@@ -574,32 +584,11 @@ footer a:hover{color:var(--tx2)}
   <div class="cwrap"><canvas id="c_fuel"></canvas></div>
 </section>
 
-<section id="runtable">
+<section id="fuelout">
   <p class="stag">Pit wall · run table</p>
-  <h2>Run Table — Weather · Tyres · Fuel</h2>
-  <p class="hsub" style="margin-bottom:12px">Manually recorded pit-wall data. 14 stints · 14 Apr 2026 · 15:00 → 03:55. Tyre pressures recorded at end of stint (selected stints only). Fuel out = litres remaining when stopped.</p>
+  <h2>Fuel Out</h2>
+  <p class="hsub" style="margin-bottom:12px">Fuel remaining in tank at each pit stop. Tank size: 24 L. Lower = more laps on tank.</p>
 
-  <div class="cwrap" style="margin-bottom:24px;height:auto">
-    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Weather — Air Temp · Track Temp · Wind Speed</p>
-    <canvas id="rt_c1" height="300"></canvas>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#22d3ee"></div>Air Temp (°C)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>Track Temp (°C)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#4169E1"></div>Wind Speed km/h (right axis)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated</div>
-    </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:6px;font-style:italic">Missing stints shown as line breaks. S25 (14:35) has no weather data recorded.</p>
-  </div>
-
-  <div class="cwrap" style="margin-bottom:24px;height:auto">
-    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Tyre Pressures — End of Stint (bar)</p>
-    <canvas id="rt_c2" height="300"></canvas>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>Front End (bar)</div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#a78bfa"></div>Rear End (bar)</div>
-    </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Only stints with recorded end pressures shown. Front Start S1 = 2.30 bar · Rear Start S1 = 1.40 bar</p>
-  </div>
 
   <div class="cwrap" style="height:auto">
     <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Fuel Out — Remaining in Tank at Pit Stop (L)</p>
@@ -615,35 +604,60 @@ footer a:hover{color:var(--tx2)}
       <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#fbbf24"></div>Fuel Out (L) — left axis 0–4 L</div>
       <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:12px;height:12px;border-radius:50%;background:#a5f3fc"></div>Laps per stint — right axis 0–40, circles coloured by rider</div>
     </div>
-    <p style="font-size:.72rem;color:var(--tx2);margin-top:8px;font-style:italic">Tank size: 24 L. Fuel Out = fuel remaining when stopped. Lower = more laps on tank.</p>
-  </div>
 </section>
-
 <div class="chapter-title">
   <h2>Weather &amp; Telemetry</h2>
   <p class="chapter-sub">MoTeC engine data · track &amp; air temperature</p>
 </div>
 
+<section id="weather_chart">
+  <p class="stag">Pit wall · weather data</p>
+  <h2>Weather — Air Temp · Track Temp · Wind Speed</h2>
+  <p class="hsub" style="margin-bottom:8px">Manually recorded pit-wall data. Missing stints shown as line breaks.</p>
+
+
+  <div class="cwrap" style="margin-bottom:24px;height:auto">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Weather — Air Temp · Track Temp · Wind Speed</p>
+    <canvas id="rt_c1" height="300"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#22d3ee"></div>Air Temp (°C)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>Track Temp (°C)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:18px;height:2px;background:#4169E1"></div>Wind Speed km/h (right axis)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#fbbf24;outline:1px dashed #fbbf24;outline-offset:1px"></div>Interpolated</div>
+    </div>
+</section>
+
+<section id="tyres_chart">
+  <p class="stag">Pit wall · tyre data</p>
+  <h2>Tyre Pressures — End of Stint</h2>
+  <p class="hsub" style="margin-bottom:8px">End-of-stint pressures (bar). Only stints with recorded data shown.</p>
+
+
+  <div class="cwrap" style="margin-bottom:24px;height:auto">
+    <p class="hsub" style="margin-bottom:8px;font-weight:600;color:var(--tx2)">Tyre Pressures — End of Stint (bar)</p>
+    <canvas id="rt_c2" height="300"></canvas>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px">
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#4ade80"></div>Front End (bar)</div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:50%;background:#a78bfa"></div>Rear End (bar)</div>
+    </div>
+</section>
 <section id="oiltemp">
   <p class="stag">MoTeC · engine</p>
   <h2>Oil Temperature</h2>
   <p class="hsub" style="margin-bottom:12px">Min/Max per lap + dashed average. Band = range within lap. SC periods shaded yellow. Laps without MoTeC data shown as gaps.</p>
   <div class="cwrap"><canvas id="c_oil"></canvas></div>
 </section>
-
 <section id="cooltemp">
   <p class="stag">MoTeC · engine</p>
   <h2>Coolant Temperature</h2>
   <p class="hsub" style="margin-bottom:12px">Min/Max per lap. Band = range within lap. SC periods shaded yellow.</p>
   <div class="cwrap"><canvas id="c_cool"></canvas></div>
 </section>
-
 <footer>
+  <p><a href="?archive" style="color:var(--tx3)">Archive charts</a></p>
   <p>Data: FIM EWC official timing — 24 Heures Motos Le Mans 2026 &middot; <a href="https://www.fimewc.com">fimewc.com</a></p>
   <p style="margin-top:5px">Analysis: Claude / Cowork &middot; #38 Champion-HERT powered by MRP</p>
 </footer>
-
-<div id="tip"><div class="tl" id="tl"></div><div class="tr" id="tr"></div><div class="tt" id="tt"></div><div class="tn" id="tn"></div></div>
 
 <script>
 const DATA = [{"lap":1,"t":108.885,"r":"KOVÁCS Bálint"},{"lap":2,"t":99.345,"r":"KOVÁCS Bálint"},{"lap":3,"t":98.916,"r":"KOVÁCS Bálint"},{"lap":4,"t":98.435,"r":"KOVÁCS Bálint"},{"lap":5,"t":98.431,"r":"KOVÁCS Bálint"},{"lap":6,"t":98.505,"r":"KOVÁCS Bálint"},{"lap":7,"t":98.613,"r":"KOVÁCS Bálint"},{"lap":8,"t":98.293,"r":"KOVÁCS Bálint"},{"lap":9,"t":98.426,"r":"KOVÁCS Bálint"},{"lap":10,"t":98.982,"r":"KOVÁCS Bálint"},{"lap":11,"t":99.539,"r":"KOVÁCS Bálint"},{"lap":12,"t":98.514,"r":"KOVÁCS Bálint"},{"lap":13,"t":98.868,"r":"KOVÁCS Bálint"},{"lap":14,"t":98.859,"r":"KOVÁCS Bálint"},{"lap":15,"t":103.705,"r":"KOVÁCS Bálint"},{"lap":16,"t":99.183,"r":"KOVÁCS Bálint"},{"lap":17,"t":98.577,"r":"KOVÁCS Bálint"},{"lap":18,"t":99.192,"r":"KOVÁCS Bálint"},{"lap":19,"t":98.7,"r":"KOVÁCS Bálint"},{"lap":20,"t":99.001,"r":"KOVÁCS Bálint"},{"lap":21,"t":98.946,"r":"KOVÁCS Bálint"},{"lap":22,"t":99.078,"r":"KOVÁCS Bálint"},{"lap":23,"t":98.685,"r":"KOVÁCS Bálint"},{"lap":24,"t":98.613,"r":"KOVÁCS Bálint"},{"lap":25,"t":98.746,"r":"KOVÁCS Bálint"},{"lap":26,"t":98.796,"r":"KOVÁCS Bálint"},{"lap":27,"t":98.488,"r":"KOVÁCS Bálint"},{"lap":28,"t":99.494,"r":"KOVÁCS Bálint"},{"lap":29,"t":98.683,"r":"KOVÁCS Bálint"},{"lap":30,"t":101.436,"r":"KOVÁCS Bálint"},{"lap":31,"t":100.444,"r":"KOVÁCS Bálint"},{"lap":32,"t":98.806,"r":"KOVÁCS Bálint"},{"lap":33,"t":null,"r":"KOVÁCS Bálint"},{"lap":34,"t":165.535,"r":"CRESSON Loris"},{"lap":35,"t":99.766,"r":"CRESSON Loris"},{"lap":36,"t":100.68,"r":"CRESSON Loris"},{"lap":37,"t":99.589,"r":"CRESSON Loris"},{"lap":38,"t":101.304,"r":"CRESSON Loris"},{"lap":39,"t":99.428,"r":"CRESSON Loris"},{"lap":40,"t":99.94,"r":"CRESSON Loris"},{"lap":41,"t":100.648,"r":"CRESSON Loris"},{"lap":42,"t":99.191,"r":"CRESSON Loris"},{"lap":43,"t":98.768,"r":"CRESSON Loris"},{"lap":44,"t":98.707,"r":"CRESSON Loris"},{"lap":45,"t":98.909,"r":"CRESSON Loris"},{"lap":46,"t":98.821,"r":"CRESSON Loris"},{"lap":47,"t":99.261,"r":"CRESSON Loris"},{"lap":48,"t":100.03,"r":"CRESSON Loris"},{"lap":49,"t":98.891,"r":"CRESSON Loris"},{"lap":50,"t":98.763,"r":"CRESSON Loris"},{"lap":51,"t":100.388,"r":"CRESSON Loris"},{"lap":52,"t":99.07,"r":"CRESSON Loris"},{"lap":53,"t":99.501,"r":"CRESSON Loris"},{"lap":54,"t":99.526,"r":"CRESSON Loris"},{"lap":55,"t":99.688,"r":"CRESSON Loris"},{"lap":56,"t":99.25,"r":"CRESSON Loris"},{"lap":57,"t":98.702,"r":"CRESSON Loris"},{"lap":58,"t":100.163,"r":"CRESSON Loris"},{"lap":59,"t":99.037,"r":"CRESSON Loris"},{"lap":60,"t":99.104,"r":"CRESSON Loris"},{"lap":61,"t":100.205,"r":"CRESSON Loris"},{"lap":62,"t":99.69,"r":"CRESSON Loris"},{"lap":63,"t":98.903,"r":"CRESSON Loris"},{"lap":64,"t":98.771,"r":"CRESSON Loris"},{"lap":65,"t":99.411,"r":"CRESSON Loris"},{"lap":66,"t":98.635,"r":"CRESSON Loris"},{"lap":67,"t":null,"r":"CRESSON Loris"},{"lap":68,"t":185.121,"r":"SZÁMADÓ Máté"},{"lap":69,"t":100.181,"r":"SZÁMADÓ Máté"},{"lap":70,"t":100.703,"r":"SZÁMADÓ Máté"},{"lap":71,"t":99.416,"r":"SZÁMADÓ Máté"},{"lap":72,"t":101.728,"r":"SZÁMADÓ Máté"},{"lap":73,"t":99.286,"r":"SZÁMADÓ Máté"},{"lap":74,"t":98.907,"r":"SZÁMADÓ Máté"},{"lap":75,"t":98.917,"r":"SZÁMADÓ Máté"},{"lap":76,"t":99.092,"r":"SZÁMADÓ Máté"},{"lap":77,"t":99.796,"r":"SZÁMADÓ Máté"},{"lap":78,"t":100.073,"r":"SZÁMADÓ Máté"},{"lap":79,"t":99.388,"r":"SZÁMADÓ Máté"},{"lap":80,"t":99.375,"r":"SZÁMADÓ Máté"},{"lap":81,"t":101.291,"r":"SZÁMADÓ Máté"},{"lap":82,"t":99.615,"r":"SZÁMADÓ Máté"},{"lap":83,"t":100.497,"r":"SZÁMADÓ Máté"},{"lap":84,"t":100.935,"r":"SZÁMADÓ Máté"},{"lap":85,"t":100.904,"r":"SZÁMADÓ Máté"},{"lap":86,"t":100.366,"r":"SZÁMADÓ Máté"},{"lap":87,"t":99.818,"r":"SZÁMADÓ Máté"},{"lap":88,"t":101.702,"r":"SZÁMADÓ Máté"},{"lap":89,"t":99.48,"r":"SZÁMADÓ Máté"},{"lap":90,"t":98.88,"r":"SZÁMADÓ Máté"},{"lap":91,"t":99.109,"r":"SZÁMADÓ Máté"},{"lap":92,"t":101.349,"r":"SZÁMADÓ Máté"},{"lap":93,"t":100.745,"r":"SZÁMADÓ Máté"},{"lap":94,"t":100.975,"r":"SZÁMADÓ Máté"},{"lap":95,"t":99.01,"r":"SZÁMADÓ Máté"},{"lap":96,"t":99.438,"r":"SZÁMADÓ Máté"},{"lap":97,"t":99.456,"r":"SZÁMADÓ Máté"},{"lap":98,"t":100.533,"r":"SZÁMADÓ Máté"},{"lap":99,"t":100.46,"r":"SZÁMADÓ Máté"},{"lap":100,"t":100.83,"r":"SZÁMADÓ Máté"},{"lap":101,"t":99.244,"r":"SZÁMADÓ Máté"},{"lap":102,"t":100.61,"r":"SZÁMADÓ Máté"},{"lap":103,"t":null,"r":"SZÁMADÓ Máté"},{"lap":104,"t":166.243,"r":"BÜHN Jan"},{"lap":105,"t":101.169,"r":"BÜHN Jan"},{"lap":106,"t":100.373,"r":"BÜHN Jan"},{"lap":107,"t":101.23,"r":"BÜHN Jan"},{"lap":108,"t":100.198,"r":"BÜHN Jan"},{"lap":109,"t":99.504,"r":"BÜHN Jan"},{"lap":110,"t":99.969,"r":"BÜHN Jan"},{"lap":111,"t":100.361,"r":"BÜHN Jan"},{"lap":112,"t":100.676,"r":"BÜHN Jan"},{"lap":113,"t":99.306,"r":"BÜHN Jan"},{"lap":114,"t":99.421,"r":"BÜHN Jan"},{"lap":115,"t":100.196,"r":"BÜHN Jan"},{"lap":116,"t":100.043,"r":"BÜHN Jan"},{"lap":117,"t":99.816,"r":"BÜHN Jan"},{"lap":118,"t":99.761,"r":"BÜHN Jan"},{"lap":119,"t":100.303,"r":"BÜHN Jan"},{"lap":120,"t":99.725,"r":"BÜHN Jan"},{"lap":121,"t":100.549,"r":"BÜHN Jan"},{"lap":122,"t":100.502,"r":"BÜHN Jan"},{"lap":123,"t":99.881,"r":"BÜHN Jan"},{"lap":124,"t":99.971,"r":"BÜHN Jan"},{"lap":125,"t":99.328,"r":"BÜHN Jan"},{"lap":126,"t":99.273,"r":"BÜHN Jan"},{"lap":127,"t":99.62,"r":"BÜHN Jan"},{"lap":128,"t":100.358,"r":"BÜHN Jan"},{"lap":129,"t":99.851,"r":"BÜHN Jan"},{"lap":130,"t":100.484,"r":"BÜHN Jan"},{"lap":131,"t":99.219,"r":"BÜHN Jan"},{"lap":132,"t":99.322,"r":"BÜHN Jan"},{"lap":133,"t":99.571,"r":"BÜHN Jan"},{"lap":134,"t":99.671,"r":"BÜHN Jan"},{"lap":135,"t":99.086,"r":"BÜHN Jan"},{"lap":136,"t":99.991,"r":"BÜHN Jan"},{"lap":137,"t":null,"r":"BÜHN Jan"},{"lap":138,"t":190.866,"r":"KOVÁCS Bálint"},{"lap":139,"t":99.22,"r":"KOVÁCS Bálint"},{"lap":140,"t":99.571,"r":"KOVÁCS Bálint"},{"lap":141,"t":98.796,"r":"KOVÁCS Bálint"},{"lap":142,"t":98.994,"r":"KOVÁCS Bálint"},{"lap":143,"t":98.561,"r":"KOVÁCS Bálint"},{"lap":144,"t":99.21,"r":"KOVÁCS Bálint"},{"lap":145,"t":99.323,"r":"KOVÁCS Bálint"},{"lap":146,"t":100.323,"r":"KOVÁCS Bálint"},{"lap":147,"t":99.947,"r":"KOVÁCS Bálint"},{"lap":148,"t":99.22,"r":"KOVÁCS Bálint"},{"lap":149,"t":99.323,"r":"KOVÁCS Bálint"},{"lap":150,"t":98.914,"r":"KOVÁCS Bálint"},{"lap":151,"t":99.569,"r":"KOVÁCS Bálint"},{"lap":152,"t":98.173,"r":"KOVÁCS Bálint"},{"lap":153,"t":99.009,"r":"KOVÁCS Bálint"},{"lap":154,"t":98.358,"r":"KOVÁCS Bálint"},{"lap":155,"t":98.509,"r":"KOVÁCS Bálint"},{"lap":156,"t":99.798,"r":"KOVÁCS Bálint"},{"lap":157,"t":98.869,"r":"KOVÁCS Bálint"},{"lap":158,"t":98.283,"r":"KOVÁCS Bálint"},{"lap":159,"t":98.353,"r":"KOVÁCS Bálint"},{"lap":160,"t":98.879,"r":"KOVÁCS Bálint"},{"lap":161,"t":98.389,"r":"KOVÁCS Bálint"},{"lap":162,"t":98.617,"r":"KOVÁCS Bálint"},{"lap":163,"t":98.413,"r":"KOVÁCS Bálint"},{"lap":164,"t":98.94,"r":"KOVÁCS Bálint"},{"lap":165,"t":98.754,"r":"KOVÁCS Bálint"},{"lap":166,"t":98.525,"r":"KOVÁCS Bálint"},{"lap":167,"t":98.062,"r":"KOVÁCS Bálint"},{"lap":168,"t":98.388,"r":"KOVÁCS Bálint"},{"lap":169,"t":99.146,"r":"KOVÁCS Bálint"},{"lap":170,"t":98.714,"r":"KOVÁCS Bálint"},{"lap":171,"t":null,"r":"KOVÁCS Bálint"},{"lap":172,"t":171.516,"r":"CRESSON Loris"},{"lap":173,"t":100.02,"r":"CRESSON Loris"},{"lap":174,"t":99.313,"r":"CRESSON Loris"},{"lap":175,"t":99.981,"r":"CRESSON Loris"},{"lap":176,"t":99.248,"r":"CRESSON Loris"},{"lap":177,"t":99.902,"r":"CRESSON Loris"},{"lap":178,"t":98.656,"r":"CRESSON Loris"},{"lap":179,"t":98.95,"r":"CRESSON Loris"},{"lap":180,"t":98.445,"r":"CRESSON Loris"},{"lap":181,"t":99.325,"r":"CRESSON Loris"},{"lap":182,"t":99.866,"r":"CRESSON Loris"},{"lap":183,"t":99.267,"r":"CRESSON Loris"},{"lap":184,"t":98.606,"r":"CRESSON Loris"},{"lap":185,"t":98.529,"r":"CRESSON Loris"},{"lap":186,"t":98.489,"r":"CRESSON Loris"},{"lap":187,"t":98.281,"r":"CRESSON Loris"},{"lap":188,"t":98.764,"r":"CRESSON Loris"},{"lap":189,"t":99.394,"r":"CRESSON Loris"},{"lap":190,"t":98.387,"r":"CRESSON Loris"},{"lap":191,"t":98.523,"r":"CRESSON Loris"},{"lap":192,"t":98.29,"r":"CRESSON Loris"},{"lap":193,"t":98.395,"r":"CRESSON Loris"},{"lap":194,"t":98.994,"r":"CRESSON Loris"},{"lap":195,"t":99.747,"r":"CRESSON Loris"},{"lap":196,"t":104.295,"r":"CRESSON Loris"},{"lap":197,"t":144.729,"r":"CRESSON Loris"},{"lap":198,"t":141.879,"r":"CRESSON Loris"},{"lap":199,"t":136.642,"r":"CRESSON Loris"},{"lap":200,"t":140.133,"r":"CRESSON Loris"},{"lap":201,"t":140.667,"r":"CRESSON Loris"},{"lap":202,"t":135.477,"r":"CRESSON Loris"},{"lap":203,"t":127.549,"r":"CRESSON Loris"},{"lap":204,"t":104.416,"r":"CRESSON Loris"},{"lap":205,"t":101.143,"r":"CRESSON Loris"},{"lap":206,"t":99.269,"r":"CRESSON Loris"},{"lap":207,"t":98.446,"r":"CRESSON Loris"},{"lap":208,"t":99.095,"r":"CRESSON Loris"},{"lap":209,"t":null,"r":"CRESSON Loris"},{"lap":210,"t":183.665,"r":"SZÁMADÓ Máté"},{"lap":211,"t":100.437,"r":"SZÁMADÓ Máté"},{"lap":212,"t":100.478,"r":"SZÁMADÓ Máté"},{"lap":213,"t":100.447,"r":"SZÁMADÓ Máté"},{"lap":214,"t":100.35,"r":"SZÁMADÓ Máté"},{"lap":215,"t":99.539,"r":"SZÁMADÓ Máté"},{"lap":216,"t":100.292,"r":"SZÁMADÓ Máté"},{"lap":217,"t":99.288,"r":"SZÁMADÓ Máté"},{"lap":218,"t":98.913,"r":"SZÁMADÓ Máté"},{"lap":219,"t":100.628,"r":"SZÁMADÓ Máté"},{"lap":220,"t":100.011,"r":"SZÁMADÓ Máté"},{"lap":221,"t":99.483,"r":"SZÁMADÓ Máté"},{"lap":222,"t":99.003,"r":"SZÁMADÓ Máté"},{"lap":223,"t":98.944,"r":"SZÁMADÓ Máté"},{"lap":224,"t":101.044,"r":"SZÁMADÓ Máté"},{"lap":225,"t":99.902,"r":"SZÁMADÓ Máté"},{"lap":226,"t":99.64,"r":"SZÁMADÓ Máté"},{"lap":227,"t":99.917,"r":"SZÁMADÓ Máté"},{"lap":228,"t":100.67,"r":"SZÁMADÓ Máté"},{"lap":229,"t":100.116,"r":"SZÁMADÓ Máté"},{"lap":230,"t":98.784,"r":"SZÁMADÓ Máté"},{"lap":231,"t":99.814,"r":"SZÁMADÓ Máté"},{"lap":232,"t":101.604,"r":"SZÁMADÓ Máté"},{"lap":233,"t":101.656,"r":"SZÁMADÓ Máté"},{"lap":234,"t":99.893,"r":"SZÁMADÓ Máté"},{"lap":235,"t":100.483,"r":"SZÁMADÓ Máté"},{"lap":236,"t":99.318,"r":"SZÁMADÓ Máté"},{"lap":237,"t":99.814,"r":"SZÁMADÓ Máté"},{"lap":238,"t":99.166,"r":"SZÁMADÓ Máté"},{"lap":239,"t":99.521,"r":"SZÁMADÓ Máté"},{"lap":240,"t":99.191,"r":"SZÁMADÓ Máté"},{"lap":241,"t":101.004,"r":"SZÁMADÓ Máté"},{"lap":242,"t":99.969,"r":"SZÁMADÓ Máté"},{"lap":243,"t":99.629,"r":"SZÁMADÓ Máté"},{"lap":244,"t":100.138,"r":"SZÁMADÓ Máté"},{"lap":245,"t":null,"r":"SZÁMADÓ Máté"},{"lap":246,"t":167.646,"r":"KOVÁCS Bálint"},{"lap":247,"t":100.185,"r":"KOVÁCS Bálint"},{"lap":248,"t":99.601,"r":"KOVÁCS Bálint"},{"lap":249,"t":99.74,"r":"KOVÁCS Bálint"},{"lap":250,"t":99.785,"r":"KOVÁCS Bálint"},{"lap":251,"t":99.178,"r":"KOVÁCS Bálint"},{"lap":252,"t":99.871,"r":"KOVÁCS Bálint"},{"lap":253,"t":99.375,"r":"KOVÁCS Bálint"},{"lap":254,"t":99.514,"r":"KOVÁCS Bálint"},{"lap":255,"t":99.125,"r":"KOVÁCS Bálint"},{"lap":256,"t":99.587,"r":"KOVÁCS Bálint"},{"lap":257,"t":99.015,"r":"KOVÁCS Bálint"},{"lap":258,"t":98.535,"r":"KOVÁCS Bálint"},{"lap":259,"t":99.496,"r":"KOVÁCS Bálint"},{"lap":260,"t":99.289,"r":"KOVÁCS Bálint"},{"lap":261,"t":99.581,"r":"KOVÁCS Bálint"},{"lap":262,"t":98.976,"r":"KOVÁCS Bálint"},{"lap":263,"t":99.043,"r":"KOVÁCS Bálint"},{"lap":264,"t":98.671,"r":"KOVÁCS Bálint"},{"lap":265,"t":99.585,"r":"KOVÁCS Bálint"},{"lap":266,"t":99.573,"r":"KOVÁCS Bálint"},{"lap":267,"t":99.293,"r":"KOVÁCS Bálint"},{"lap":268,"t":98.778,"r":"KOVÁCS Bálint"},{"lap":269,"t":99.761,"r":"KOVÁCS Bálint"},{"lap":270,"t":99.904,"r":"KOVÁCS Bálint"},{"lap":271,"t":99.691,"r":"KOVÁCS Bálint"},{"lap":272,"t":98.877,"r":"KOVÁCS Bálint"},{"lap":273,"t":100.364,"r":"KOVÁCS Bálint"},{"lap":274,"t":100.001,"r":"KOVÁCS Bálint"},{"lap":275,"t":98.767,"r":"KOVÁCS Bálint"},{"lap":276,"t":99.235,"r":"KOVÁCS Bálint"},{"lap":277,"t":98.903,"r":"KOVÁCS Bálint"},{"lap":278,"t":99.814,"r":"KOVÁCS Bálint"},{"lap":279,"t":null,"r":"KOVÁCS Bálint"},{"lap":280,"t":193.827,"r":"BÜHN Jan"},{"lap":281,"t":102.16,"r":"BÜHN Jan"},{"lap":282,"t":101.715,"r":"BÜHN Jan"},{"lap":283,"t":100.379,"r":"BÜHN Jan"},{"lap":284,"t":100.094,"r":"BÜHN Jan"},{"lap":285,"t":99.844,"r":"BÜHN Jan"},{"lap":286,"t":99.744,"r":"BÜHN Jan"},{"lap":287,"t":100.352,"r":"BÜHN Jan"},{"lap":288,"t":100.893,"r":"BÜHN Jan"},{"lap":289,"t":101.005,"r":"BÜHN Jan"},{"lap":290,"t":101.422,"r":"BÜHN Jan"},{"lap":291,"t":100.642,"r":"BÜHN Jan"},{"lap":292,"t":100.802,"r":"BÜHN Jan"},{"lap":293,"t":99.648,"r":"BÜHN Jan"},{"lap":294,"t":99.743,"r":"BÜHN Jan"},{"lap":295,"t":98.816,"r":"BÜHN Jan"},{"lap":296,"t":99.295,"r":"BÜHN Jan"},{"lap":297,"t":100.752,"r":"BÜHN Jan"},{"lap":298,"t":100.184,"r":"BÜHN Jan"},{"lap":299,"t":99.629,"r":"BÜHN Jan"},{"lap":300,"t":100.328,"r":"BÜHN Jan"},{"lap":301,"t":100.578,"r":"BÜHN Jan"},{"lap":302,"t":99.947,"r":"BÜHN Jan"},{"lap":303,"t":100.981,"r":"BÜHN Jan"},{"lap":304,"t":99.692,"r":"BÜHN Jan"},{"lap":305,"t":101.23,"r":"BÜHN Jan"},{"lap":306,"t":100.87,"r":"BÜHN Jan"},{"lap":307,"t":99.42,"r":"BÜHN Jan"},{"lap":308,"t":99.308,"r":"BÜHN Jan"},{"lap":309,"t":99.512,"r":"BÜHN Jan"},{"lap":310,"t":99.009,"r":"BÜHN Jan"},{"lap":311,"t":99.461,"r":"BÜHN Jan"},{"lap":312,"t":99.305,"r":"BÜHN Jan"},{"lap":313,"t":null,"r":"BÜHN Jan"},{"lap":314,"t":166.069,"r":"CRESSON Loris"},{"lap":315,"t":99.848,"r":"CRESSON Loris"},{"lap":316,"t":100.508,"r":"CRESSON Loris"},{"lap":317,"t":99.352,"r":"CRESSON Loris"},{"lap":318,"t":98.86,"r":"CRESSON Loris"},{"lap":319,"t":99.44,"r":"CRESSON Loris"},{"lap":320,"t":101.313,"r":"CRESSON Loris"},{"lap":321,"t":99.422,"r":"CRESSON Loris"},{"lap":322,"t":100.248,"r":"CRESSON Loris"},{"lap":323,"t":99.481,"r":"CRESSON Loris"},{"lap":324,"t":98.977,"r":"CRESSON Loris"},{"lap":325,"t":101.124,"r":"CRESSON Loris"},{"lap":326,"t":99.548,"r":"CRESSON Loris"},{"lap":327,"t":100.099,"r":"CRESSON Loris"},{"lap":328,"t":100.466,"r":"CRESSON Loris"},{"lap":329,"t":138.555,"r":"CRESSON Loris"},{"lap":330,"t":141.051,"r":"CRESSON Loris"},{"lap":331,"t":130.332,"r":"CRESSON Loris"},{"lap":332,"t":129.58,"r":"CRESSON Loris"},{"lap":333,"t":104.03,"r":"CRESSON Loris"},{"lap":334,"t":99.827,"r":"CRESSON Loris"},{"lap":335,"t":101.224,"r":"CRESSON Loris"},{"lap":336,"t":99.127,"r":"CRESSON Loris"},{"lap":337,"t":98.788,"r":"CRESSON Loris"},{"lap":338,"t":98.918,"r":"CRESSON Loris"},{"lap":339,"t":99.198,"r":"CRESSON Loris"},{"lap":340,"t":99.088,"r":"CRESSON Loris"},{"lap":341,"t":99.133,"r":"CRESSON Loris"},{"lap":342,"t":98.476,"r":"CRESSON Loris"},{"lap":343,"t":99.097,"r":"CRESSON Loris"},{"lap":344,"t":99.44,"r":"CRESSON Loris"},{"lap":345,"t":99.905,"r":"CRESSON Loris"},{"lap":346,"t":99.798,"r":"CRESSON Loris"},{"lap":347,"t":98.908,"r":"CRESSON Loris"},{"lap":348,"t":null,"r":"CRESSON Loris"},{"lap":349,"t":190.612,"r":"SZÁMADÓ Máté"},{"lap":350,"t":100.997,"r":"SZÁMADÓ Máté"},{"lap":351,"t":99.871,"r":"SZÁMADÓ Máté"},{"lap":352,"t":99.916,"r":"SZÁMADÓ Máté"},{"lap":353,"t":99.864,"r":"SZÁMADÓ Máté"},{"lap":354,"t":99.646,"r":"SZÁMADÓ Máté"},{"lap":355,"t":99.841,"r":"SZÁMADÓ Máté"},{"lap":356,"t":99.008,"r":"SZÁMADÓ Máté"},{"lap":357,"t":101.313,"r":"SZÁMADÓ Máté"},{"lap":358,"t":99.037,"r":"SZÁMADÓ Máté"},{"lap":359,"t":99.676,"r":"SZÁMADÓ Máté"},{"lap":360,"t":100.964,"r":"SZÁMADÓ Máté"},{"lap":361,"t":99.28,"r":"SZÁMADÓ Máté"},{"lap":362,"t":99.697,"r":"SZÁMADÓ Máté"},{"lap":363,"t":99.159,"r":"SZÁMADÓ Máté"},{"lap":364,"t":99.195,"r":"SZÁMADÓ Máté"},{"lap":365,"t":100.025,"r":"SZÁMADÓ Máté"},{"lap":366,"t":101.206,"r":"SZÁMADÓ Máté"},{"lap":367,"t":99.121,"r":"SZÁMADÓ Máté"},{"lap":368,"t":99.745,"r":"SZÁMADÓ Máté"},{"lap":369,"t":99.209,"r":"SZÁMADÓ Máté"},{"lap":370,"t":100.039,"r":"SZÁMADÓ Máté"},{"lap":371,"t":99.648,"r":"SZÁMADÓ Máté"},{"lap":372,"t":99.327,"r":"SZÁMADÓ Máté"},{"lap":373,"t":101.085,"r":"SZÁMADÓ Máté"},{"lap":374,"t":99.862,"r":"SZÁMADÓ Máté"},{"lap":375,"t":99.252,"r":"SZÁMADÓ Máté"},{"lap":376,"t":100.328,"r":"SZÁMADÓ Máté"},{"lap":377,"t":99.111,"r":"SZÁMADÓ Máté"},{"lap":378,"t":100.657,"r":"SZÁMADÓ Máté"},{"lap":379,"t":99.466,"r":"SZÁMADÓ Máté"},{"lap":380,"t":99.438,"r":"SZÁMADÓ Máté"},{"lap":381,"t":99.967,"r":"SZÁMADÓ Máté"},{"lap":382,"t":99.496,"r":"SZÁMADÓ Máté"},{"lap":383,"t":null,"r":"SZÁMADÓ Máté"},{"lap":384,"t":165.527,"r":"KOVÁCS Bálint"},{"lap":385,"t":100.956,"r":"KOVÁCS Bálint"},{"lap":386,"t":99.101,"r":"KOVÁCS Bálint"},{"lap":387,"t":99.665,"r":"KOVÁCS Bálint"},{"lap":388,"t":99.693,"r":"KOVÁCS Bálint"},{"lap":389,"t":99.636,"r":"KOVÁCS Bálint"},{"lap":390,"t":99.123,"r":"KOVÁCS Bálint"},{"lap":391,"t":99.411,"r":"KOVÁCS Bálint"},{"lap":392,"t":99.66,"r":"KOVÁCS Bálint"},{"lap":393,"t":100.494,"r":"KOVÁCS Bálint"},{"lap":394,"t":100.924,"r":"KOVÁCS Bálint"},{"lap":395,"t":99.32,"r":"KOVÁCS Bálint"},{"lap":396,"t":98.993,"r":"KOVÁCS Bálint"},{"lap":397,"t":98.984,"r":"KOVÁCS Bálint"},{"lap":398,"t":99.994,"r":"KOVÁCS Bálint"},{"lap":399,"t":99.363,"r":"KOVÁCS Bálint"},{"lap":400,"t":99.506,"r":"KOVÁCS Bálint"},{"lap":401,"t":99.973,"r":"KOVÁCS Bálint"},{"lap":402,"t":99.604,"r":"KOVÁCS Bálint"},{"lap":403,"t":100.268,"r":"KOVÁCS Bálint"},{"lap":404,"t":99.313,"r":"KOVÁCS Bálint"},{"lap":405,"t":100.491,"r":"KOVÁCS Bálint"},{"lap":406,"t":102.495,"r":"KOVÁCS Bálint"},{"lap":407,"t":99.274,"r":"KOVÁCS Bálint"},{"lap":408,"t":99.438,"r":"KOVÁCS Bálint"},{"lap":409,"t":101.18,"r":"KOVÁCS Bálint"},{"lap":410,"t":100.558,"r":"KOVÁCS Bálint"},{"lap":411,"t":100.043,"r":"KOVÁCS Bálint"},{"lap":412,"t":98.752,"r":"KOVÁCS Bálint"},{"lap":413,"t":98.365,"r":"KOVÁCS Bálint"},{"lap":414,"t":98.324,"r":"KOVÁCS Bálint"},{"lap":415,"t":98.629,"r":"KOVÁCS Bálint"},{"lap":416,"t":98.98,"r":"KOVÁCS Bálint"},{"lap":417,"t":null,"r":"KOVÁCS Bálint"},{"lap":418,"t":197.12,"r":"BÜHN Jan"},{"lap":419,"t":103.284,"r":"BÜHN Jan"},{"lap":420,"t":100.678,"r":"BÜHN Jan"},{"lap":421,"t":100.197,"r":"BÜHN Jan"},{"lap":422,"t":100.617,"r":"BÜHN Jan"},{"lap":423,"t":100.206,"r":"BÜHN Jan"},{"lap":424,"t":99.557,"r":"BÜHN Jan"},{"lap":425,"t":100.547,"r":"BÜHN Jan"},{"lap":426,"t":100.845,"r":"BÜHN Jan"},{"lap":427,"t":100.202,"r":"BÜHN Jan"},{"lap":428,"t":100.294,"r":"BÜHN Jan"},{"lap":429,"t":100.028,"r":"BÜHN Jan"},{"lap":430,"t":99.333,"r":"BÜHN Jan"},{"lap":431,"t":100.8,"r":"BÜHN Jan"},{"lap":432,"t":99.571,"r":"BÜHN Jan"},{"lap":433,"t":100.388,"r":"BÜHN Jan"},{"lap":434,"t":99.087,"r":"BÜHN Jan"},{"lap":435,"t":100.414,"r":"BÜHN Jan"},{"lap":436,"t":101.733,"r":"BÜHN Jan"},{"lap":437,"t":100.579,"r":"BÜHN Jan"},{"lap":438,"t":99.727,"r":"BÜHN Jan"},{"lap":439,"t":99.594,"r":"BÜHN Jan"},{"lap":440,"t":99.07,"r":"BÜHN Jan"},{"lap":441,"t":101.819,"r":"BÜHN Jan"},{"lap":442,"t":99.572,"r":"BÜHN Jan"},{"lap":443,"t":98.998,"r":"BÜHN Jan"},{"lap":444,"t":99.458,"r":"BÜHN Jan"},{"lap":445,"t":100.294,"r":"BÜHN Jan"},{"lap":446,"t":99.756,"r":"BÜHN Jan"},{"lap":447,"t":99.082,"r":"BÜHN Jan"},{"lap":448,"t":99.377,"r":"BÜHN Jan"},{"lap":449,"t":98.792,"r":"BÜHN Jan"},{"lap":450,"t":99.26,"r":"BÜHN Jan"},{"lap":451,"t":null,"r":"BÜHN Jan"},{"lap":452,"t":169.141,"r":"CRESSON Loris"},{"lap":453,"t":100.291,"r":"CRESSON Loris"},{"lap":454,"t":100.83,"r":"CRESSON Loris"},{"lap":455,"t":99.576,"r":"CRESSON Loris"},{"lap":456,"t":100.501,"r":"CRESSON Loris"},{"lap":457,"t":99.89,"r":"CRESSON Loris"},{"lap":458,"t":99.61,"r":"CRESSON Loris"},{"lap":459,"t":98.992,"r":"CRESSON Loris"},{"lap":460,"t":98.923,"r":"CRESSON Loris"},{"lap":461,"t":98.748,"r":"CRESSON Loris"},{"lap":462,"t":99.101,"r":"CRESSON Loris"},{"lap":463,"t":98.62,"r":"CRESSON Loris"},{"lap":464,"t":99.014,"r":"CRESSON Loris"},{"lap":465,"t":99.296,"r":"CRESSON Loris"},{"lap":466,"t":99.477,"r":"CRESSON Loris"},{"lap":467,"t":99.193,"r":"CRESSON Loris"},{"lap":468,"t":99.343,"r":"CRESSON Loris"},{"lap":469,"t":100.716,"r":"CRESSON Loris"},{"lap":470,"t":99.295,"r":"CRESSON Loris"},{"lap":471,"t":98.514,"r":"CRESSON Loris"},{"lap":472,"t":98.556,"r":"CRESSON Loris"},{"lap":473,"t":98.078,"r":"CRESSON Loris"},{"lap":474,"t":98.758,"r":"CRESSON Loris"},{"lap":475,"t":99.757,"r":"CRESSON Loris"},{"lap":476,"t":98.753,"r":"CRESSON Loris"},{"lap":477,"t":99.654,"r":"CRESSON Loris"},{"lap":478,"t":99.719,"r":"CRESSON Loris"},{"lap":479,"t":99.917,"r":"CRESSON Loris"},{"lap":480,"t":100.046,"r":"CRESSON Loris"},{"lap":481,"t":99.265,"r":"CRESSON Loris"},{"lap":482,"t":99.691,"r":"CRESSON Loris"},{"lap":483,"t":99.671,"r":"CRESSON Loris"},{"lap":484,"t":100.258,"r":"CRESSON Loris"},{"lap":485,"t":null,"r":"CRESSON Loris"},{"lap":486,"t":214.67,"r":"SZÁMADÓ Máté"},{"lap":487,"t":101.031,"r":"SZÁMADÓ Máté"},{"lap":488,"t":99.962,"r":"SZÁMADÓ Máté"},{"lap":489,"t":99.974,"r":"SZÁMADÓ Máté"},{"lap":490,"t":100.4,"r":"SZÁMADÓ Máté"},{"lap":491,"t":99.662,"r":"SZÁMADÓ Máté"},{"lap":492,"t":100.43,"r":"SZÁMADÓ Máté"},{"lap":493,"t":100.638,"r":"SZÁMADÓ Máté"},{"lap":494,"t":99.45,"r":"SZÁMADÓ Máté"},{"lap":495,"t":99.056,"r":"SZÁMADÓ Máté"},{"lap":496,"t":98.767,"r":"SZÁMADÓ Máté"},{"lap":497,"t":99.486,"r":"SZÁMADÓ Máté"},{"lap":498,"t":100.079,"r":"SZÁMADÓ Máté"},{"lap":499,"t":100.02,"r":"SZÁMADÓ Máté"},{"lap":500,"t":98.848,"r":"SZÁMADÓ Máté"},{"lap":501,"t":100.548,"r":"SZÁMADÓ Máté"},{"lap":502,"t":100.649,"r":"SZÁMADÓ Máté"},{"lap":503,"t":100.022,"r":"SZÁMADÓ Máté"},{"lap":504,"t":100.33,"r":"SZÁMADÓ Máté"},{"lap":505,"t":101.715,"r":"SZÁMADÓ Máté"},{"lap":506,"t":99.853,"r":"SZÁMADÓ Máté"},{"lap":507,"t":100.289,"r":"SZÁMADÓ Máté"},{"lap":508,"t":100.126,"r":"SZÁMADÓ Máté"},{"lap":509,"t":99.034,"r":"SZÁMADÓ Máté"},{"lap":510,"t":99.259,"r":"SZÁMADÓ Máté"},{"lap":511,"t":100.812,"r":"SZÁMADÓ Máté"},{"lap":512,"t":99.796,"r":"SZÁMADÓ Máté"},{"lap":513,"t":99.727,"r":"SZÁMADÓ Máté"},{"lap":514,"t":99.538,"r":"SZÁMADÓ Máté"},{"lap":515,"t":100.232,"r":"SZÁMADÓ Máté"},{"lap":516,"t":99.943,"r":"SZÁMADÓ Máté"},{"lap":517,"t":100.801,"r":"SZÁMADÓ Máté"},{"lap":518,"t":99.354,"r":"SZÁMADÓ Máté"},{"lap":519,"t":99.05,"r":"SZÁMADÓ Máté"},{"lap":520,"t":null,"r":"SZÁMADÓ Máté"},{"lap":521,"t":166.723,"r":"CRESSON Loris"},{"lap":522,"t":100.134,"r":"CRESSON Loris"},{"lap":523,"t":100.037,"r":"CRESSON Loris"},{"lap":524,"t":99.449,"r":"CRESSON Loris"},{"lap":525,"t":99.523,"r":"CRESSON Loris"},{"lap":526,"t":100.474,"r":"CRESSON Loris"},{"lap":527,"t":99.806,"r":"CRESSON Loris"},{"lap":528,"t":100.455,"r":"CRESSON Loris"},{"lap":529,"t":99.267,"r":"CRESSON Loris"},{"lap":530,"t":100.121,"r":"CRESSON Loris"},{"lap":531,"t":99.672,"r":"CRESSON Loris"},{"lap":532,"t":98.838,"r":"CRESSON Loris"},{"lap":533,"t":99.566,"r":"CRESSON Loris"},{"lap":534,"t":99.071,"r":"CRESSON Loris"},{"lap":535,"t":98.694,"r":"CRESSON Loris"},{"lap":536,"t":99.513,"r":"CRESSON Loris"},{"lap":537,"t":99.294,"r":"CRESSON Loris"},{"lap":538,"t":100.022,"r":"CRESSON Loris"},{"lap":539,"t":99.943,"r":"CRESSON Loris"},{"lap":540,"t":100.167,"r":"CRESSON Loris"},{"lap":541,"t":99.22,"r":"CRESSON Loris"},{"lap":542,"t":99.044,"r":"CRESSON Loris"},{"lap":543,"t":100.814,"r":"CRESSON Loris"},{"lap":544,"t":101.629,"r":"CRESSON Loris"},{"lap":545,"t":100.175,"r":"CRESSON Loris"},{"lap":546,"t":100.71,"r":"CRESSON Loris"},{"lap":547,"t":98.995,"r":"CRESSON Loris"},{"lap":548,"t":99.273,"r":"CRESSON Loris"},{"lap":549,"t":99.217,"r":"CRESSON Loris"},{"lap":550,"t":98.85,"r":"CRESSON Loris"},{"lap":551,"t":98.748,"r":"CRESSON Loris"},{"lap":552,"t":100.074,"r":"CRESSON Loris"},{"lap":553,"t":null,"r":"CRESSON Loris"},{"lap":554,"t":201.658,"r":"KOVÁCS Bálint"},{"lap":555,"t":101.899,"r":"KOVÁCS Bálint"},{"lap":556,"t":100.942,"r":"KOVÁCS Bálint"},{"lap":557,"t":100.053,"r":"KOVÁCS Bálint"},{"lap":558,"t":101.354,"r":"KOVÁCS Bálint"},{"lap":559,"t":101.176,"r":"KOVÁCS Bálint"},{"lap":560,"t":100.226,"r":"KOVÁCS Bálint"},{"lap":561,"t":100.868,"r":"KOVÁCS Bálint"},{"lap":562,"t":100.695,"r":"KOVÁCS Bálint"},{"lap":563,"t":100.235,"r":"KOVÁCS Bálint"},{"lap":564,"t":99.861,"r":"KOVÁCS Bálint"},{"lap":565,"t":101.124,"r":"KOVÁCS Bálint"},{"lap":566,"t":101.165,"r":"KOVÁCS Bálint"},{"lap":567,"t":100.888,"r":"KOVÁCS Bálint"},{"lap":568,"t":100.517,"r":"KOVÁCS Bálint"},{"lap":569,"t":100.264,"r":"KOVÁCS Bálint"},{"lap":570,"t":101.45,"r":"KOVÁCS Bálint"},{"lap":571,"t":100.208,"r":"KOVÁCS Bálint"},{"lap":572,"t":100.519,"r":"KOVÁCS Bálint"},{"lap":573,"t":100.794,"r":"KOVÁCS Bálint"},{"lap":574,"t":100.751,"r":"KOVÁCS Bálint"},{"lap":575,"t":99.935,"r":"KOVÁCS Bálint"},{"lap":576,"t":101.14,"r":"KOVÁCS Bálint"},{"lap":577,"t":100.717,"r":"KOVÁCS Bálint"},{"lap":578,"t":103.357,"r":"KOVÁCS Bálint"},{"lap":579,"t":101.001,"r":"KOVÁCS Bálint"},{"lap":580,"t":101.039,"r":"KOVÁCS Bálint"},{"lap":581,"t":100.232,"r":"KOVÁCS Bálint"},{"lap":582,"t":100.28,"r":"KOVÁCS Bálint"},{"lap":583,"t":100.819,"r":"KOVÁCS Bálint"},{"lap":584,"t":100.305,"r":"KOVÁCS Bálint"},{"lap":585,"t":101.123,"r":"KOVÁCS Bálint"},{"lap":586,"t":100.142,"r":"KOVÁCS Bálint"},{"lap":587,"t":null,"r":"KOVÁCS Bálint"},{"lap":588,"t":171.184,"r":"BÜHN Jan"},{"lap":589,"t":102.82,"r":"BÜHN Jan"},{"lap":590,"t":101.654,"r":"BÜHN Jan"},{"lap":591,"t":100.646,"r":"BÜHN Jan"},{"lap":592,"t":100.304,"r":"BÜHN Jan"},{"lap":593,"t":100.187,"r":"BÜHN Jan"},{"lap":594,"t":100.455,"r":"BÜHN Jan"},{"lap":595,"t":100.145,"r":"BÜHN Jan"},{"lap":596,"t":103.418,"r":"BÜHN Jan"},{"lap":597,"t":103.394,"r":"BÜHN Jan"},{"lap":598,"t":99.848,"r":"BÜHN Jan"},{"lap":599,"t":99.613,"r":"BÜHN Jan"},{"lap":600,"t":100.231,"r":"BÜHN Jan"},{"lap":601,"t":100.453,"r":"BÜHN Jan"},{"lap":602,"t":99.269,"r":"BÜHN Jan"},{"lap":603,"t":99.969,"r":"BÜHN Jan"},{"lap":604,"t":101.96,"r":"BÜHN Jan"},{"lap":605,"t":99.339,"r":"BÜHN Jan"},{"lap":606,"t":99.267,"r":"BÜHN Jan"},{"lap":607,"t":99.195,"r":"BÜHN Jan"},{"lap":608,"t":99.617,"r":"BÜHN Jan"},{"lap":609,"t":103.203,"r":"BÜHN Jan"},{"lap":610,"t":100.66,"r":"BÜHN Jan"},{"lap":611,"t":100.925,"r":"BÜHN Jan"},{"lap":612,"t":100.225,"r":"BÜHN Jan"},{"lap":613,"t":99.529,"r":"BÜHN Jan"},{"lap":614,"t":99.706,"r":"BÜHN Jan"},{"lap":615,"t":100.118,"r":"BÜHN Jan"},{"lap":616,"t":99.725,"r":"BÜHN Jan"},{"lap":617,"t":100.099,"r":"BÜHN Jan"},{"lap":618,"t":99.333,"r":"BÜHN Jan"},{"lap":619,"t":99.405,"r":"BÜHN Jan"},{"lap":620,"t":99.709,"r":"BÜHN Jan"},{"lap":621,"t":null,"r":"BÜHN Jan"},{"lap":622,"t":196.981,"r":"KOVÁCS Bálint"},{"lap":623,"t":105.977,"r":"KOVÁCS Bálint"},{"lap":624,"t":100.511,"r":"KOVÁCS Bálint"},{"lap":625,"t":99.957,"r":"KOVÁCS Bálint"},{"lap":626,"t":99.854,"r":"KOVÁCS Bálint"},{"lap":627,"t":99.822,"r":"KOVÁCS Bálint"},{"lap":628,"t":99.893,"r":"KOVÁCS Bálint"},{"lap":629,"t":99.411,"r":"KOVÁCS Bálint"},{"lap":630,"t":99.196,"r":"KOVÁCS Bálint"},{"lap":631,"t":99.174,"r":"KOVÁCS Bálint"},{"lap":632,"t":98.995,"r":"KOVÁCS Bálint"},{"lap":633,"t":98.442,"r":"KOVÁCS Bálint"},{"lap":634,"t":98.617,"r":"KOVÁCS Bálint"},{"lap":635,"t":102.389,"r":"KOVÁCS Bálint"},{"lap":636,"t":98.991,"r":"KOVÁCS Bálint"},{"lap":637,"t":99.644,"r":"KOVÁCS Bálint"},{"lap":638,"t":99.104,"r":"KOVÁCS Bálint"},{"lap":639,"t":98.562,"r":"KOVÁCS Bálint"},{"lap":640,"t":98.773,"r":"KOVÁCS Bálint"},{"lap":641,"t":98.75,"r":"KOVÁCS Bálint"},{"lap":642,"t":99.149,"r":"KOVÁCS Bálint"},{"lap":643,"t":98.95,"r":"KOVÁCS Bálint"},{"lap":644,"t":99.176,"r":"KOVÁCS Bálint"},{"lap":645,"t":99.491,"r":"KOVÁCS Bálint"},{"lap":646,"t":98.74,"r":"KOVÁCS Bálint"},{"lap":647,"t":98.862,"r":"KOVÁCS Bálint"},{"lap":648,"t":99.753,"r":"KOVÁCS Bálint"},{"lap":649,"t":99.643,"r":"KOVÁCS Bálint"},{"lap":650,"t":100.995,"r":"KOVÁCS Bálint"},{"lap":651,"t":100.078,"r":"KOVÁCS Bálint"},{"lap":652,"t":100.503,"r":"KOVÁCS Bálint"},{"lap":653,"t":99.744,"r":"KOVÁCS Bálint"},{"lap":654,"t":99.364,"r":"KOVÁCS Bálint"},{"lap":655,"t":null,"r":"KOVÁCS Bálint"},{"lap":656,"t":167.728,"r":"SZÁMADÓ Máté"},{"lap":657,"t":101.88,"r":"SZÁMADÓ Máté"},{"lap":658,"t":99.809,"r":"SZÁMADÓ Máté"},{"lap":659,"t":99.017,"r":"SZÁMADÓ Máté"},{"lap":660,"t":99.574,"r":"SZÁMADÓ Máté"},{"lap":661,"t":99.091,"r":"SZÁMADÓ Máté"},{"lap":662,"t":99.552,"r":"SZÁMADÓ Máté"},{"lap":663,"t":99.198,"r":"SZÁMADÓ Máté"},{"lap":664,"t":100.267,"r":"SZÁMADÓ Máté"},{"lap":665,"t":99.354,"r":"SZÁMADÓ Máté"},{"lap":666,"t":99.319,"r":"SZÁMADÓ Máté"},{"lap":667,"t":99.29,"r":"SZÁMADÓ Máté"},{"lap":668,"t":99.24,"r":"SZÁMADÓ Máté"},{"lap":669,"t":99.093,"r":"SZÁMADÓ Máté"},{"lap":670,"t":99.239,"r":"SZÁMADÓ Máté"},{"lap":671,"t":99.209,"r":"SZÁMADÓ Máté"},{"lap":672,"t":99.169,"r":"SZÁMADÓ Máté"},{"lap":673,"t":99.195,"r":"SZÁMADÓ Máté"},{"lap":674,"t":100.302,"r":"SZÁMADÓ Máté"},{"lap":675,"t":100.047,"r":"SZÁMADÓ Máté"},{"lap":676,"t":100.747,"r":"SZÁMADÓ Máté"},{"lap":677,"t":99.888,"r":"SZÁMADÓ Máté"},{"lap":678,"t":99.563,"r":"SZÁMADÓ Máté"},{"lap":679,"t":99.64,"r":"SZÁMADÓ Máté"},{"lap":680,"t":99.634,"r":"SZÁMADÓ Máté"},{"lap":681,"t":102.233,"r":"SZÁMADÓ Máté"},{"lap":682,"t":154.017,"r":"SZÁMADÓ Máté"},{"lap":683,"t":142.837,"r":"SZÁMADÓ Máté"},{"lap":684,"t":138.714,"r":"SZÁMADÓ Máté"},{"lap":685,"t":144.207,"r":"SZÁMADÓ Máté"},{"lap":686,"t":141.711,"r":"SZÁMADÓ Máté"},{"lap":687,"t":140.004,"r":"SZÁMADÓ Máté"},{"lap":688,"t":137.148,"r":"SZÁMADÓ Máté"},{"lap":689,"t":138.173,"r":"SZÁMADÓ Máté"},{"lap":690,"t":137.168,"r":"SZÁMADÓ Máté"},{"lap":691,"t":136.254,"r":"SZÁMADÓ Máté"},{"lap":692,"t":null,"r":"SZÁMADÓ Máté"},{"lap":693,"t":225.582,"r":"CRESSON Loris"},{"lap":694,"t":102.989,"r":"CRESSON Loris"},{"lap":695,"t":99.458,"r":"CRESSON Loris"},{"lap":696,"t":100.119,"r":"CRESSON Loris"},{"lap":697,"t":99.432,"r":"CRESSON Loris"},{"lap":698,"t":99.405,"r":"CRESSON Loris"},{"lap":699,"t":99.733,"r":"CRESSON Loris"},{"lap":700,"t":99.216,"r":"CRESSON Loris"},{"lap":701,"t":98.964,"r":"CRESSON Loris"},{"lap":702,"t":99.021,"r":"CRESSON Loris"},{"lap":703,"t":99.47,"r":"CRESSON Loris"},{"lap":704,"t":101.153,"r":"CRESSON Loris"},{"lap":705,"t":99.911,"r":"CRESSON Loris"},{"lap":706,"t":99.109,"r":"CRESSON Loris"},{"lap":707,"t":99.387,"r":"CRESSON Loris"},{"lap":708,"t":98.992,"r":"CRESSON Loris"},{"lap":709,"t":99.535,"r":"CRESSON Loris"},{"lap":710,"t":100.114,"r":"CRESSON Loris"},{"lap":711,"t":99.316,"r":"CRESSON Loris"},{"lap":712,"t":98.758,"r":"CRESSON Loris"},{"lap":713,"t":100.379,"r":"CRESSON Loris"},{"lap":714,"t":99.136,"r":"CRESSON Loris"},{"lap":715,"t":98.836,"r":"CRESSON Loris"},{"lap":716,"t":100.917,"r":"CRESSON Loris"},{"lap":717,"t":98.976,"r":"CRESSON Loris"},{"lap":718,"t":99.414,"r":"CRESSON Loris"},{"lap":719,"t":99.072,"r":"CRESSON Loris"},{"lap":720,"t":99.4,"r":"CRESSON Loris"},{"lap":721,"t":100.141,"r":"CRESSON Loris"},{"lap":722,"t":98.862,"r":"CRESSON Loris"},{"lap":723,"t":98.753,"r":"CRESSON Loris"},{"lap":724,"t":98.873,"r":"CRESSON Loris"},{"lap":725,"t":99.595,"r":"CRESSON Loris"},{"lap":726,"t":null,"r":"CRESSON Loris"},{"lap":727,"t":167.515,"r":"BÜHN Jan"},{"lap":728,"t":101.312,"r":"BÜHN Jan"},{"lap":729,"t":100.453,"r":"BÜHN Jan"},{"lap":730,"t":99.898,"r":"BÜHN Jan"},{"lap":731,"t":100.231,"r":"BÜHN Jan"},{"lap":732,"t":99.756,"r":"BÜHN Jan"},{"lap":733,"t":99.808,"r":"BÜHN Jan"},{"lap":734,"t":99.951,"r":"BÜHN Jan"},{"lap":735,"t":99.649,"r":"BÜHN Jan"},{"lap":736,"t":100.668,"r":"BÜHN Jan"},{"lap":737,"t":99.373,"r":"BÜHN Jan"},{"lap":738,"t":100.441,"r":"BÜHN Jan"},{"lap":739,"t":99.866,"r":"BÜHN Jan"},{"lap":740,"t":101.221,"r":"BÜHN Jan"},{"lap":741,"t":100.265,"r":"BÜHN Jan"},{"lap":742,"t":100.599,"r":"BÜHN Jan"},{"lap":743,"t":100.008,"r":"BÜHN Jan"},{"lap":744,"t":100.161,"r":"BÜHN Jan"},{"lap":745,"t":100.913,"r":"BÜHN Jan"},{"lap":746,"t":100.264,"r":"BÜHN Jan"},{"lap":747,"t":102.711,"r":"BÜHN Jan"},{"lap":748,"t":99.973,"r":"BÜHN Jan"},{"lap":749,"t":99.755,"r":"BÜHN Jan"},{"lap":750,"t":101.769,"r":"BÜHN Jan"},{"lap":751,"t":99.808,"r":"BÜHN Jan"},{"lap":752,"t":100.363,"r":"BÜHN Jan"},{"lap":753,"t":100.268,"r":"BÜHN Jan"},{"lap":754,"t":100.067,"r":"BÜHN Jan"},{"lap":755,"t":100.348,"r":"BÜHN Jan"},{"lap":756,"t":100.286,"r":"BÜHN Jan"},{"lap":757,"t":100.433,"r":"BÜHN Jan"},{"lap":758,"t":101.055,"r":"BÜHN Jan"},{"lap":759,"t":100.83,"r":"BÜHN Jan"},{"lap":760,"t":null,"r":"BÜHN Jan"},{"lap":761,"t":193.833,"r":"KOVÁCS Bálint"},{"lap":762,"t":102.137,"r":"KOVÁCS Bálint"},{"lap":763,"t":101.694,"r":"KOVÁCS Bálint"},{"lap":764,"t":102.18,"r":"KOVÁCS Bálint"},{"lap":765,"t":101.429,"r":"KOVÁCS Bálint"},{"lap":766,"t":101.516,"r":"KOVÁCS Bálint"},{"lap":767,"t":101.396,"r":"KOVÁCS Bálint"},{"lap":768,"t":101.4,"r":"KOVÁCS Bálint"},{"lap":769,"t":101.094,"r":"KOVÁCS Bálint"},{"lap":770,"t":101.109,"r":"KOVÁCS Bálint"},{"lap":771,"t":101.455,"r":"KOVÁCS Bálint"},{"lap":772,"t":101.42,"r":"KOVÁCS Bálint"},{"lap":773,"t":102.33,"r":"KOVÁCS Bálint"},{"lap":774,"t":101.188,"r":"KOVÁCS Bálint"},{"lap":775,"t":101.496,"r":"KOVÁCS Bálint"},{"lap":776,"t":101.284,"r":"KOVÁCS Bálint"},{"lap":777,"t":101.369,"r":"KOVÁCS Bálint"},{"lap":778,"t":101.437,"r":"KOVÁCS Bálint"},{"lap":779,"t":101.581,"r":"KOVÁCS Bálint"},{"lap":780,"t":101.927,"r":"KOVÁCS Bálint"},{"lap":781,"t":102.098,"r":"KOVÁCS Bálint"},{"lap":782,"t":101.213,"r":"KOVÁCS Bálint"},{"lap":783,"t":101.672,"r":"KOVÁCS Bálint"},{"lap":784,"t":101.182,"r":"KOVÁCS Bálint"},{"lap":785,"t":102.765,"r":"KOVÁCS Bálint"},{"lap":786,"t":101.033,"r":"KOVÁCS Bálint"},{"lap":787,"t":100.863,"r":"KOVÁCS Bálint"},{"lap":788,"t":101.736,"r":"KOVÁCS Bálint"},{"lap":789,"t":101.373,"r":"KOVÁCS Bálint"},{"lap":790,"t":101.736,"r":"KOVÁCS Bálint"},{"lap":791,"t":101.059,"r":"KOVÁCS Bálint"},{"lap":792,"t":null,"r":"KOVÁCS Bálint"},{"lap":793,"t":167.11,"r":"SZÁMADÓ Máté"},{"lap":794,"t":101.517,"r":"SZÁMADÓ Máté"},{"lap":795,"t":101.812,"r":"SZÁMADÓ Máté"},{"lap":796,"t":102.337,"r":"SZÁMADÓ Máté"},{"lap":797,"t":100.751,"r":"SZÁMADÓ Máté"},{"lap":798,"t":100.792,"r":"SZÁMADÓ Máté"},{"lap":799,"t":101.538,"r":"SZÁMADÓ Máté"},{"lap":800,"t":100.993,"r":"SZÁMADÓ Máté"},{"lap":801,"t":101.813,"r":"SZÁMADÓ Máté"},{"lap":802,"t":102.79,"r":"SZÁMADÓ Máté"},{"lap":803,"t":102.558,"r":"SZÁMADÓ Máté"},{"lap":804,"t":102.438,"r":"SZÁMADÓ Máté"},{"lap":805,"t":101.638,"r":"SZÁMADÓ Máté"},{"lap":806,"t":102.117,"r":"SZÁMADÓ Máté"},{"lap":807,"t":101.668,"r":"SZÁMADÓ Máté"},{"lap":808,"t":101.766,"r":"SZÁMADÓ Máté"},{"lap":809,"t":101.531,"r":"SZÁMADÓ Máté"},{"lap":810,"t":101.548,"r":"SZÁMADÓ Máté"},{"lap":811,"t":101.692,"r":"SZÁMADÓ Máté"},{"lap":812,"t":102.141,"r":"SZÁMADÓ Máté"},{"lap":813,"t":102.237,"r":"SZÁMADÓ Máté"},{"lap":814,"t":102.455,"r":"SZÁMADÓ Máté"},{"lap":815,"t":102.098,"r":"SZÁMADÓ Máté"},{"lap":816,"t":102.186,"r":"SZÁMADÓ Máté"},{"lap":817,"t":102.129,"r":"SZÁMADÓ Máté"},{"lap":818,"t":102.631,"r":"SZÁMADÓ Máté"},{"lap":819,"t":101.249,"r":"SZÁMADÓ Máté"},{"lap":820,"t":101.333,"r":"SZÁMADÓ Máté"},{"lap":821,"t":101.14,"r":"SZÁMADÓ Máté"},{"lap":822,"t":null,"r":"SZÁMADÓ Máté"},{"lap":823,"t":189.38,"r":"CRESSON Loris"},{"lap":824,"t":100.296,"r":"CRESSON Loris"},{"lap":825,"t":100.927,"r":"CRESSON Loris"},{"lap":826,"t":101.308,"r":"CRESSON Loris"},{"lap":827,"t":101.087,"r":"CRESSON Loris"},{"lap":828,"t":100.948,"r":"CRESSON Loris"},{"lap":829,"t":101.151,"r":"CRESSON Loris"},{"lap":830,"t":100.726,"r":"CRESSON Loris"},{"lap":831,"t":100.961,"r":"CRESSON Loris"},{"lap":832,"t":101.806,"r":"CRESSON Loris"},{"lap":833,"t":101.517,"r":"CRESSON Loris"},{"lap":834,"t":100.326,"r":"CRESSON Loris"},{"lap":835,"t":100.443,"r":"CRESSON Loris"},{"lap":836,"t":101.281,"r":"CRESSON Loris"},{"lap":837,"t":100.614,"r":"CRESSON Loris"},{"lap":838,"t":102.98,"r":"CRESSON Loris"}];
